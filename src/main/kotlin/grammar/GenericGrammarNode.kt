@@ -1,13 +1,19 @@
 package grammar
 
-sealed class GenericGrammarNode(val productionRule: AttributedProductionRule){
+sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
     var rhs: List<GrammarNode> = listOf()
-    val lhsSymbol : Symbol by lazy {
-        productionRule.rule.lsh
+    fun lhsSymbol() : Symbol {
+        return productionRule.rule.lsh
     }
-    abstract val attributes: Set<NodeAttribute>
-    abstract val synthesizedAttributes: Set<NodeAttribute>
-    abstract val inheritedAttributes: Set<NodeAttribute>
+    fun attributes(): Set<NodeAttribute> {
+        return synthesizedAttributes().union(inheritedAttributes())
+    }
+    fun synthesizedAttributes(): Set<NodeAttribute> {
+        return productionRule.makeSynthesizedAttributes(inheritedAttributes(), rhs.map {
+            it.attributes()
+        })
+    }
+    abstract fun inheritedAttributes(): Set<NodeAttribute>
 
     fun withChildren(makeChildren: (parent: GenericGrammarNode) -> List<GrammarNode>): GenericGrammarNode {
         this.rhs = makeChildren(this)

@@ -17,6 +17,16 @@ class ProgramGenerator {
             val toExpand = expandQueue.poll()
             val expansions = grammar.getPossibleExpansions(toExpand.lhsSymbol)
             // Choose an expansion at random.
+            val expansion = expansions.random()
+            // Apply it, if we can.
+            if (expansion.satisfiesConstraints(toExpand.attributes)) {
+                val newNodes = expansion.rule.rhs.mapIndexed { index, symbol ->
+                    GrammarNode(null, toExpand, index)
+                }
+            }
+            else {
+
+            }
         }
     }
 }
