@@ -1,13 +1,12 @@
 package generators
 
-import grammar.AttributeGrammar
-import grammar.GenericGrammarNode
-import grammar.GrammarNode
-import grammar.RootGrammarNode
+import grammar.*
+import grammars.common.TerminalProductionRule
 import java.util.*
+import java.util.concurrent.TimeoutException
 
-class ProgramGenerator {
-    fun generate(grammar: AttributeGrammar): String {
+class ProgramGenerator(val numRandomTries : Int = 3) {
+    fun generate(grammar: AttributeGrammar): RootGrammarNode {
         // First, create the program by expanding the start symbol.
         val startRules = grammar.getPossibleExpansions(grammar.start)
         val startExpand = startRules.random()
@@ -15,18 +14,36 @@ class ProgramGenerator {
         val expandQueue : Queue<GenericGrammarNode> = LinkedList(listOf(program))
         while(expandQueue.isNotEmpty()) {
             val toExpand = expandQueue.poll()
-            val expansions = grammar.getPossibleExpansions(toExpand.lhsSymbol)
+            val lhsSymbol = toExpand.lhsSymbol()
+            if(lhsSymbol.terminal){
+                continue
+            }
+            println(program)
+            val expansions = grammar.getPossibleExpansions(lhsSymbol)
             // Choose an expansion at random.
             val expansion = expansions.random()
             // Apply it, if we can.
-            if (expansion.satisfiesConstraints(toExpand.attributes)) {
-                val newNodes = expansion.rule.rhs.mapIndexed { index, symbol ->
-                    GrammarNode(null, toExpand, index)
+            var foundSatisfying = false
+            var tryCount = 0
+            while (!foundSatisfying && (tryCount < numRandomTries || numRandomTries == -1)) {
+                if(expansion.satisfiesConstraints(toExpand.attributes())){
+                    val newNodes = expansion.rule.rhs.mapIndexed { index, symbol ->
+                        GrammarNode(TerminalProductionRule(symbol), toExpand, index)
+                    }
+                    // The new nodes need to be expanded, so add them to the queue.
+                    toExpand.rhs = newNodes
+                    toExpand.productionRule = expansion
+                    expandQueue.addAll(newNodes)
+                    foundSatisfying = true
+                    tryCount += 1
                 }
             }
-            else {
-
+            if(!foundSatisfying) {
+                // In the future we'll try and edit the rest of the tree to make the attributes fit, but this is non-trivial.
+                // For now, just give up.
+                throw TimeoutException("Give up fool")
             }
         }
+        return program
     }
 }

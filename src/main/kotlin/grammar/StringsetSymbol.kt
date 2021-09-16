@@ -1,5 +1,5 @@
 package grammar
 
-open class StringsetSymbol(val stringset: List<String>) : Symbol(true, stringset.joinToString("|")) {
+open class StringsetSymbol(val stringset: List<String>, displayName : String = stringset.joinToString("|") ) : Symbol(false, displayName) {
 
 }

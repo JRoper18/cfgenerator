@@ -1,13 +1,15 @@
 package grammar
-class GrammarNode(productionRule: AttributedProductionRule,
-                  var parent: GrammarNode,
-                  var idx: Int = 0) : GenericGrammarNode(productionRule){
+class GrammarNode(
+    productionRule: AttributedProductionRule,
+    val parent: GenericGrammarNode,
+    var idx: Int = 0) : GenericGrammarNode(productionRule){
 
     override fun inheritedAttributes(): Set<NodeAttribute> {
-        val siblingAttrs = parent.rhs.map { grammarNode: GrammarNode ->
-            grammarNode.synthesizedAttributes()
+        val siblingAttrs = mutableListOf<Set<NodeAttribute>>()
+        for(i in 0..idx-1){ // For every left-node:
+            siblingAttrs.add(parent.rhs[i].synthesizedAttributes())
         }
-        return productionRule.makeInheritedAttributes(idx, parent.attributes(), siblingAttrs)
+        return productionRule.makeInheritedAttributes(idx, parent.inheritedAttributes(), siblingAttrs)
     }
 
 }
