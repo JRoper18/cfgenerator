@@ -4,8 +4,8 @@ class GrammarNode(
     val parent: GenericGrammarNode,
     var idx: Int = 0) : GenericGrammarNode(productionRule){
 
-    override fun inheritedAttributes(): Set<NodeAttribute> {
-        val siblingAttrs = mutableListOf<Set<NodeAttribute>>()
+    override fun inheritedAttributes(): NodeAttributes {
+        val siblingAttrs = mutableListOf<NodeAttributes>()
         for(i in 0..idx-1){ // For every left-node:
             siblingAttrs.add(parent.rhs[i].synthesizedAttributes())
         }

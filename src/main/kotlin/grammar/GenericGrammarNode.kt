@@ -1,24 +1,20 @@
 package grammar
 
-import javax.swing.tree.TreeNode
-
-
-
 
 sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
     var rhs: List<GrammarNode> = listOf()
     fun lhsSymbol() : Symbol {
         return productionRule.rule.lsh
     }
-    fun attributes(): Set<NodeAttribute> {
+    fun attributes(): NodeAttributes {
         return synthesizedAttributes().union(inheritedAttributes())
     }
-    fun synthesizedAttributes(): Set<NodeAttribute> {
+    fun synthesizedAttributes(): NodeAttributes {
         return productionRule.makeSynthesizedAttributes(rhs.map {
             it.attributes()
         })
     }
-    abstract fun inheritedAttributes(): Set<NodeAttribute>
+    abstract fun inheritedAttributes(): NodeAttributes
 
     fun withChildren(makeChildren: (parent: GenericGrammarNode) -> List<GrammarNode>): GenericGrammarNode {
         this.rhs = makeChildren(this)

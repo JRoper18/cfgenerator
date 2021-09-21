@@ -18,17 +18,17 @@ class ProgramGenerator(val numRandomTries : Int = 3) {
             if(lhsSymbol.terminal){
                 continue
             }
-            println(program)
             val expansions = grammar.getPossibleExpansions(lhsSymbol)
-            // Choose an expansion at random.
-            val expansion = expansions.random()
-            // Apply it, if we can.
+
             var foundSatisfying = false
             var tryCount = 0
             while (!foundSatisfying && (tryCount < numRandomTries || numRandomTries == -1)) {
+                // Choose an expansion at random.
+                val expansion = expansions.random()
+                // Apply it, if we can.
                 if(expansion.satisfiesConstraints(toExpand.attributes())){
                     val newNodes = expansion.rule.rhs.mapIndexed { index, symbol ->
-                        GrammarNode(TerminalProductionRule(symbol), toExpand, index)
+                        GrammarNode(APR(TerminalProductionRule(symbol)), toExpand, index)
                     }
                     // The new nodes need to be expanded, so add them to the queue.
                     toExpand.rhs = newNodes

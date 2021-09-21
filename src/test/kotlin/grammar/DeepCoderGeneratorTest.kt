@@ -1,6 +1,7 @@
 package grammar
 
 import generators.ProgramGenerator
+import generators.ProgramStringifier
 import grammars.deepcoder.deepCoderGrammar
 import org.junit.jupiter.api.Test
 
@@ -11,6 +12,8 @@ internal class DeepCoderGeneratorTest {
     @Test
     fun generate() {
         val generator = ProgramGenerator(numRandomTries = 1)
-        println(generator.generate(deepCoderGrammar))
+        val program = (generator.generate(deepCoderGrammar))
+        println(program)
+        println(ProgramStringifier().stringify(program))
     }
 }
