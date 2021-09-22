@@ -1,6 +1,8 @@
 package grammar
 
-class AttributeGrammar(givenRules: List<AttributedProductionRule>, val start : Symbol){
+import grammar.constraints.RuleConstraint
+
+class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constraints : Map<AttributedProductionRule, List<RuleConstraint>>, val start : Symbol){
     // Maps LHS symbols to a list of possible RHS symbol lists.
     val expansions: Map<Symbol, List<AttributedProductionRule>> by lazy {
         this.rules.groupBy {
@@ -35,6 +37,12 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val start : S
         symbols.forEach {
             require(it.terminal || expansions.containsKey(it)) {
                 "Symbol ${it.name} needs expansion rules"
+            }
+        }
+        // Validate that each constraint actually correlates with a rule.
+        constraints.forEach {
+            require(givenRules.contains(it.key)) {
+                "Rule ${it.key} is not present in the grammar but has a constraint."
             }
         }
     }
