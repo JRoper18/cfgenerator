@@ -24,15 +24,14 @@ private val STMT_RULE = APR(PR(STMT, listOf( // A statement is just a function c
 )))
 private val STMT_LIST_RULE = SizedListAttributeProductionRule(STMT_LIST, STMT, "\n")
 
-val deepCoderGrammar = AttributeGrammar(listOf(listOf(
+val deepCoderGrammar = AttributeGrammar(listOf(
     STMT_LIST_RULE,
     InitAttributeProductionRule(TerminalProductionRule(STMT_LIST), "length", "0"),
     APR(TerminalProductionRule(FUNCTION_ARGS)),
     APR(ListProductionRule(FUNCTION_ARGS, FUNCTION_ARG, " ")),
     STMT_RULE,
     APR(ProductionRule(FUNCTION_ARG, listOf(LowercaseASCIISymbol))),
-    ),
-).flatten(), start = STMT_LIST, constraints = mapOf(
+), start = STMT_LIST, constraints = mapOf(
     STMT_RULE to LookupConstraintGenerator("chosenSymbol", "length", mapOf(
         "Head" to "2",
         "Last" to "1",

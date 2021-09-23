@@ -11,6 +11,7 @@ internal class SizedListAttributeProductionRuleTest {
     val unitSym = StringSymbol("UNIT")
     val rule = SizedListAttributeProductionRule(listSym, unitSym, " ")
 
+
     @Test
     fun testCanMakeProgramWithAttribute() {
         val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("length", "2"))

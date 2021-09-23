@@ -12,6 +12,9 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         return synthesizedAttributes().union(inheritedAttributes())
     }
     fun synthesizedAttributes(): NodeAttributes {
+        if(this.isUnexpanded()) {
+            return NodeAttributes()
+        }
         return productionRule.makeSynthesizedAttributes(rhs.map {
             it.attributes()
         })
@@ -58,9 +61,11 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
             }
         }
     }
-
+    fun isUnexpanded() : Boolean {
+        return (this.rhs.size != this.productionRule.rule.rhs.size && !this.lhsSymbol().terminal)
+    }
     fun getUnexpandedNodes() : List<GenericGrammarNode> {
-        val thisUnexpanded = if(this.rhs.size == this.productionRule.rule.rhs.size || this.lhsSymbol().terminal) listOf() else listOf(this)
+        val thisUnexpanded = if(isUnexpanded()) listOf(this) else listOf()
         return this.rhs.flatMap {
             it.getUnexpandedNodes()
         } + thisUnexpanded
@@ -75,7 +80,11 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         }
         val unexpanded = getUnexpandedNodes()
         check(unexpanded.isEmpty()) {
-            "There are unexpanded nodes present: $unexpanded"
+            var str = "There are ${unexpanded.size} unexpanded nodes present:"
+            unexpanded.forEach {
+                str += "$it which is ${it.lhsSymbol().terminal}"
+            }
+            str
         }
         productionRule.rule.rhs.forEachIndexed { index, symbol ->
             val actualSym = this.rhs[index].lhsSymbol()

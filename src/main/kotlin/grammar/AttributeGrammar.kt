@@ -1,6 +1,7 @@
 package grammar
 
 import grammar.constraints.ConstraintGenerator
+import grammars.common.TerminalAPR
 import grammars.common.makeStringsetRules
 
 class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constraints : Map<AttributedProductionRule, ConstraintGenerator>, val start : Symbol){
@@ -25,7 +26,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
                 //Ignore
             }
             is StringSymbol -> {
-                //No rules here either.
+                ret = listOf(TerminalAPR(symbol))
             }
         }
         ret

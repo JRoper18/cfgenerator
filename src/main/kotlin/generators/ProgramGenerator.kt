@@ -2,128 +2,103 @@ package generators
 
 import grammar.*
 import grammar.constraints.RuleConstraint
+import grammars.common.TerminalAPR
 import grammars.common.TerminalProductionRule
+import grammars.common.UnexpandedAPR
 import java.util.*
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.*
 class ProgramGenerator(val grammar: AttributeGrammar, val numRandomTries : Int = 3, val timeoutMs : Long = 1L) {
-    fun generateWithConstraints(constraints : List<RuleConstraint>) : GenericGrammarNode? {
-        if(constraints.isEmpty()) {
-            return generate()
+
+
+    /**
+     * Given a list of APRs and a list of constraints we have to uphold,
+     * return a map from APRs in that list to new constraints we could substitute them out for.
+     */
+    fun getConstraintSubstitutions(expansions: List<AttributedProductionRule>, constraints: List<RuleConstraint>): Map<AttributedProductionRule, List<RuleConstraint>> {
+        val fittingAttributes = constraints.map { //Make a set of attributes that would satisfy these constraints.
+            (it.makeSatisfyingAttribute())
         }
-        var tryCount = 0
-        while ((tryCount < numRandomTries || numRandomTries == -1)) {
-            tryCount += 1
-
-            val fittingAttributes = constraints.map {
-                (it.makeSatisfyingAttribute())
+        return expansions.map { apr ->
+            val satisfiesEachConstraint = constraints.mapIndexed { index, ruleConstraint ->
+                val canMakeData = apr.canMakeProgramWithAttribute(fittingAttributes[index])
+                canMakeData
             }
-
-            val rulesWithConstraints = grammar.rules.map { apr ->
-                val satisfiesEachConstraint = constraints.mapIndexed { index, ruleConstraint ->
-                    val canMakeData = apr.canMakeProgramWithAttribute(fittingAttributes[index])
-                    canMakeData
-                }
-                Pair(apr, satisfiesEachConstraint)
-            }.filter { aprPair ->
-                val fittingConstraints = aprPair.second.filter {
-                    it.first
-                }
-                fittingConstraints.size == aprPair.second.size // If the rule can't handle some constraint, then remove it from the list entirely.
-            }.map {
-                Pair(it.first, it.second.flatMap {
-                    it.second
-                }) // Map to remove the booleans and flatmap the rule constraints together
-            }.groupBy {
+            Pair(apr, satisfiesEachConstraint)
+        }.filter { aprPair ->
+            val fittingConstraints = aprPair.second.filter {
                 it.first
-            }.mapValues { value ->// Finally, just remove the extra attributes.
-                value.value.flatMap {
-                    it.second
-                }
-            } // And now we have a map from attributes to ALL their required constraints, only if they can actually be made (according to their functions).
-            rulesWithConstraints.forEach { ruleEntry ->
-                val expansion = ruleEntry.key
-                val newConstraints = ruleEntry.value
-                // We have an expansion and any new constraints. Can we make a program with it, though?
-                if(newConstraints.isNotEmpty()){
-                    // Generate a program
-                    val possibleProgram = generateWithConstraints(newConstraints)
-                    if(possibleProgram != null){
-                        // Pass it in so that the APR can make a program given one that solves it's constraints.
-                        val totalProgram = expansion.makeProgramWithAttribute(fittingAttributes[0], possibleProgram)
-                        if(totalProgram != null){
-                            return totalProgram
-                        }
-                    }
-                }
-                else {
-                    val newProg = expansion.makeProgramWithAttribute(fittingAttributes[0])
-                        ?: return null //TODO Handle more than 1-element list
-                    val unexpanded = newProg.getUnexpandedNodes()
-                    unexpanded.forEach {
-                        expandNode(it)
-                    }
-                    return newProg
-                }
             }
-        }
-        return null
+            fittingConstraints.size == aprPair.second.size // If the rule can't handle some constraint, then remove it from the list entirely.
+        }.map {
+            Pair(it.first, it.second.flatMap {
+                it.second
+            }) // Map to remove the booleans and flatmap the rule constraints together
+        }.groupBy {
+            it.first
+        }.mapValues { value ->// Finally, just remove the extra attributes.
+            value.value.flatMap {
+                it.second
+            }
+        } // And now we have a map from attributes to ALL their required constraints, only if they can actually be made (according to their functions).
     }
-    fun expandNode(node: GenericGrammarNode, constraints : List<RuleConstraint> = listOf()) {
+
+    /**
+     * Given a node with no attribute rule associated with it and a set of extra constraints
+     *  (extra meaning on top of whatever constraints the generated node has to have)
+     *  expand it out until valid.
+     *  Returns true if we could expand, false if we couldn't.
+     */
+    fun expandNode(node: GenericGrammarNode, additionalConstraints : List<RuleConstraint> = listOf()) : Boolean {
         // First, create the program by expanding the start symbol.
         val lhsSymbol = node.lhsSymbol()
         if(lhsSymbol.terminal){
-            return
+            return true // All done!
         }
         val expansions = grammar.getPossibleExpansions(lhsSymbol)
         var foundSatisfying = false
         var tryCount = 0
         while (!foundSatisfying && (tryCount < numRandomTries || numRandomTries == -1)) {
-            // Choose an expansion at random.
-            val expansion = expansions.random()
-            val constraints = grammar.constraints[expansion]
-
-            // Apply it, if we can.
-            var satisfies = false
-            if(constraints == null) {
-                satisfies = true
-            } else {
-                satisfies = true
+            tryCount += 1
+            val substitutedConstraints = this.getConstraintSubstitutions(expansions, additionalConstraints)
+            // For each rule + constraints, see if we can expand every node there.
+            substitutedConstraints.forEach { ruleEntry ->
                 val attributes = node.attributes()
-                val generatedConstraints = constraints.generate(attrs = attributes)
-                generatedConstraints.forEach {
-                    if(!it.satisfies(attributes)){
-                        satisfies = false
+                val expansion = ruleEntry.key
+                val ruleConstraints = grammar.constraints[expansion]?.generate(attributes) ?: listOf()
+                val allNewConstraints = ruleEntry.value + ruleConstraints // All the new constraints our expansion would need.
+                // Apply it, if we can.
+                var expansionIsSatisfying = true
+                val childNodes = expansion.rule.rhs.mapIndexed { index, childSymbol ->
+                    if(!expansionIsSatisfying){
+                        return@forEach
                     }
+                    val newChild = GrammarNode(UnexpandedAPR(childSymbol), node, index)
+                    if(!childSymbol.terminal) {
+                        // If the child needs to be expanded, expand it.
+                        if(!expandNode(newChild, allNewConstraints)){
+                            expansionIsSatisfying = false
+                        }
+                    }
+                    newChild
+                }
+                if(expansionIsSatisfying) {
+                    // We're done! Hooray! Just add these expanded nodes as our current node's children.
+                    node.rhs = childNodes
+                    node.productionRule = expansion
+                    return true
                 }
             }
-            if(satisfies){
-                val newNodes = expansion.rule.rhs.mapIndexed { index, symbol ->
-                    GrammarNode(APR(TerminalProductionRule(symbol)), node, index)
-                }
-                // The new nodes need to be expanded, so add them to the queue.
-                node.rhs = newNodes
-                node.productionRule = expansion
-                newNodes.forEach {
-                    expandNode(it, listOf())
-                }
-                foundSatisfying = true
-                tryCount += 1
-            }
         }
-        if(!foundSatisfying) {
-            // In the future we'll try and edit the rest of the tree to make the attributes fit, but this is non-trivial.
-            // For now, just give up.
-            throw TimeoutException("Give up fool")
-        }
+        return false //
     }
 
-    fun generate(): RootGrammarNode = runBlocking {
+    fun generate(rootConstraints: List<RuleConstraint> = listOf()): RootGrammarNode = runBlocking {
         val firstRule = grammar.getPossibleExpansions(grammar.start).random()
         val program = RootGrammarNode(firstRule)
         try {
             withTimeout(timeMillis = 100L) {
-                expandNode(program, listOf())
+                expandNode(program, rootConstraints)
                 program
             }
         } catch (ex: TimeoutException) {
