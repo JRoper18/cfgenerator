@@ -20,7 +20,7 @@ open class AttributedProductionRule(val rule: ProductionRule) {
      * Returns a boolean saying if we can do it or not,
      * and if needed, a list of additional constraints we'll need to fill in the true case.
      * This list is empty if we don't need to fill any more constraints.
-     * MUST be deterministic, because the
+     * MUST be deterministic
      */
     open fun canMakeProgramWithAttribute(attr: NodeAttribute) : Pair<Boolean, List<RuleConstraint>> {
         return Pair(false, listOf())

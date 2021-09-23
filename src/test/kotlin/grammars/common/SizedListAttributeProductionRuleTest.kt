@@ -26,6 +26,14 @@ internal class SizedListAttributeProductionRuleTest {
     }
 
     @Test
+    fun testCannotMakeZeroLengthList() {
+        val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("length", "0"))
+        assert(!res1.first)
+        assert(res1.second.isEmpty())
+    }
+
+
+    @Test
     fun testCannotMakeNonLengthAttribute() {
         val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("lenasdhas", "2"))
         assert(!res1.first)

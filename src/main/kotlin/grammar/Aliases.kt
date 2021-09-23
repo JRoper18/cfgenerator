@@ -1,5 +1,7 @@
 package grammar
 
+import grammar.constraints.RuleConstraint
+
 typealias NtSym = NonterminalSymbol
 typealias GN = GrammarNode
 typealias PR = ProductionRule

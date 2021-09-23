@@ -5,11 +5,11 @@ import grammar.constraints.RuleConstraint
 import grammars.common.TerminalProductionRule
 import java.util.*
 import java.util.concurrent.TimeoutException
-
-class ProgramGenerator(val numRandomTries : Int = 3) {
-    fun generateWithConstraints(grammar: AttributeGrammar, constraints : List<RuleConstraint>) : GenericGrammarNode? {
+import kotlinx.coroutines.*
+class ProgramGenerator(val grammar: AttributeGrammar, val numRandomTries : Int = 3, val timeoutMs : Long = 1L) {
+    fun generateWithConstraints(constraints : List<RuleConstraint>) : GenericGrammarNode? {
         if(constraints.isEmpty()) {
-            return generate(grammar)
+            return generate()
         }
         var tryCount = 0
         while ((tryCount < numRandomTries || numRandomTries == -1)) {
@@ -41,78 +41,98 @@ class ProgramGenerator(val numRandomTries : Int = 3) {
                     it.second
                 }
             } // And now we have a map from attributes to ALL their required constraints, only if they can actually be made (according to their functions).
-
-            val expansion = rulesWithConstraints.keys.random()
-            val newConstraints = rulesWithConstraints[expansion]!!
-            // We have an expansion and any new constraints. Can we make a program with it, though?
-            if(newConstraints.isNotEmpty()){
-                // Generate a program
-                val possibleProgram = generateWithConstraints(grammar, newConstraints)
-                if(possibleProgram == null){
-                    // Couldn't do it.
-                    continue
+            rulesWithConstraints.forEach { ruleEntry ->
+                val expansion = ruleEntry.key
+                val newConstraints = ruleEntry.value
+                // We have an expansion and any new constraints. Can we make a program with it, though?
+                if(newConstraints.isNotEmpty()){
+                    // Generate a program
+                    val possibleProgram = generateWithConstraints(newConstraints)
+                    if(possibleProgram != null){
+                        // Pass it in so that the APR can make a program given one that solves it's constraints.
+                        val totalProgram = expansion.makeProgramWithAttribute(fittingAttributes[0], possibleProgram)
+                        if(totalProgram != null){
+                            return totalProgram
+                        }
+                    }
                 }
-                // Pass it in so that the APR can make a program given one that solves it's constraints.
-                val totalProgram = expansion.makeProgramWithAttribute(fittingAttributes[0], possibleProgram)
-                if(totalProgram == null){
-                    continue
+                else {
+                    val newProg = expansion.makeProgramWithAttribute(fittingAttributes[0])
+                        ?: return null //TODO Handle more than 1-element list
+                    val unexpanded = newProg.getUnexpandedNodes()
+                    unexpanded.forEach {
+                        expandNode(it)
+                    }
+                    return newProg
                 }
-                return totalProgram
             }
         }
         return null
     }
-    fun generate(grammar: AttributeGrammar): RootGrammarNode {
+    fun expandNode(node: GenericGrammarNode, constraints : List<RuleConstraint> = listOf()) {
         // First, create the program by expanding the start symbol.
-        val startRules = grammar.getPossibleExpansions(grammar.start)
-        val startExpand = startRules.random()
-        val program = RootGrammarNode(startExpand)
-        val expandQueue : Queue<GenericGrammarNode> = LinkedList(listOf(program))
-        while(expandQueue.isNotEmpty()) {
-            val toExpand = expandQueue.poll()
-            val lhsSymbol = toExpand.lhsSymbol()
-            if(lhsSymbol.terminal){
-                continue
-            }
-            val expansions = grammar.getPossibleExpansions(lhsSymbol)
+        val lhsSymbol = node.lhsSymbol()
+        if(lhsSymbol.terminal){
+            return
+        }
+        val expansions = grammar.getPossibleExpansions(lhsSymbol)
+        var foundSatisfying = false
+        var tryCount = 0
+        while (!foundSatisfying && (tryCount < numRandomTries || numRandomTries == -1)) {
+            // Choose an expansion at random.
+            val expansion = expansions.random()
+            val constraints = grammar.constraints[expansion]
 
-            var foundSatisfying = false
-            var tryCount = 0
-            while (!foundSatisfying && (tryCount < numRandomTries || numRandomTries == -1)) {
-                // Choose an expansion at random.
-                val expansion = expansions.random()
-                val constraints = grammar.constraints[expansion]
-                // Apply it, if we can.
-                var satisfies = false
-                if((constraints ?: listOf<RuleConstraint>()).isEmpty()) {
-                    satisfies = true
-                } else {
-                    satisfies = true
-                    val attributes = toExpand.attributes()
-                    constraints!!.forEach {
-                        if(!it.satisfies(attributes)){
-                            satisfies = false
-                        }
+            // Apply it, if we can.
+            var satisfies = false
+            if(constraints == null) {
+                satisfies = true
+            } else {
+                satisfies = true
+                val attributes = node.attributes()
+                val generatedConstraints = constraints.generate(attrs = attributes)
+                generatedConstraints.forEach {
+                    if(!it.satisfies(attributes)){
+                        satisfies = false
                     }
-                }
-                if(satisfies){
-                    val newNodes = expansion.rule.rhs.mapIndexed { index, symbol ->
-                        GrammarNode(APR(TerminalProductionRule(symbol)), toExpand, index)
-                    }
-                    // The new nodes need to be expanded, so add them to the queue.
-                    toExpand.rhs = newNodes
-                    toExpand.productionRule = expansion
-                    expandQueue.addAll(newNodes)
-                    foundSatisfying = true
-                    tryCount += 1
                 }
             }
-            if(!foundSatisfying) {
-                // In the future we'll try and edit the rest of the tree to make the attributes fit, but this is non-trivial.
-                // For now, just give up.
-                throw TimeoutException("Give up fool")
+            if(satisfies){
+                val newNodes = expansion.rule.rhs.mapIndexed { index, symbol ->
+                    GrammarNode(APR(TerminalProductionRule(symbol)), node, index)
+                }
+                // The new nodes need to be expanded, so add them to the queue.
+                node.rhs = newNodes
+                node.productionRule = expansion
+                newNodes.forEach {
+                    expandNode(it, listOf())
+                }
+                foundSatisfying = true
+                tryCount += 1
             }
         }
-        return program
+        if(!foundSatisfying) {
+            // In the future we'll try and edit the rest of the tree to make the attributes fit, but this is non-trivial.
+            // For now, just give up.
+            throw TimeoutException("Give up fool")
+        }
+    }
+
+    fun generate(): RootGrammarNode = runBlocking {
+        val firstRule = grammar.getPossibleExpansions(grammar.start).random()
+        val program = RootGrammarNode(firstRule)
+        try {
+            withTimeout(timeMillis = 100L) {
+                expandNode(program, listOf())
+                program
+            }
+        } catch (ex: TimeoutException) {
+            // We ran out of time.
+            println("Ran out of time. Program so far: ")
+            println(program)
+            println(ProgramStringifier().stringify(program))
+            throw ex
+        }
+        program
     }
 }

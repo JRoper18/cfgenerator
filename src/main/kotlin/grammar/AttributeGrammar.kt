@@ -1,8 +1,9 @@
 package grammar
 
-import grammar.constraints.RuleConstraint
+import grammar.constraints.ConstraintGenerator
+import grammars.common.makeStringsetRules
 
-class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constraints : Map<AttributedProductionRule, List<RuleConstraint>>, val start : Symbol){
+class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constraints : Map<AttributedProductionRule, ConstraintGenerator>, val start : Symbol){
     // Maps LHS symbols to a list of possible RHS symbol lists.
     val expansions: Map<Symbol, List<AttributedProductionRule>> by lazy {
         this.rules.groupBy {
@@ -18,9 +19,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
         var ret = listOf<AttributedProductionRule>()
         when(symbol) {
             is StringsetSymbol -> {
-                ret = symbol.stringset.map {
-                    APR(PR(symbol, listOf(StringSymbol(it))))
-                }
+                ret = makeStringsetRules(symbol)
             }
             is NonterminalSymbol -> {
                 //Ignore

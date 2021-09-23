@@ -12,13 +12,16 @@ class SizedListAttributeProductionRule(listName: NtSym,
         val listAttrs = childAttributes[0]
         val sizeKey = "length"
         val ret = listAttrs.copy()
-        ret.setAttribute(sizeKey, (listAttrs.getStringAttribute(sizeKey)!!.toInt() + 1).toString())
+        val childLength = listAttrs.getStringAttribute(sizeKey)
+        if(childLength != null){
+            ret.setAttribute(sizeKey, (listAttrs.getStringAttribute(sizeKey)!!.toInt() + 1).toString())
+        }
         return ret
     }
 
     override fun canMakeProgramWithAttribute(attr: NodeAttribute): Pair<Boolean, List<RuleConstraint>> {
         val size = attr.second.toIntOrNull()
-        val canMake = attr.first == "length" && (size != null) && size >= 0
+        val canMake = attr.first == "length" && (size != null) && size > 0
         val constraints = if(!canMake || size == 0) listOf() else listOf<RuleConstraint>(BasicRuleConstraint(Pair(attr.first, ((size ?: 1) - 1).toString())))
         return Pair(canMake, constraints)
     }

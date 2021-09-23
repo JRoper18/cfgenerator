@@ -59,12 +59,23 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         }
     }
 
+    fun getUnexpandedNodes() : List<GenericGrammarNode> {
+        val thisUnexpanded = if(this.rhs.size == this.productionRule.rule.rhs.size || this.lhsSymbol().terminal) listOf() else listOf(this)
+        return this.rhs.flatMap {
+            it.getUnexpandedNodes()
+        } + thisUnexpanded
+    }
+
     open fun verify() {
         check(lhsSymbol().equals(this.productionRule.rule.lsh)) {
             "Our left hand symbol needs to match the symbol in our production rule. "
         }
         check(productionRule.rule.rhs.size == this.rhs.size) {
             "Our rule says our RHS has ${productionRule.rule.rhs.size} elements but we have ${this.rhs.size}"
+        }
+        val unexpanded = getUnexpandedNodes()
+        check(unexpanded.isEmpty()) {
+            "There are unexpanded nodes present: $unexpanded"
         }
         productionRule.rule.rhs.forEachIndexed { index, symbol ->
             val actualSym = this.rhs[index].lhsSymbol()
