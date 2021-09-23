@@ -26,15 +26,14 @@ class SizedListAttributeProductionRule(listName: NtSym,
         return Pair(canMake, constraints)
     }
 
-    override fun makeProgramWithAttribute(attr: NodeAttribute, node: GenericGrammarNode?): GenericGrammarNode {
-        // Node here must be a node that satisfies the constraint of being length - 1.
-        val ret = RootGrammarNode(this)
-        ret.rhs = listOf(
-            node!!.withParent(ret, 0),
-            GrammarNode(TerminalAPR(this.rule.rhs[1]), ret, 1),
-            GrammarNode(UnexpandedAPR(this.rule.rhs[2]), ret, 2),
+    override fun makeChildrenForAttribute(
+        attr: NodeAttribute,
+        nodeThatFits: GenericGrammarNode?
+    ): List<GenericGrammarNode> {
+        return listOf(
+            nodeThatFits!!,
+            RootGrammarNode(TerminalAPR(this.rule.rhs[1])),
+            RootGrammarNode(UnexpandedAPR(this.rule.rhs[2])),
         )
-        return ret
-
     }
 }

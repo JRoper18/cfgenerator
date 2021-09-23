@@ -43,15 +43,15 @@ internal class SizedListAttributeProductionRuleTest {
 
     @Test
     fun testMakeProgramWithAttribute() {
-        val satisfyingProgram = RootGrammarNode(rule).withChildren {
-            listOf(
-                GrammarNode(InitAttributeProductionRule(TerminalProductionRule(unitSym), "length", "0"), it, 0)
-            )
-        }
-        val res1 = rule.makeProgramWithAttribute(NodeAttribute("length", "1"), satisfyingProgram)
+        val satisfyingProgram = RootGrammarNode(InitAttributeProductionRule(TerminalProductionRule(listSym), "length", "0")).withChildren(
+            listOf(RootGrammarNode(TerminalAPR(TERMINAL)))
+        )
+        println(satisfyingProgram)
+        val res1 = rule.makeRootProgramWithAttributes(NodeAttribute("length", "1"), satisfyingProgram)
+        println(res1)
         assertNotNull(res1)
         val attrs = res1.attributes()
         res1.verify()
-        assert(attrs.getStringAttribute("length").equals( "2"))
+        assert(attrs.getStringAttribute("length").equals( "1"))
     }
 }

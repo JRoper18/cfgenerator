@@ -4,8 +4,9 @@ import grammar.*
 import grammar.StringsetSymbol
 import grammar.constraints.RuleConstraint
 
+val TERMINAL = StringSymbol("")
 fun TerminalProductionRule(lhs: Symbol) : ProductionRule{
-    return ProductionRule(lhs, listOf(StringSymbol("")))
+    return ProductionRule(lhs, listOf(TERMINAL))
 }
 fun TerminalAPR(lsh: Symbol) : APR {
     return APR(TerminalProductionRule(lsh))

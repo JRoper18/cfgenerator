@@ -24,10 +24,8 @@ internal class ProgramGeneratorTest {
     fun testExpandNode() {
         val cons = listOf(BasicRuleConstraint(NodeAttribute("length", "1")))
         val program = generator.generate(cons)
-        println(program)
-        if(program != null){
-            println(ProgramStringifier().stringify(program!!))
-            program.verify()
-        }
+        print(program)
+        program.verify()
+        println(ProgramStringifier().stringify(program!!))
     }
 }

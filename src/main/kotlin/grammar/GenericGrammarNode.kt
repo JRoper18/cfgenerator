@@ -33,10 +33,9 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         }
         return this
     }
-    fun withChildren(makeChildren: (parent: GenericGrammarNode) -> List<GrammarNode>): GenericGrammarNode {
-        this.rhs = makeChildren(this)
-        this.rhs.forEachIndexed { index, grammarNode ->
-            grammarNode.idx = index
+    fun withChildren(children: List<GenericGrammarNode>): GenericGrammarNode {
+        this.rhs = children.mapIndexed { index, child ->
+            child.withParent(this, index)
         }
         return this
     }
@@ -82,7 +81,7 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         check(unexpanded.isEmpty()) {
             var str = "There are ${unexpanded.size} unexpanded nodes present:"
             unexpanded.forEach {
-                str += "$it which is ${it.lhsSymbol().terminal}"
+                str += "$it\n"
             }
             str
         }

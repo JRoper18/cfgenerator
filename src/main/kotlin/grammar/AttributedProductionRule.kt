@@ -27,10 +27,18 @@ open class AttributedProductionRule(val rule: ProductionRule) {
     }
 
     /**
-     * Assume someone's program has the rules needed. Here, we assemble a program with the given nodes.
-     * If we return a list of constraints, the input is a list of programs that satisfy the constrains in the order we return them.
+     * Assume someone's nodeThatFits has the rules needed. Then, we'll return a RHS
+     * that would satisfy the attribute given, unexpanded.
      */
-    open fun makeProgramWithAttribute(attr: NodeAttribute, node : GenericGrammarNode? = null) : GenericGrammarNode? {
-        return null
+    open fun makeChildrenForAttribute(attr: NodeAttribute, nodeThatFits : GenericGrammarNode? = null) : List<GenericGrammarNode> {
+        return listOf()
+    }
+
+    fun makeRootProgramWithAttributes(attr: NodeAttribute, nodeThatFits : GenericGrammarNode? = null) : RootGrammarNode {
+        val node = RootGrammarNode(this)
+        node.rhs = makeChildrenForAttribute(attr, nodeThatFits).mapIndexed { index, child ->
+            child.withParent(node, index)
+        }
+        return node
     }
 }

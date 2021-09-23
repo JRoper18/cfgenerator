@@ -17,13 +17,12 @@ class InitAttributeProductionRule(rule: ProductionRule, val initialKey : String,
      * Assume someone's program has the rules needed. Here, we assemble a program with the given nodes.
      * If we return a list of constraints, the input is a list of programs that satisfy the constrains in the order we return them.
      */
-    override fun makeProgramWithAttribute(attr: NodeAttribute, node : GenericGrammarNode?) : GenericGrammarNode {
-        val node = RootGrammarNode(this)
-        node.rhs = this.rule.rhs.mapIndexed { index, symbol ->
-            val child = GrammarNode(TerminalAPR(symbol), node, index)
-            child
+    override fun makeChildrenForAttribute(
+        attr: NodeAttribute,
+        nodeThatFits: GenericGrammarNode?
+    ): List<GenericGrammarNode> {
+        return this.rule.rhs.map { symbol ->
+            RootGrammarNode(UnexpandedAPR(symbol))
         }
-        return node
     }
-
 }
