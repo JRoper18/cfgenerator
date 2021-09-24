@@ -18,23 +18,32 @@ class ProgramGenerator(val ag: AttributeGrammar,
      * return a map from APRs in that list to new constraints we could substitute them out for.
      */
     fun getConstraintSubstitutions(nodeAttributes: NodeAttributes, expansions: List<AttributedProductionRule>, fittingAttributes: NodeAttributes): Map<AttributedProductionRule, List<List<RuleConstraint>>> {
-        return expansions.map { apr ->
-            Pair(apr, apr.canMakeProgramWithAttributes(fittingAttributes))
-        }.filter { aprPair ->
-            aprPair.second.first
-        }.map {
-            Pair(it.first, it.second.second)
-        }.groupBy {
-            it.first
-        }.mapValues { value ->// Finally, just remove the extra attributes.
-            val agConstraints = ag.constraints[value.key]?.generate(attrs = nodeAttributes) ?: listOf()
-            val noExtra = value.value[0].second // We take the zeroth because we assume that the list created by groupBy is size 1,
-            // Because we don't have APRs that map to more than one list of constraint lists.
-            require(value.value.size == 1) {
-                "APR ${value.key} is somehow leading to multiple sets of constraints. "
+        if(fittingAttributes.isEmpty()) {
+            //Easy mode: Just returns expansions with no constraints.
+            return expansions.map {
+                Pair<AttributedProductionRule, List<List<RuleConstraint>>>(it, listOf())
+            }.toMap()
+        }
+        else {
+            return expansions.map { apr ->
+                Pair(apr, apr.canMakeProgramWithAttributes(fittingAttributes))
+            }.filter { aprPair ->
+                aprPair.second.first
+            }.map {
+                Pair(it.first, it.second.second)
+            }.groupBy {
+                it.first
+            }.mapValues { value ->// Finally, just remove the extra attributes.
+                val agConstraints = ag.constraints[value.key]?.generate(attrs = nodeAttributes) ?: listOf()
+                val noExtra = value.value[0].second // We take the zeroth because we assume that the list created by groupBy is size 1,
+                // Because we don't have APRs that map to more than one list of constraint lists.
+                require(value.value.size == 1) {
+                    "APR ${value.key} is somehow leading to multiple sets of constraints. "
+                }
+                noExtra
             }
-            noExtra
-        } // And now we have a map from attributes to ALL their required constraints, only if they can actually be made (according to their functions).
+            // And now we have a map from attributes to ALL their required constraints, only if they can actually be made (according to their functions).
+        }
     }
 
     /**
@@ -85,7 +94,6 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 else {
                     val satisfyingSubprograms = mutableListOf<GenericGrammarNode>()
                     for(i in 0..allNewFittingAttributes.size-1) {
-
                         val fittingAttributesForThisChild = allNewFittingAttributes[i]
                         val allNewConstraintsForThisChild = allNewConstraints[i]
                         var satisfyingSubprogram : RootGrammarNode? = null

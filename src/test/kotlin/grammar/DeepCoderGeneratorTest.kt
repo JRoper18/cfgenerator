@@ -28,17 +28,28 @@ internal class DeepCoderGeneratorTest {
     }
 
     @Test
-    fun testGenerateFunctionName() {
+    fun testGenerateFunctionNameWithConstraint() {
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
         val cons = listOf(BasicRuleConstraint(NodeAttribute("chosenSymbol", "Head")))
 //        val program = generator.generate(cons)
+        val program = RootGrammarNode(UnexpandedAPR(FUNCTION_NAME))
+        generator.expandNode(program, cons)
+        println(program)
+        assertNotNull(program)
+        val progStr = (ProgramStringifier().stringify(program))
+        program.verify()
+        assertContains(progStr, "Head")
+    }
+
+    @Test
+    fun testGenerateFunctionNameWithoutConstraint() {
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
         val program = RootGrammarNode(UnexpandedAPR(FUNCTION_NAME))
         generator.expandNode(program)
         println(program)
         assertNotNull(program)
         val progStr = (ProgramStringifier().stringify(program))
         program.verify()
-        assertContains(progStr, "Head")
     }
 
     @Test
