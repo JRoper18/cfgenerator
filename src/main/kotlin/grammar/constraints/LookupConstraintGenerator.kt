@@ -17,6 +17,13 @@ class LookupConstraintGenerator(val lookupKey : String, val compareToKey : Strin
 //    }
     override fun generate(attrs: NodeAttributes): List<RuleConstraint> {
         val lookupVal = attrs.getStringAttribute(lookupKey)
+        if(lookupVal == null) {
+            // There isn't a lookup value because the lookupkey isn't in the attributes.
+            // Return a constraint list with a random value of lookupKey/Value and associating compareTo
+            val randomEntry = lookupTable.entries.random()
+            return listOf(BasicRuleConstraint(NodeAttribute(lookupKey, randomEntry.key)),
+                BasicRuleConstraint(NodeAttribute(compareToKey, randomEntry.value)))
+        }
         val compareToVal = lookupTable[lookupVal]
         if(lookupVal == null || compareToVal == null) {
             return listOf(UnsatConstraint());

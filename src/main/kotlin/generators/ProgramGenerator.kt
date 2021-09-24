@@ -7,14 +7,17 @@ import grammars.common.UnexpandedAPR
 import java.util.*
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.*
-class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, val timeoutMs : Long = 10000L) {
+class ProgramGenerator(val ag: AttributeGrammar,
+                       val numRandomTries : Int = 3,
+                       val timeoutMs : Long = 10000L,
+                       val maxProgramDepth : Int = 10) {
 
 
     /**
      * Given a list of APRs and a list of attributes we want to make,
      * return a map from APRs in that list to new constraints we could substitute them out for.
      */
-    fun getConstraintSubstitutions(expansions: List<AttributedProductionRule>, fittingAttributes: List<NodeAttribute>): Map<AttributedProductionRule, List<RuleConstraint>> {
+    fun getConstraintSubstitutions(nodeAttributes: NodeAttributes, expansions: List<AttributedProductionRule>, fittingAttributes: List<NodeAttribute>): Map<AttributedProductionRule, List<RuleConstraint>> {
         return expansions.map { apr ->
             val satisfiesEachConstraint = fittingAttributes.map{ attr ->
                 val canMakeData = apr.canMakeProgramWithAttribute(attr)
@@ -33,9 +36,12 @@ class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, v
         }.groupBy {
             it.first
         }.mapValues { value ->// Finally, just remove the extra attributes.
-            value.value.flatMap {
+            val noExtra = value.value.flatMap {
                 it.second
             }
+            // And add the additional constraints from our grammar.
+            val agConstraints = ag.constraints[value.key]?.generate(attrs = nodeAttributes) ?: listOf()
+            noExtra + agConstraints
         } // And now we have a map from attributes to ALL their required constraints, only if they can actually be made (according to their functions).
     }
 
@@ -45,11 +51,18 @@ class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, v
      *  expand it out until valid.
      *  Returns true if we could expand, false if we couldn't.
      */
-    fun expandNode(node: GenericGrammarNode, additionalConstraints : List<RuleConstraint> = listOf()) : Boolean {
+    fun expandNode(node: GenericGrammarNode, additionalConstraints : List<RuleConstraint> = listOf(), depth : Int = 0) : Boolean {
         // First, create the program by expanding the start symbol.
+        if(depth > maxProgramDepth) {
+            return false
+        }
         val lhsSymbol = node.lhsSymbol()
+        val attributes = node.attributes()
         if(!node.isUnexpanded()){
-            return true // All done!
+            // If the node's unexpanded (ie terminal) then just return if it satisfies the constraints.
+            return additionalConstraints.find {
+                !it.satisfies(attributes)
+            } == null // Return the first constraint that doesn't satisfy, null if they all satisfy.
         }
         val expansions = ag.getPossibleExpansions(lhsSymbol)
         var foundSatisfying = false
@@ -60,17 +73,15 @@ class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, v
                 (it.makeSatisfyingAttribute())
             }
 
-            val substitutedConstraints = this.getConstraintSubstitutions(expansions, fittingAttributes)
+            val substitutedConstraints = this.getConstraintSubstitutions(attributes, expansions, fittingAttributes)
             // For each rule + constraints, see if we can expand every node there.
-            substitutedConstraints.forEach { ruleEntry ->
-                val attributes = node.attributes()
+            for(ruleEntry in substitutedConstraints) {
                 val expansion = ruleEntry.key
-                val ruleConstraints = ag.constraints[expansion]?.generate(attributes) ?: listOf()
-                val allNewConstraints = ruleEntry.value + ruleConstraints // All the new constraints our expansion would need.
-                val allFittingAttributes = allNewConstraints.map { //Make a set of attributes that would satisfy these constraints.
-                    (it.makeSatisfyingAttribute())
+                val allNewConstraints = ruleEntry.value
+                //For our new set of constraints, generate a new set of satisfying attributes.
+                val allNewFittingAttributes = allNewConstraints.map {
+                    it.makeSatisfyingAttribute()
                 }
-                
                 var newChildren : List<GenericGrammarNode>
                 var expansionIsGood = true
                 if(allNewConstraints.isEmpty()){
@@ -78,17 +89,33 @@ class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, v
                     newChildren = expansion.makeChildren()
                 }
                 else {
-                    // For each symbol in our grammar, find one that gives us a satisfying subprogram.
-                    var satisfyingSubprogram : RootGrammarNode? = null
-                    for(symbol in ag.symbols) {
-                        satisfyingSubprogram = RootGrammarNode(UnexpandedAPR(symbol))
-                        val canExpand = expandNode(satisfyingSubprogram, allNewConstraints) //Make a satisfying subprogram for the make...() call.
-                        if(canExpand) {
-                            break
+                    val satisfyingSubprograms = mutableListOf<GenericGrammarNode>()
+                    for(fittingAttribute in allNewFittingAttributes) {
+                        var satisfyingSubprogram : RootGrammarNode? = null
+                        var foundSatisfyingSubprogram = false
+                        // For each symbol in our grammar, find one that gives us a satisfying subprogram.
+                        for(symbol in expansion.rule.rhs) {
+                            satisfyingSubprogram = RootGrammarNode(UnexpandedAPR(symbol))
+                            foundSatisfyingSubprogram = expandNode(satisfyingSubprogram, allNewConstraints, depth + 1) //Make a satisfying subprogram for the make...() call.
+                            if(foundSatisfyingSubprogram) {
+                                break
+                            }
+                        }
+                        if(foundSatisfyingSubprogram) {
+                            satisfyingSubprograms.add(satisfyingSubprogram!!)
+                        }
+                        else {
+                            break;
                         }
                     }
+                    if(fittingAttributes.isEmpty()) {
+                        println(node)
+                        println(allNewConstraints)
+                        print(allNewFittingAttributes)
+                        println("EMPTY FITTING")
+                    }
                     // TODO: Handle rules that create/require more than 1 attribute.
-                    newChildren = expansion.makeChildrenForAttribute(allFittingAttributes[0], nodeThatFits = satisfyingSubprogram)
+                    newChildren = expansion.makeChildrenForAttribute(allNewFittingAttributes[0], nodesThatFit = satisfyingSubprograms)
                 }
                 //Now, just expand the children trees.
                 for(child in newChildren){
@@ -104,13 +131,16 @@ class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, v
                     }
                 }
                 if(expansionIsGood) {
+                    println(node)
                     node.withChildren(newChildren)
                     node.productionRule = expansion
+                    println("AFTER")
+                    println(node)
                     return true
                 }
             }
         }
-        return false //
+        return false
     }
 
     fun generate(rootConstraints: List<RuleConstraint> = listOf()): RootGrammarNode = runBlocking {

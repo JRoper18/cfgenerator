@@ -11,13 +11,18 @@ data class NodeAttributes(
         return stringAttributes[key]
     }
 
-    fun copyAttribute(key : String, into : NodeAttributes) {
+    fun copyAttributeIfPresent(key: String, into: NodeAttributes) {
         val stringAttr = getStringAttribute(key)
         if(stringAttr != null) {
             into.setAttribute(key, stringAttr)
             return
         }
-        throw NullPointerException()
+    }
+    fun copyAttribute(key : String, into : NodeAttributes) {
+        if(!stringAttributes.containsKey(key)){
+            throw NullPointerException()
+        }
+        copyAttributeIfPresent(key, into)
     }
 
     fun union(other: NodeAttributes) : NodeAttributes{
@@ -28,6 +33,10 @@ data class NodeAttributes(
     }
     fun isEmpty() : Boolean {
         return stringAttributes.isEmpty()
+    }
+
+    fun size() : Int {
+        return stringAttributes.size
     }
     override fun toString() : String {
         return this.stringAttributes.toString()

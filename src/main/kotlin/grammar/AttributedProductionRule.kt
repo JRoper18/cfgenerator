@@ -31,7 +31,7 @@ open class AttributedProductionRule(val rule: ProductionRule) {
      * Assume someone's nodeThatFits has the rules needed. Then, we'll return a RHS
      * that would satisfy the attribute given, unexpanded.
      */
-    open fun makeChildrenForAttribute(attr: NodeAttribute, nodeThatFits : GenericGrammarNode? = null) : List<GenericGrammarNode> {
+    open fun makeChildrenForAttribute(attr: NodeAttribute, nodesThatFit : List<GenericGrammarNode> = listOf()) : List<GenericGrammarNode> {
         return listOf()
     }
 
@@ -41,9 +41,9 @@ open class AttributedProductionRule(val rule: ProductionRule) {
         }
     }
 
-    fun makeRootProgramWithAttributes(attr: NodeAttribute, nodeThatFits : GenericGrammarNode? = null) : RootGrammarNode {
+    fun makeRootProgramWithAttributes(attr: NodeAttribute, nodesThatFit: List<GenericGrammarNode> = listOf()) : RootGrammarNode {
         val node = RootGrammarNode(this)
-        node.rhs = makeChildrenForAttribute(attr, nodeThatFits).mapIndexed { index, child ->
+        node.rhs = makeChildrenForAttribute(attr, nodesThatFit).mapIndexed { index, child ->
             child.withParent(node, index)
         }
         return node

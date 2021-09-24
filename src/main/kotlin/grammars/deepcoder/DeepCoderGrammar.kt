@@ -8,7 +8,7 @@ import grammars.common.*
 
 private val STMT = NtSym("Stmt")
 private val STMT_LIST = NtSym("StmtList")
-private val FUNCTION_NAME = StringsetSymbol(setOf(
+val FUNCTION_NAME = StringsetSymbol(setOf(
     "Head",
     "Last",
     "Take",

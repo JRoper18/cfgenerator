@@ -19,7 +19,7 @@ class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         val attrs = NodeAttributes()
         toSynthesize.forEach { key, childIdx ->
-            childAttributes[childIdx].copyAttribute(key, attrs)
+            childAttributes[childIdx].copyAttributeIfPresent(key, attrs)
         }
         return attrs
     }
