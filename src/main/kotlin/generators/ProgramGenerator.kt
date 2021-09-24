@@ -14,34 +14,26 @@ class ProgramGenerator(val ag: AttributeGrammar,
 
 
     /**
-     * Given a list of APRs and a list of attributes we want to make,
+     * Given a list of our current attributes, APRs, and a list of attributes we want to make,
      * return a map from APRs in that list to new constraints we could substitute them out for.
      */
-    fun getConstraintSubstitutions(nodeAttributes: NodeAttributes, expansions: List<AttributedProductionRule>, fittingAttributes: List<NodeAttribute>): Map<AttributedProductionRule, List<RuleConstraint>> {
+    fun getConstraintSubstitutions(nodeAttributes: NodeAttributes, expansions: List<AttributedProductionRule>, fittingAttributes: NodeAttributes): Map<AttributedProductionRule, List<List<RuleConstraint>>> {
         return expansions.map { apr ->
-            val satisfiesEachConstraint = fittingAttributes.map{ attr ->
-                val canMakeData = apr.canMakeProgramWithAttribute(attr)
-                canMakeData
-            }
-            Pair(apr, satisfiesEachConstraint)
+            Pair(apr, apr.canMakeProgramWithAttributes(fittingAttributes))
         }.filter { aprPair ->
-            val fittingConstraints = aprPair.second.filter {
-                it.first
-            }
-            fittingConstraints.size == aprPair.second.size // If the rule can't handle some constraint, then remove it from the list entirely.
+            aprPair.second.first
         }.map {
-            Pair(it.first, it.second.flatMap {
-                it.second
-            }) // Map to remove the booleans and flatmap the rule constraints together
+            Pair(it.first, it.second.second)
         }.groupBy {
             it.first
         }.mapValues { value ->// Finally, just remove the extra attributes.
-            val noExtra = value.value.flatMap {
-                it.second
-            }
-            // And add the additional constraints from our grammar.
             val agConstraints = ag.constraints[value.key]?.generate(attrs = nodeAttributes) ?: listOf()
-            noExtra + agConstraints
+            val noExtra = value.value[0].second // We take the zeroth because we assume that the list created by groupBy is size 1,
+            // Because we don't have APRs that map to more than one list of constraint lists.
+            require(value.value.size == 1) {
+                "APR ${value.key} is somehow leading to multiple sets of constraints. "
+            }
+            noExtra
         } // And now we have a map from attributes to ALL their required constraints, only if they can actually be made (according to their functions).
     }
 
@@ -73,14 +65,16 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 (it.makeSatisfyingAttribute())
             }
 
-            val substitutedConstraints = this.getConstraintSubstitutions(attributes, expansions, fittingAttributes)
+            val substitutedConstraints = this.getConstraintSubstitutions(attributes, expansions, NodeAttributes.fromList(fittingAttributes))
             // For each rule + constraints, see if we can expand every node there.
             for(ruleEntry in substitutedConstraints) {
                 val expansion = ruleEntry.key
                 val allNewConstraints = ruleEntry.value
                 //For our new set of constraints, generate a new set of satisfying attributes.
-                val allNewFittingAttributes = allNewConstraints.map {
-                    it.makeSatisfyingAttribute()
+                val allNewFittingAttributes = allNewConstraints.map { consList ->
+                    consList.map {
+                        it.makeSatisfyingAttribute()
+                    }
                 }
                 var newChildren : List<GenericGrammarNode>
                 var expansionIsGood = true
@@ -90,13 +84,16 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 }
                 else {
                     val satisfyingSubprograms = mutableListOf<GenericGrammarNode>()
-                    for(fittingAttribute in allNewFittingAttributes) {
+                    for(i in 0..allNewFittingAttributes.size-1) {
+
+                        val fittingAttributesForThisChild = allNewFittingAttributes[i]
+                        val allNewConstraintsForThisChild = allNewConstraints[i]
                         var satisfyingSubprogram : RootGrammarNode? = null
                         var foundSatisfyingSubprogram = false
                         // For each symbol in our grammar, find one that gives us a satisfying subprogram.
                         for(symbol in expansion.rule.rhs) {
                             satisfyingSubprogram = RootGrammarNode(UnexpandedAPR(symbol))
-                            foundSatisfyingSubprogram = expandNode(satisfyingSubprogram, allNewConstraints, depth + 1) //Make a satisfying subprogram for the make...() call.
+                            foundSatisfyingSubprogram = expandNode(satisfyingSubprogram, allNewConstraintsForThisChild, depth + 1) //Make a satisfying subprogram for the make...() call.
                             if(foundSatisfyingSubprogram) {
                                 break
                             }
@@ -114,8 +111,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
                         print(allNewFittingAttributes)
                         println("EMPTY FITTING")
                     }
-                    // TODO: Handle rules that create/require more than 1 attribute.
-                    newChildren = expansion.makeChildrenForAttribute(allNewFittingAttributes[0], nodesThatFit = satisfyingSubprograms)
+                    newChildren = expansion.makeChildrenForAttributes(NodeAttributes.fromList(allNewFittingAttributes.flatten()), nodesThatFit = satisfyingSubprograms)
                 }
                 //Now, just expand the children trees.
                 for(child in newChildren){

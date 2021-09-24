@@ -3,13 +3,13 @@ package grammars.common
 import grammar.*
 import grammar.constraints.RuleConstraint
 
-class InitAttributeProductionRule(rule: ProductionRule, val initialKey : String, val initialVal : String) : AttributedProductionRule(rule) {
+class InitAttributeProductionRule(rule: ProductionRule, val initialKey : String, val initialVal : String) : SingleAttributeProductionRule(rule) {
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         val ret = NodeAttributes()
         ret.setAttribute(initialKey, initialVal)
         return ret
     }
-    override fun canMakeProgramWithAttribute(attr: NodeAttribute) : Pair<Boolean, List<RuleConstraint>> {
+    override fun canMakeProgramWithAttribute(attr: NodeAttribute) : Pair<Boolean, List<List<RuleConstraint>>> {
         return Pair(attr.first == initialKey && attr.second == initialVal, listOf())
     }
 
@@ -19,7 +19,7 @@ class InitAttributeProductionRule(rule: ProductionRule, val initialKey : String,
      */
     override fun makeChildrenForAttribute(
         attr: NodeAttribute,
-        nodeThatFits: GenericGrammarNode?
+        nodesThatFit: List<GenericGrammarNode>
     ): List<GenericGrammarNode> {
         return this.rule.rhs.map { symbol ->
             RootGrammarNode(UnexpandedAPR(symbol))

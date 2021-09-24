@@ -16,7 +16,7 @@ internal class SizedListAttributeProductionRuleTest {
     fun testCanMakeProgramWithAttribute() {
         val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("length", "2"))
         assert(res1.first)
-        assertEquals(res1.second, (listOf(BasicRuleConstraint(Pair("length", "1")))))
+        assertEquals(res1.second, listOf(listOf(BasicRuleConstraint(Pair("length", "1")))))
     }
 
     @Test
@@ -47,7 +47,7 @@ internal class SizedListAttributeProductionRuleTest {
             listOf(RootGrammarNode(TerminalAPR(TERMINAL)))
         )
         println(satisfyingProgram)
-        val res1 = rule.makeRootProgramWithAttributes(NodeAttribute("length", "1"), satisfyingProgram)
+        val res1 = rule.makeRootProgramWithAttributes(NodeAttributes.fromAttr(NodeAttribute("length", "1")), listOf(satisfyingProgram))
         println(res1)
         assertNotNull(res1)
         val attrs = res1.attributes()

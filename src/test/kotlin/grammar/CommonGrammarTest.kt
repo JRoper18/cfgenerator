@@ -23,7 +23,7 @@ internal class CommonGrammarTest {
         assertEquals(rules.size, STRINGSET.stringset.size)
         rules.forEach {
             assertEquals(it.rule.rhs.size, 1)
-            val canMakeData = it.canMakeProgramWithAttribute(Pair("chosenSymbol", it.rule.rhs[0].name))
+            val canMakeData = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("chosenSymbol", it.rule.rhs[0].name))))
             assert(canMakeData.first)
             assert(canMakeData.second.isEmpty())
         }

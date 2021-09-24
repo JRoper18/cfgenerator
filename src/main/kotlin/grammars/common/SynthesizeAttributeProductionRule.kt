@@ -24,24 +24,31 @@ class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule
         return attrs
     }
 
-    override fun canMakeProgramWithAttribute(attr: NodeAttribute): Pair<Boolean, List<RuleConstraint>> {
-        if(toSynthesize.containsKey(attr.first)){
-            return Pair(true, listOf(BasicRuleConstraint(attr)))
+    override fun canMakeProgramWithAttributes(attrs: NodeAttributes): Pair<Boolean, List<List<RuleConstraint>>> {
+        val constraintList = rule.rhs.map {
+            mutableListOf<RuleConstraint>()
+        }.toMutableList()
+        attrs.toList().forEachIndexed { index, attr ->
+            if(toSynthesize.containsKey(attr.first)){
+                val childIdx = toSynthesize.get(attr.first)!!
+                constraintList[childIdx].add(BasicRuleConstraint(attr))
+            }
+            else {
+                return Pair(false, listOf()) // We can't make that attribute.
+            }
         }
-        return Pair(false, listOf())
+        return Pair(true, constraintList.map {
+            it.toList()
+        }.toList())
     }
 
-    override fun makeChildrenForAttribute(
-        attr: NodeAttribute,
-        nodeThatFits: GenericGrammarNode?
+    override fun makeChildrenForAttributes(
+        attr: NodeAttributes,
+        nodesThatFit: List<GenericGrammarNode>
     ): List<GenericGrammarNode> {
-        val idxToInsert = toSynthesize[attr.first]
-        return this.rule.rhs.mapIndexed { index, symbol ->
-            var ret = nodeThatFits!!
-            if(index != idxToInsert){
-                ret = RootGrammarNode(UnexpandedAPR(symbol))
-            }
-            ret
+        require(nodesThatFit.size == this.rule.rhs.size) {
+            "Nodes that fit for synthesized attributes must match the size of the rhs!"
         }
+        return nodesThatFit
     }
 }

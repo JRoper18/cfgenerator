@@ -23,7 +23,7 @@ open class AttributedProductionRule(val rule: ProductionRule) {
      * This list is empty if we don't need to fill any more constraints.
      * MUST be deterministic
      */
-    open fun canMakeProgramWithAttribute(attr: NodeAttribute) : Pair<Boolean, List<RuleConstraint>> {
+    open fun canMakeProgramWithAttributes(attrs: NodeAttributes) : Pair<Boolean, List<List<RuleConstraint>>> {
         return Pair(false, listOf())
     }
 
@@ -31,7 +31,7 @@ open class AttributedProductionRule(val rule: ProductionRule) {
      * Assume someone's nodeThatFits has the rules needed. Then, we'll return a RHS
      * that would satisfy the attribute given, unexpanded.
      */
-    open fun makeChildrenForAttribute(attr: NodeAttribute, nodesThatFit : List<GenericGrammarNode> = listOf()) : List<GenericGrammarNode> {
+    open fun makeChildrenForAttributes(attrs: NodeAttributes, nodesThatFit : List<GenericGrammarNode> = listOf()) : List<GenericGrammarNode> {
         return listOf()
     }
 
@@ -41,9 +41,9 @@ open class AttributedProductionRule(val rule: ProductionRule) {
         }
     }
 
-    fun makeRootProgramWithAttributes(attr: NodeAttribute, nodesThatFit: List<GenericGrammarNode> = listOf()) : RootGrammarNode {
+    fun makeRootProgramWithAttributes(attrs: NodeAttributes, nodesThatFit: List<GenericGrammarNode> = listOf()) : RootGrammarNode {
         val node = RootGrammarNode(this)
-        node.rhs = makeChildrenForAttribute(attr, nodesThatFit).mapIndexed { index, child ->
+        node.rhs = makeChildrenForAttributes(attrs, nodesThatFit).mapIndexed { index, child ->
             child.withParent(node, index)
         }
         return node

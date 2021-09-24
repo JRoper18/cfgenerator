@@ -1,6 +1,7 @@
 package grammars.common
 
 import grammar.NodeAttribute
+import grammar.NodeAttributes
 import grammar.RootGrammarNode
 import grammar.StringSymbol
 import kotlin.test.Test
@@ -27,7 +28,7 @@ internal class InitAttributeProductionRuleTest {
 
     @Test
     fun testMakeProgramWithAttribute() {
-        val res1 = rule.makeRootProgramWithAttributes(NodeAttribute("attr", "0"), null)
+        val res1 = rule.makeRootProgramWithAttributes(NodeAttributes.fromAttr(NodeAttribute("attr", "0")), listOf())
         val attrs = res1.attributes()
         res1.verify()
         assert(attrs.getStringAttribute("attr").equals( "0"))

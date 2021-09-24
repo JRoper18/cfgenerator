@@ -35,6 +35,24 @@ data class NodeAttributes(
         return stringAttributes.isEmpty()
     }
 
+    fun toList() : List<NodeAttribute> {
+        return this.stringAttributes.entries.toList().map {
+            NodeAttribute(it.key, it.value)
+        }
+    }
+    companion object {
+        fun fromList(list : List<NodeAttribute>) : NodeAttributes {
+            val map = mutableMapOf<String, String>()
+            list.forEach {
+                map.put(it.first, it.second)
+            }
+            return NodeAttributes(map)
+        }
+        fun fromAttr(attr: NodeAttribute) : NodeAttributes {
+            return fromList(listOf(attr))
+        }
+    }
+
     fun size() : Int {
         return stringAttributes.size
     }
