@@ -59,6 +59,7 @@ class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, v
             val fittingAttributes = additionalConstraints.map { //Make a set of attributes that would satisfy these constraints.
                 (it.makeSatisfyingAttribute())
             }
+
             val substitutedConstraints = this.getConstraintSubstitutions(expansions, fittingAttributes)
             // For each rule + constraints, see if we can expand every node there.
             substitutedConstraints.forEach { ruleEntry ->
@@ -66,14 +67,17 @@ class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, v
                 val expansion = ruleEntry.key
                 val ruleConstraints = ag.constraints[expansion]?.generate(attributes) ?: listOf()
                 val allNewConstraints = ruleEntry.value + ruleConstraints // All the new constraints our expansion would need.
+                val allFittingAttributes = allNewConstraints.map { //Make a set of attributes that would satisfy these constraints.
+                    (it.makeSatisfyingAttribute())
+                }
+                
                 var newChildren : List<GenericGrammarNode>
                 var expansionIsGood = true
                 if(allNewConstraints.isEmpty()){
-                    //TODO: Handle things that generate more than 1 attribute that needs to fit.
-                    newChildren = expansion.makeChildrenForAttribute(fittingAttributes[0], nodeThatFits = null)
+                    //We have no constraints. Generate anything we want.
+                    newChildren = expansion.makeChildren()
                 }
                 else {
-
                     // For each symbol in our grammar, find one that gives us a satisfying subprogram.
                     var satisfyingSubprogram : RootGrammarNode? = null
                     for(symbol in ag.symbols) {
@@ -84,20 +88,19 @@ class ProgramGenerator(val ag: AttributeGrammar, val numRandomTries : Int = 3, v
                         }
                     }
                     // TODO: Handle rules that create/require more than 1 attribute.
-                    newChildren = expansion.makeChildrenForAttribute(fittingAttributes[0], nodeThatFits = satisfyingSubprogram)
-
-                    //Now, just expand the children trees.
-                    for(child in newChildren){
-                        for(unexpanded in child.getUnexpandedNodes()) {
-                            val canExpand = expandNode(unexpanded, listOf())
-                            if(!canExpand){
-                                expansionIsGood = false
-                                break
-                            }
-                        }
-                        if(!expansionIsGood) {
+                    newChildren = expansion.makeChildrenForAttribute(allFittingAttributes[0], nodeThatFits = satisfyingSubprogram)
+                }
+                //Now, just expand the children trees.
+                for(child in newChildren){
+                    for(unexpanded in child.getUnexpandedNodes()) {
+                        val canExpand = expandNode(unexpanded, listOf())
+                        if(!canExpand){
+                            expansionIsGood = false
                             break
                         }
+                    }
+                    if(!expansionIsGood) {
+                        break
                     }
                 }
                 if(expansionIsGood) {

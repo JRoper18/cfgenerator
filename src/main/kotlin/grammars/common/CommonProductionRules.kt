@@ -21,6 +21,7 @@ fun ListProductionRule(listName: NtSym, unitName: Symbol, separator: String = ""
     return ProductionRule(listName, listOf(listName, StringSymbol(separator), unitName))
 }
 fun makeStringsetRules(symbol: StringsetSymbol) : List<AttributedProductionRule> {
+    println()
     return symbol.stringset.map {
         StringsetSymbolRule(symbol, StringSymbol(it))
     }
@@ -34,7 +35,9 @@ class StringsetSymbolRule(val stringSetSymbol : StringsetSymbol, val stringSymbo
         return Pair(attr.first == "chosenSymbol" && attr.second == stringSymbol.name, listOf())
     }
 }
-val LowercaseASCIISymbol = StringsetSymbol("qwertyuiopasdfghjklzxcvbnm".split("").toSet(), "lowercaseASCII")
+val LowercaseASCIISymbol = StringsetSymbol("qwertyuiopasdfghjklzxcvbnm".split("").filter {
+    it.isNotBlank()
+}.toSet(), "lowercaseASCII")
 fun LowercaseASCIIProductionRule(symbolName: String) : ProductionRule {
     return ProductionRule(NtSym(symbolName), listOf(LowercaseASCIISymbol))
 }

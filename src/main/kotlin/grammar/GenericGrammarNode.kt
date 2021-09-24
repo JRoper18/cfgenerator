@@ -20,6 +20,7 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         })
     }
     abstract fun inheritedAttributes(): NodeAttributes
+    abstract fun depth() : Int
 
     fun withParent(parent: GenericGrammarNode, index : Int) : GrammarNode {
         val node = GrammarNode(productionRule, parent, index)

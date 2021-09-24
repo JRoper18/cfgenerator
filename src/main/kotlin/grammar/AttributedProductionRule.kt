@@ -1,6 +1,7 @@
 package grammar
 
 import grammar.constraints.RuleConstraint
+import grammars.common.UnexpandedAPR
 
 open class AttributedProductionRule(val rule: ProductionRule) {
     // Given a set of node attributes for each node on the RHS and my inherited attrs, return a set of new NodeAttributes.
@@ -32,6 +33,12 @@ open class AttributedProductionRule(val rule: ProductionRule) {
      */
     open fun makeChildrenForAttribute(attr: NodeAttribute, nodeThatFits : GenericGrammarNode? = null) : List<GenericGrammarNode> {
         return listOf()
+    }
+
+    open fun makeChildren() : List<GenericGrammarNode> {
+        return this.rule.rhs.map {
+            RootGrammarNode(UnexpandedAPR(it))
+        }
     }
 
     fun makeRootProgramWithAttributes(attr: NodeAttribute, nodeThatFits : GenericGrammarNode? = null) : RootGrammarNode {

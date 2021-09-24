@@ -4,4 +4,8 @@ class RootGrammarNode(productionRule: AttributedProductionRule) : GenericGrammar
     override fun inheritedAttributes(): NodeAttributes {
         return NodeAttributes()
     }
+
+    override fun depth(): Int {
+        return 0
+    }
 }

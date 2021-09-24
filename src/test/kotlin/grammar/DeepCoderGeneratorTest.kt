@@ -13,7 +13,7 @@ internal class DeepCoderGeneratorTest {
     @Test
     fun generate() {
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
-        val cons = listOf(BasicRuleConstraint(NodeAttribute("length", "1")))
+        val cons = listOf(BasicRuleConstraint(NodeAttribute("length", "3")))
         val program = generator.generate(cons)
         println(program)
         if(program != null){

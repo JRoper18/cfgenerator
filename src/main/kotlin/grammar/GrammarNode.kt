@@ -16,5 +16,9 @@ class GrammarNode(
         return productionRule.makeInheritedAttributes(idx, parent.inheritedAttributes(), siblingAttrs)
     }
 
+    override fun depth(): Int {
+        return parent.depth() + 1
+    }
+
 
 }

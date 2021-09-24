@@ -7,6 +7,8 @@ import grammar.constraints.RuleConstraint
 class SizedListAttributeProductionRule(listName: NtSym,
                                        unitName: Symbol,
                                        separator: String = "") : AttributedProductionRule(
+
+
     ListProductionRule(listName, unitName, separator)) {
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         val listAttrs = childAttributes[0]

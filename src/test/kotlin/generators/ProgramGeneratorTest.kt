@@ -26,6 +26,6 @@ internal class ProgramGeneratorTest {
         val program = generator.generate(cons)
         print(program)
         program.verify()
-        println(ProgramStringifier().stringify(program!!))
+        println(ProgramStringifier().stringify(program))
     }
 }
