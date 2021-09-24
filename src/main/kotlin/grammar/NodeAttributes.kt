@@ -29,5 +29,8 @@ data class NodeAttributes(
     fun isEmpty() : Boolean {
         return stringAttributes.isEmpty()
     }
+    override fun toString() : String {
+        return this.stringAttributes.toString()
+    }
 
 }

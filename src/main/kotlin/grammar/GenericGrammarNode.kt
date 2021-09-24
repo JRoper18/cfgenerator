@@ -47,9 +47,13 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         return buffer.toString()
     }
 
-    protected fun print(buffer: StringBuilder, prefix: String, childrenPrefix: String) {
+    protected fun print(buffer: StringBuilder, prefix: String, childrenPrefix: String, printAttrs : Boolean = true) {
         buffer.append(prefix)
         buffer.append(productionRule.rule.toString())
+        if(printAttrs){
+            buffer.append(' ')
+            buffer.append(this.attributes())
+        }
         buffer.append('\n')
         val it = rhs.iterator()
         while (it.hasNext()) {
