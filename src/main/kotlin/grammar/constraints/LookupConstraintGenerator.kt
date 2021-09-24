@@ -26,7 +26,7 @@ class LookupConstraintGenerator(val lookupKey : String, val compareToKey : Strin
         }
         val compareToVal = lookupTable[lookupVal]
         if(lookupVal == null || compareToVal == null) {
-            return listOf(UnsatConstraint());
+            return listOf(UnsatConstraint())
         }
         return listOf(BasicRuleConstraint(NodeAttribute(compareToKey, compareToVal)))
     }

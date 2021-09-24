@@ -17,11 +17,11 @@ internal class LookupConstraintGeneratorTest {
             "NotHead" to "3"
         ))
         val gen1 = gen.generate(attrs)
-        assertEquals(gen1[0], BasicRuleConstraint(NodeAttribute("length", "2")))
+        assertEquals(gen1, (listOf(BasicRuleConstraint(NodeAttribute("length", "2")))))
 
         attrs.setAttribute("chosenSymbol", "NotHead")
         val gen2 = gen.generate(attrs)
-        assertEquals(gen2[0], BasicRuleConstraint(NodeAttribute("length", "3")))
+        assertEquals(gen2, (listOf(BasicRuleConstraint(NodeAttribute("length", "3")))))
     }
     @Test
     fun testGenerateInvalid() {
