@@ -3,6 +3,7 @@ package grammar.constraints
 import grammar.GenericGrammarNode
 import grammar.NodeAttribute
 import grammar.NodeAttributes
+import kotlin.random.Random
 
 /**
  * Given an attribute key, get the value of that attribute and see if it matches some lookup table.
@@ -15,12 +16,12 @@ class LookupConstraintGenerator(val lookupKey : String, val compareToKey : Strin
 //        val attrs = attributes()
 //
 //    }
-    override fun generate(attrs: NodeAttributes): List<RuleConstraint> {
+    override fun generate(attrs: NodeAttributes, random: Random): List<RuleConstraint> {
         val lookupVal = attrs.getStringAttribute(lookupKey)
         if(lookupVal == null) {
             // There isn't a lookup value because the lookupkey isn't in the attributes.
             // Return a constraint list with a random value of lookupKey/Value and associating compareTo
-            val randomEntry = lookupTable.entries.random()
+            val randomEntry = lookupTable.entries.random(random)
             return listOf(BasicRuleConstraint(NodeAttribute(lookupKey, randomEntry.key)),
                 BasicRuleConstraint(NodeAttribute(compareToKey, randomEntry.value)))
         }

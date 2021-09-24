@@ -37,7 +37,7 @@ val deepCoderGrammar = AttributeGrammar(listOf(
         "Head" to "2",
         "Last" to "1",
         "Take" to "4",
-        "Drop" to "0"
+        "Drop" to "3"
     )),
 ))
 

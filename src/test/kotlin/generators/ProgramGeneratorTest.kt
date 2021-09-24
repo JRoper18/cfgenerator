@@ -31,13 +31,6 @@ internal class ProgramGeneratorTest {
         println(ProgramStringifier().stringify(program))
     }
 
-//    fun testExpandNodeLookup() {
-//        val listSym = NtSym("LIST")
-//        val unitSym = StringSymbol("UNIT")
-//        val rule = SizedListAttributeProductionRule(listSym, unitSym, " ")
-//        val grammar = AttributeGrammar(listOf(rule,
-//            InitAttributeProductionRule(TerminalProductionRule(listSym), "length", "0"),
-//        ), start = listSym, constraints = mapOf())
-//        val generator = ProgramGenerator(grammar)
-//    }
+    @Test
+    fun
 }

@@ -2,13 +2,14 @@ package grammar.constraints
 
 import grammar.NodeAttribute
 import grammar.NodeAttributes
+import kotlin.random.Random
 
 data class BasicRuleConstraint(val attr: NodeAttribute) : RuleConstraint {
     override fun satisfies(attrs: NodeAttributes): Boolean {
         return attrs.getStringAttribute(attr.first).equals(attr.second)
     }
 
-    override fun makeSatisfyingAttribute(): NodeAttribute {
+    override fun makeSatisfyingAttribute(random : Random): NodeAttribute {
         return attr
     }
 }

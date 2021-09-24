@@ -54,8 +54,6 @@ internal class DeepCoderGeneratorTest {
     @Test
     fun testGenerateStatement() {
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
-//        val cons = listOf(BasicRuleConstraint(NodeAttribute("length", "3")))
-//        val program = generator.generate(cons)
         val program = RootGrammarNode(UnexpandedAPR(NtSym("Stmt")))
         generator.expandNode(program)
         println(program)
