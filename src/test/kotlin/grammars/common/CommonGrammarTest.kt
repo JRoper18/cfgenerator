@@ -1,4 +1,4 @@
-package grammar
+package grammars.common
 
 import generators.ProgramGenerator
 import generators.ProgramStringifier

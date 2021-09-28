@@ -6,31 +6,40 @@ import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.LookupConstraintGenerator
 import grammars.common.*
 
-private val STMT = NtSym("Stmt")
-private val STMT_LIST = NtSym("StmtList")
+internal val STMT = NtSym("Stmt")
+internal val STMT_LIST = NtSym("StmtList")
 const val functionNameAttr = "functionName"
 const val typeNameAttr = "typeName"
-val FUNCTION_NAME = StringsetSymbol(setOf(
-    "Head",
-    "Last",
-    "Take",
-    "Drop",
-), attributeName = functionNameAttr)
-private val FUNCTION_ARGS = NtSym("FuncArgs")
-private val FUNCTION_ARG = NtSym("FuncArg")
-private val VARDEF = NtSym("VarDef")
-private val STMT_RULE = SynthesizeAttributeProductionRule(mapOf(functionNameAttr to 2, "length" to 2),
+const val listType = "[int]"
+const val intType = "int"
+val FUNCTION_NAME = StringsetSymbol(mapOf(
+    "Head" to setOf(NodeAttribute(typeNameAttr, intType)),
+    "Last" to setOf(NodeAttribute(typeNameAttr, intType)),
+    "Take" to setOf(NodeAttribute(typeNameAttr, listType)),
+    "Drop" to setOf(NodeAttribute(typeNameAttr, listType)),
+    "Access" to setOf(NodeAttribute(typeNameAttr, intType)),
+    "Minimum" to setOf(NodeAttribute(typeNameAttr, intType)),
+    "Maximum" to setOf(NodeAttribute(typeNameAttr, intType)),
+    "Reverse" to setOf(NodeAttribute(typeNameAttr, listType)),
+    "Sort" to setOf(NodeAttribute(typeNameAttr, listType)),
+    "Sum" to setOf(NodeAttribute(typeNameAttr, intType)),
+    ), attributeName = functionNameAttr)
+internal val FUNCTION_ARGS = NtSym("FuncArgs")
+internal val FUNCTION_ARG = NtSym("FuncArg")
+internal val VARDEF = NtSym("VarDef")
+internal val STMT_RULE = SynthesizeAttributeProductionRule(mapOf("chosenSymbol" to 0),
     PR(STMT, listOf( // A statement is just a function call going into a variable.
     LowercaseASCIISymbol,
     StringSymbol(":="),
     VARDEF,
 )))
-private val TYPES = StringsetSymbol(setOf("[int]", "int"))
-private val FUNCTION_CALL_RULE = SynthesizeAttributeProductionRule(mapOf(functionNameAttr to 0, "length" to 1),
+internal val TYPES = StringsetSymbol(setOf("[int]", "int"), attributeName = typeNameAttr)
+internal val FUNCTION_CALL_RULE = SynthesizeAttributeProductionRule(mapOf(functionNameAttr to 0, "length" to 1, typeNameAttr to 0),
     PR(VARDEF, listOf(FUNCTION_NAME, FUNCTION_ARGS)))
-private val INPUT_VAR_RULE = APR(PR(VARDEF, listOf(TYPES)))
-private val STMT_LIST_RULE = SizedListAttributeProductionRule(STMT_LIST, STMT, "\n")
-private val FUNCTION_LIST_RULE = SizedListAttributeProductionRule(FUNCTION_ARGS, FUNCTION_ARG, " ")
+internal val TYPEVAR_RULE = SynthesizeAttributeProductionRule(mapOf(typeNameAttr to 0),
+    PR(VARDEF, listOf(TYPES)))
+internal val STMT_LIST_RULE = SizedListAttributeProductionRule(STMT_LIST, STMT, "\n")
+internal val FUNCTION_LIST_RULE = SizedListAttributeProductionRule(FUNCTION_ARGS, FUNCTION_ARG, " ")
 val deepCoderGrammar = AttributeGrammar(listOf(
     STMT_LIST_RULE,
     InitAttributeProductionRule(TerminalProductionRule(STMT_LIST), "length", "0"),
@@ -38,14 +47,21 @@ val deepCoderGrammar = AttributeGrammar(listOf(
     FUNCTION_LIST_RULE,
     FUNCTION_CALL_RULE,
     STMT_RULE,
+    TYPEVAR_RULE,
     APR(ProductionRule(FUNCTION_ARG, listOf(LowercaseASCIISymbol))),
 ), start = STMT_LIST, constraints = mapOf(
     FUNCTION_CALL_RULE to LookupConstraintGenerator(functionNameAttr, "length", mapOf(
         // Gets the length of args = length of function call
-        "Head" to "2",
+        "Head" to "1",
         "Last" to "1",
-        "Take" to "4",
-        "Drop" to "3"
+        "Take" to "2",
+        "Drop" to "2",
+        "Access" to "2",
+        "Minimum" to "1",
+        "Maximum" to "1",
+        "Reverse" to "1",
+        "Sort" to "1",
+        "Sum" to "1"
     )),
 ))
 

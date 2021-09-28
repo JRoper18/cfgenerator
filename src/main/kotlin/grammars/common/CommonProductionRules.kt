@@ -28,7 +28,7 @@ fun makeStringsetRules(symbol: StringsetSymbol) : List<AttributedProductionRule>
 }
 val LowercaseASCIISymbol = StringsetSymbol("qwertyuiopasdfghjklzxcvbnm".split("").filter {
     it.isNotBlank()
-}.toSet(), "lowercaseASCII")
+}.toSet(), displayName = "lowercaseASCII")
 fun LowercaseASCIIProductionRule(symbolName: String) : ProductionRule {
     return ProductionRule(NtSym(symbolName), listOf(LowercaseASCIISymbol))
 }
