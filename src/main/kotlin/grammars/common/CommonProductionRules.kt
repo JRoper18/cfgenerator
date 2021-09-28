@@ -1,5 +1,6 @@
 package grammars.common
 
+import StringsetSymbolRule
 import grammar.*
 import grammar.StringsetSymbol
 import grammar.constraints.RuleConstraint
@@ -21,25 +22,8 @@ fun ListProductionRule(listName: NtSym, unitName: Symbol, separator: String = ""
     return ProductionRule(listName, listOf(listName, StringSymbol(separator), unitName))
 }
 fun makeStringsetRules(symbol: StringsetSymbol) : List<AttributedProductionRule> {
-    println()
     return symbol.stringset.map {
         StringsetSymbolRule(symbol, StringSymbol(it))
-    }
-}
-class StringsetSymbolRule(val stringSetSymbol : StringsetSymbol, val stringSymbol : StringSymbol) : SingleAttributeProductionRule(PR(stringSetSymbol, listOf(stringSymbol))) {
-    override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
-        return NodeAttributes(mutableMapOf("chosenSymbol" to stringSymbol.name))
-    }
-
-    override fun makeChildrenForAttribute(
-        attr: NodeAttribute,
-        nodesThatFit: List<GenericGrammarNode>
-    ): List<GenericGrammarNode> {
-        return listOf()
-    }
-
-    override fun canMakeProgramWithAttribute(attr: NodeAttribute): Pair<Boolean, List<List<RuleConstraint>>> {
-        return Pair(attr.first == "chosenSymbol" && attr.second == stringSymbol.name, listOf())
     }
 }
 val LowercaseASCIISymbol = StringsetSymbol("qwertyuiopasdfghjklzxcvbnm".split("").filter {

@@ -1,5 +1,6 @@
 package generators
 
+
 import grammar.AttributeGrammar
 import grammar.NodeAttribute
 import grammar.NtSym

@@ -35,7 +35,7 @@ open class AttributedProductionRule(val rule: ProductionRule) {
         return listOf()
     }
 
-    open fun makeChildren() : List<GenericGrammarNode> {
+    fun makeChildren() : List<GenericGrammarNode> {
         return this.rule.rhs.map {
             RootGrammarNode(UnexpandedAPR(it))
         }

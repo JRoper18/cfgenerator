@@ -6,6 +6,7 @@ import grammar.constraints.BasicRuleConstraint
 import grammars.common.UnexpandedAPR
 import grammars.deepcoder.FUNCTION_NAME
 import grammars.deepcoder.deepCoderGrammar
+import grammars.deepcoder.functionNameAttr
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -21,7 +22,7 @@ internal class DeepCoderGeneratorTest {
         println(program)
         assert(success)
         println(program)
-        println(ProgramStringifier().stringify(program!!))
+        println(ProgramStringifier().stringify(program))
         program.verify()
         assert(program.attributes().getStringAttribute("length")!!.toInt() > 0)
     }
@@ -29,12 +30,13 @@ internal class DeepCoderGeneratorTest {
     @Test
     fun testGenerateFunctionNameWithConstraint() {
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
-        val cons = listOf(BasicRuleConstraint(NodeAttribute("chosenSymbol", "Head")))
-//        val program = generator.generate(cons)
+        val cons = listOf(BasicRuleConstraint(NodeAttribute(functionNameAttr, "Head")))
         val program = RootGrammarNode(UnexpandedAPR(FUNCTION_NAME))
-        generator.expandNode(program, cons)
+        val success = generator.expandNode(program, cons)
+        assert(success)
         println(program)
         assertNotNull(program)
+        assertEquals("Head", program.attributes().getStringAttribute(functionNameAttr))
         val progStr = (ProgramStringifier().stringify(program))
         program.verify()
         assertContains(progStr, "Head")
@@ -55,8 +57,9 @@ internal class DeepCoderGeneratorTest {
     fun testGenerateStatement() {
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
         val program = RootGrammarNode(UnexpandedAPR(NtSym("Stmt")))
-        generator.expandNode(program)
+        val success = generator.expandNode(program)
         println(program)
+        assert(success)
         assertNotNull(program)
         println(ProgramStringifier().stringify(program))
         program.verify()
