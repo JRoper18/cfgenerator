@@ -9,10 +9,14 @@ import grammar.constraints.RuleConstraint
  */
 class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule: ProductionRule) : AttributedProductionRule(rule) {
 
+    val synthesizedKeys : Set<String> by lazy {
+        toSynthesize.keys
+    }
+
     init {
         toSynthesize.forEach {
             require(it.value < rule.rhs.size && it.value >= 0) {
-                "The size of the rule's RHS must match the size of the synthesis list. "
+                "The index of the child to synthesize from must be within the bounds of the rule's RHS  "
             }
         }
     }
@@ -50,5 +54,9 @@ class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule
             "Nodes that fit for synthesized attributes must match the size of the rhs!"
         }
         return nodesThatFit
+    }
+
+    fun withOtherRule(otherRule: AttributedProductionRule) : SynthesizedCombinedAttributeProductionRule {
+        return SynthesizedCombinedAttributeProductionRule(synthesisRule = this, otherRule = otherRule)
     }
 }

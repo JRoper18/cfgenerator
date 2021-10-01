@@ -20,5 +20,23 @@ class GrammarNode(
         return parent.depth() + 1
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is GrammarNode) return false
+        if (!super.equals(other)) return false
+
+        if (parent != other.parent) return false
+        if (idx != other.idx) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + parent.hashCode()
+        result = 31 * result + idx
+        return result
+    }
+
 
 }

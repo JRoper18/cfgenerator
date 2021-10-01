@@ -98,4 +98,40 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         }
     }
 
+    fun symbolCount(symbol : Symbol) : Int {
+        var count = 0;
+        if(lhsSymbol().equals(symbol)){
+            count += 1;
+        }
+        for(child in this.rhs) {
+            count += (child.symbolCount(symbol))
+        }
+        return count;
+    }
+
+    fun forEachInTree(f: (node : GenericGrammarNode) -> Unit){
+        f(this)
+        for(child in this.rhs) {
+            f(child)
+            child.forEachInTree(f)
+        }
+    }
+
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is GenericGrammarNode) return false
+
+        if (productionRule != other.productionRule) return false
+        if (rhs != other.rhs) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = productionRule.hashCode()
+        result = 31 * result + rhs.hashCode()
+        return result
+    }
+
 }

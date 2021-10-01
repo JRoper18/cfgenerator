@@ -1,29 +1,26 @@
 package grammars.deepcoder
 
-import generators.ProgramStringifier
 import grammar.GenericGrammarNode
-import grammar.GrammarNode
-import grammar.RootGrammarNode
 import grammars.common.SizedListAttributeProductionRule
 import java.lang.Exception
 import kotlin.random.Random
 
-class DeepCoderInterpreter {
+class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariables()) {
     internal class ParseError : Exception("ParseError for DeepCoder")
-    val intVars = mutableMapOf<String, Int>()
-    val listVars = mutableMapOf<String, List<Int>>()
-
-    val stringifier = ProgramStringifier()
 
     val intFunctions : Map<String, (strs : List<String>) -> Int> = mapOf(
         "Head" to {strs ->
-            getList(strs[0]).get(0)
+            val l = getList(strs[0])
+            l[0]
         },
         "Last" to { strs ->
             getList(strs[0]).last()
         },
         "Access" to { strs ->
-            getList(strs[1])[getInt(strs[0])]
+            val l = getList(strs[1])
+            val idx = getInt(strs[0])
+            checkIsInList(l, idx)
+            l[idx]
         },
         "Minimum" to { strs ->
             getList(strs[0]).minOrNull() ?: throw ParseError()
@@ -38,11 +35,16 @@ class DeepCoderInterpreter {
     )
     val listFunctions : Map<String, (strs : List<String>) -> List<Int>> = mapOf(
         "Take" to { strs ->
-            getList(strs[1]).subList(0, getInt(strs[0]))
+            val l = getList(strs[1])
+            val idx = getInt(strs[0])
+            checkIsInList(l, idx)
+            l.subList(0, idx)
         },
         "Drop" to { strs ->
             val l = getList(strs[1])
-            l.subList(getInt(strs[0]), l.size)
+            val idx = getInt(strs[0])
+            checkIsInList(l, idx)
+            l.subList(idx, l.size)
         },
         "Reverse" to { strs ->
             val l = getList(strs[0])
@@ -54,34 +56,63 @@ class DeepCoderInterpreter {
         }
     )
 
-    fun getList(varname : String) : List<Int> {
-        return listVars[varname] ?: throw ParseError();
+    private fun checkIsInList(l : List<Int>, idx : Int) {
+        if(idx >= l.size || idx < 0){
+            throw ParseError()
+        }
     }
-    fun getInt(varname : String) : Int{
-        return intVars[varname] ?: throw ParseError();
+    private fun getList(varname : String) : List<Int> {
+        return variables.listVars[varname] ?: throw ParseError();
     }
-    fun interp(program: GenericGrammarNode){
+    private fun getInt(varname : String) : Int{
+        return variables.intVars[varname] ?: throw ParseError();
+    }
+
+    companion object {
+        /**
+         * Returns a map from input variable names to their types.
+         */
+        fun getInputs(program: GenericGrammarNode) : Map<String, String> {
+            val map = mutableMapOf<String, String>()
+            program.forEachInTree {
+                if(it.lhsSymbol() == STMT){
+                    val attrs = it.attributes()
+                    val varname = attrs.getStringAttribute(varAttrName)!!
+                    val vardefStmt = it.rhs[2]
+                    val vardefAttrs = vardefStmt.attributes()
+                    val varType = vardefAttrs.getStringAttribute(typeNameAttr) ?: throw ParseError()
+                    map[varname] = varType
+                }
+            }
+            return map
+        }
+    }
+    fun interp(program: GenericGrammarNode) : String {
         require(program.lhsSymbol() == STMT_LIST)
         if(program.rhs.size < 2){
             //It's a terminal list.
-            return;
+            return "Null";
         }
         val list = program.rhs[0]
         val stmt = program.rhs[2]
         interp(list)
-        interpStmt(stmt)
+        return interpStmt(stmt)
     }
 
-    fun interpStmt(stmt: GenericGrammarNode) {
+    /**
+     * Interprets a single statement in deepcoder, which always assigns a variable.
+     * Returns a string representation of the value of the variable just assigned.
+     */
+    fun interpStmt(stmt: GenericGrammarNode) : String {
         require(stmt.lhsSymbol() == STMT)
         val attrs = stmt.attributes()
-        val varname = attrs.getStringAttribute("chosenSymbol")!!
+        val varname = attrs.getStringAttribute(varAttrName)!!
         val vardefStmt = stmt.rhs[2]
         val vardefAttrs = vardefStmt.attributes()
         val varType = vardefAttrs.getStringAttribute(typeNameAttr)
 
         if(vardefStmt.productionRule == FUNCTION_CALL_RULE) {
-            val funcName = vardefAttrs.getStringAttribute("functionName")
+            val funcName = vardefAttrs.getStringAttribute(functionNameAttr)
             val numFuncArgs = vardefAttrs.getStringAttribute("length")
             val funcArgsNode = vardefStmt.rhs[1]
             check(funcArgsNode.productionRule is SizedListAttributeProductionRule)
@@ -89,32 +120,23 @@ class DeepCoderInterpreter {
                 it.rhs[0].rhs[0].lhsSymbol().name
             }
             if(varType == intType) {
-                intVars[varname] = intFunctions[funcName]!!(funcVarInputs)
+                val ret = intFunctions[funcName]!!(funcVarInputs)
+                variables.intVars[varname] = ret
+                return ret.toString()
             }
             if(varType == listType) {
-                listVars[varname] = listFunctions[funcName]!!(funcVarInputs)
+                val ret = listFunctions[funcName]!!(funcVarInputs)
+                variables.listVars[varname] = ret
+                return ret.toString()
             }
         }
         else if(vardefStmt.productionRule == TYPEVAR_RULE) {
-            println("INPUT RULE")
-            println(varType)
-            // Just generate some input.
-            // TODO: Seperate this out or take inputs or something, this call means that it's an input variable.
-            if(varType == intType) {
-                intVars[varname] = Random.nextInt() % 10
-            }
-            if(varType == listType) {
-                val listSize = Random.nextInt() % 10
-                val list = mutableListOf<Int>()
-                for(i in 0..listSize + 1) {
-                    list.add(Random.nextInt() % 20)
-                }
-                listVars[varname] = list.toList()
-            }
+            // An input var. Hope we've specified something for it...
         }
         else {
             println(vardefStmt)
             println("WTF")
         }
+        return "Null"
     }
 }

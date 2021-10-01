@@ -8,6 +8,11 @@ import grammars.common.*
 
 internal val STMT = NtSym("Stmt")
 internal val STMT_LIST = NtSym("StmtList")
+internal val LAMBDA_FUNC = StringsetSymbol(setOf(
+    "(+1)", "(-1)", "(*2)", "(/2)", "(*(-1))", "(**2)", "(*3)", "(/3)", "(*4)", "(/4)", //Int -> int
+    "(>0)", "(<0)", "(%2 == 0)", "(%2 == 1)", //Int -> bool
+    "(+)", "(-)", "(*)", "MIN", "MAX" // Int -> int -> int
+), displayName = "Lambda")
 const val functionNameAttr = "functionName"
 const val typeNameAttr = "typeName"
 const val listType = "[int]"
@@ -27,9 +32,10 @@ val FUNCTION_NAME = StringsetSymbol(mapOf(
 internal val FUNCTION_ARGS = NtSym("FuncArgs")
 internal val FUNCTION_ARG = NtSym("FuncArg")
 internal val VARDEF = NtSym("VarDef")
-internal val STMT_RULE = SynthesizeAttributeProductionRule(mapOf("chosenSymbol" to 0),
+const val varAttrName = "varName"
+internal val STMT_RULE = SynthesizeAttributeProductionRule(mapOf(varAttrName to 0),
     PR(STMT, listOf( // A statement is just a function call going into a variable.
-    LowercaseASCIISymbol,
+    StringsetSymbol(lowercaseASCII, displayName = "lowercaseASCII", attributeName = varAttrName),
     StringSymbol(":="),
     VARDEF,
 )))
@@ -48,7 +54,8 @@ val deepCoderGrammar = AttributeGrammar(listOf(
     FUNCTION_CALL_RULE,
     STMT_RULE,
     TYPEVAR_RULE,
-    APR(ProductionRule(FUNCTION_ARG, listOf(LowercaseASCIISymbol))),
+    APR(ProductionRule(FUNCTION_ARG, listOf(LowercaseASCIISymbol))), // A varname, or...
+//    APR(ProductionRule(FUNCTION_ARG, listOf(LAMBDA_FUNC))), // A lambda symbol
 ), start = STMT_LIST, constraints = mapOf(
     FUNCTION_CALL_RULE to LookupConstraintGenerator(functionNameAttr, "length", mapOf(
         // Gets the length of args = length of function call
@@ -64,6 +71,8 @@ val deepCoderGrammar = AttributeGrammar(listOf(
         "Sum" to "1"
     )),
 ))
+
+
 
 
 
