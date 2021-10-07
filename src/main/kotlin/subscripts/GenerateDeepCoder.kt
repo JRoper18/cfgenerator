@@ -1,4 +1,4 @@
-package scripts
+package subscripts
 
 import generators.ProgramGenerator
 import generators.ProgramStringifier
@@ -11,7 +11,7 @@ import grammars.deepcoder.FUNCTION_NAME
 import grammars.deepcoder.deepCoderGrammar
 import kotlin.random.Random
 
-fun main(args: Array<String>) {
+fun generatePrograms(args: Array<String>) {
     val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 5, random = Random(12234))
     val strfier = ProgramStringifier()
     var numBad = 0

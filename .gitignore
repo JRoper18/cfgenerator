@@ -170,6 +170,7 @@ gradle-app.setting
 
 ### Gradle Patch ###
 **/build/
+out/
 
 # Eclipse Gradle plugin generated files
 # Eclipse Core

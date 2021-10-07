@@ -56,6 +56,7 @@ internal class DeepCoderGeneratorTest {
         generator.expandNode(program)
         assertNotNull(program)
         val progStr = (ProgramStringifier().stringify(program))
+        println(progStr)
         program.verify()
     }
 
