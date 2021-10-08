@@ -68,7 +68,7 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                             }
                             numRunnable.incrementAndGet()
                             // Okay, now we have a good program. Is it useful?
-                            val useful = program.symbolCount(FUNCTION_NAME) >= 2
+                            val useful = program.symbolCount(FUNCTION_NAME) >= 1
                             if(!useful) {
                                 continue
                             }
@@ -76,10 +76,12 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                             mutex.withLock {
                                 // Lock the file writing.
                                 outF.println("Program: ")
-                                outF.println(strfier.stringify(program).trim())
+                                val progStr = strfier.stringify(program).trim()
+                                outF.println(progStr)
                                 outF.println()
                                 outF.println("Examples:")
                                 println("Found a useful")
+//                                println(progStr)
                                 ioExamples.forEach {
                                     outF.println("Inputs: ")
                                     outF.println(it.first)

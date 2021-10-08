@@ -31,6 +31,13 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
         "Sum" to { strs ->
             val l = getList(strs[0])
             l.sum()
+        },
+        "Count" to { strs ->
+            val l = getList(strs[1])
+            val f = intToBoolLambdas[strs[0]] ?: throw ParseError()
+            l.count {
+                f(it)
+            }
         }
     )
     val listFunctions : Map<String, (strs : List<String>) -> List<Int>> = mapOf(
@@ -53,7 +60,76 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
         "Sort" to { strs ->
             val l = getList(strs[0])
             l.sorted()
+        },
+        "Map" to { strs ->
+            val l = getList(strs[1])
+            val f = intToIntLambdas[strs[0]] ?: throw ParseError()
+            l.map {
+                f(it)
+            }
+        },
+        "Filter" to { strs ->
+            val l = getList(strs[1])
+            val f = intToBoolLambdas[strs[0]] ?: throw ParseError()
+            l.filter {
+                f(it)
+            }
+        },
+        "ZipWith" to { strs ->
+            val l1 = getList(strs[1])
+            val l2 = getList(strs[2])
+            val f = zipLambdas[strs[0]] ?: throw ParseError()
+            l1.zip(l2) { a, b ->
+                f(a, b)
+            }
+        },
+        "ScanL1" to { strs ->
+            val l = getList(strs[1])
+            val nl = mutableListOf<Int>()
+            val f = zipLambdas[strs[0]] ?: throw ParseError()
+            nl.set(0, l[0])
+            for(i in 1 until l.size){
+                nl[i] = f(nl[i - 1], l[i])
+            }
+            nl.toList()
         }
+
+    )
+
+    val intToIntLambdas : Map<String, (input: Int) -> Int> = mapOf(
+        "(+1)" to { it + 1 },
+        "(-1)" to { it - 1 },
+        "(*2)" to { it * 2 },
+        "(/2)" to { it / 2 },
+        "(*(-1))" to { -it },
+        "(**2)" to { it * it },
+        "(*3)" to { it * 3 },
+        "(/3)" to { it / 3 },
+        "(*4)" to { it * 4 },
+        "(/4)" to { it / 4 },
+    )
+    val intToBoolLambdas : Map<String, (input : Int) -> Boolean> = mapOf(
+        "(<0)" to { it < 0 },
+        "(>0)" to { it > 0 },
+        "(%2==0)" to { it%2 == 0 },
+        "(%2==1)" to { it%2==1 },
+    )
+    val zipLambdas : Map<String, (in1 : Int, in2 : Int) -> Int> = mapOf(
+        "(+)" to { in1, in2 ->
+            in1 + in2
+        },
+        "(-)" to { in1, in2 ->
+            in1 - in2
+        },
+        "(*)" to { in1, in2 ->
+            in1 * in2
+        },
+        "MIN" to { in1, in2 ->
+            minOf(in1, in2)
+        },
+        "MAX" to { in1, in2 ->
+            maxOf(in1, in2)
+        },
     )
 
     private fun checkIsInList(l : List<Int>, idx : Int) {
@@ -115,6 +191,9 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
         val varType = vardefAttrs.getStringAttribute(typeNameAttr)
 
         if(vardefStmt.productionRule == FUNCTION_CALL_RULE) {
+            if(variables.hasVar(varname)){ //Can't re-declare vars.
+                throw ParseError()
+            }
             val funcName = vardefAttrs.getStringAttribute(functionNameAttr)
             val numFuncArgs = vardefAttrs.getStringAttribute("length")
             val funcArgsNode = vardefStmt.rhs[1]

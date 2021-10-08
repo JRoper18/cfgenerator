@@ -17,6 +17,9 @@ data class DeepCoderVariables(val intVars: MutableMap<String, Int> = mutableMapO
         intVars[name] = ret
         return ret
     }
+    fun hasVar(name : String) : Boolean {
+        return (intVars[name] ?: listVars[name]) == null
+    }
     companion object {
         /**
          * Returns a random variable set given a map from varnames to types.

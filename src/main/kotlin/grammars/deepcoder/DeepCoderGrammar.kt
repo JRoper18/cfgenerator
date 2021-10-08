@@ -10,7 +10,7 @@ internal val STMT = NtSym("Stmt")
 internal val STMT_LIST = NtSym("StmtList")
 internal val LAMBDA_FUNC = StringsetSymbol(setOf(
     "(+1)", "(-1)", "(*2)", "(/2)", "(*(-1))", "(**2)", "(*3)", "(/3)", "(*4)", "(/4)", //Int -> int
-    "(>0)", "(<0)", "(%2 == 0)", "(%2 == 1)", //Int -> bool
+    "(>0)", "(<0)", "(%2==0)", "(%2 == 1)", //Int -> bool
     "(+)", "(-)", "(*)", "MIN", "MAX" // Int -> int -> int
 ), displayName = "Lambda")
 const val functionNameAttr = "functionName"
@@ -28,6 +28,12 @@ val FUNCTION_NAME = StringsetSymbol(mapOf(
     "Reverse" to setOf(NodeAttribute(typeNameAttr, listType)),
     "Sort" to setOf(NodeAttribute(typeNameAttr, listType)),
     "Sum" to setOf(NodeAttribute(typeNameAttr, intType)),
+    // And the higher-order functions
+    "Map" to setOf(NodeAttribute(typeNameAttr, listType)),
+    "Filter" to setOf(NodeAttribute(typeNameAttr, listType)),
+    "Count" to setOf(NodeAttribute(typeNameAttr, intType)),
+    "ZipWith" to setOf(NodeAttribute(typeNameAttr, listType)),
+    "ScanL1" to setOf(NodeAttribute(typeNameAttr, listType)),
     ), attributeName = functionNameAttr)
 internal val FUNCTION_ARGS = NtSym("FuncArgs")
 internal val FUNCTION_ARG = NtSym("FuncArg")
@@ -55,7 +61,7 @@ val deepCoderGrammar = AttributeGrammar(listOf(
     STMT_RULE,
     TYPEVAR_RULE,
     APR(ProductionRule(FUNCTION_ARG, listOf(LowercaseASCIISymbol))), // A varname, or...
-//    APR(ProductionRule(FUNCTION_ARG, listOf(LAMBDA_FUNC))), // A lambda symbol
+    APR(ProductionRule(FUNCTION_ARG, listOf(LAMBDA_FUNC))), // A lambda symbol
 ), start = STMT_LIST, constraints = mapOf(
     FUNCTION_CALL_RULE to LookupConstraintGenerator(functionNameAttr, "length", mapOf(
         // Gets the length of args = length of function call
@@ -68,7 +74,12 @@ val deepCoderGrammar = AttributeGrammar(listOf(
         "Maximum" to "1",
         "Reverse" to "1",
         "Sort" to "1",
-        "Sum" to "1"
+        "Sum" to "1",
+        "Map" to "2",
+        "Filter" to "2",
+        "Count" to "2",
+        "ZipWith" to "3",
+        "ScanL1" to "2",
     )),
 ))
 
