@@ -34,4 +34,19 @@ data class DeepCoderVariables(val intVars: MutableMap<String, Int> = mutableMapO
             return vars
         }
     }
+
+    override fun toString() : String{
+        var str = ""
+        intVars.forEach {
+            str += "${it.key} = ${it.value}\n"
+        }
+        listVars.forEach {
+            str += "${it.key} = ${it.value}\n"
+        }
+        return str.trim()
+    }
+
+    fun copy() : DeepCoderVariables {
+        return DeepCoderVariables(intVars.toMutableMap(), listVars.toMutableMap())
+    }
 }

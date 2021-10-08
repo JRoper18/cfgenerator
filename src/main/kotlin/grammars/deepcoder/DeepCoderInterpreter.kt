@@ -76,12 +76,15 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
             val map = mutableMapOf<String, String>()
             program.forEachInTree {
                 if(it.lhsSymbol() == STMT){
-                    val attrs = it.attributes()
-                    val varname = attrs.getStringAttribute(varAttrName)!!
                     val vardefStmt = it.rhs[2]
-                    val vardefAttrs = vardefStmt.attributes()
-                    val varType = vardefAttrs.getStringAttribute(typeNameAttr) ?: throw ParseError()
-                    map[varname] = varType
+                    if (vardefStmt.productionRule == TYPEVAR_RULE) {
+                        // This means it's not just ANY variable definition: It's a NEW/input variable definition. 
+                        val attrs = it.attributes()
+                        val varname = attrs.getStringAttribute(varAttrName)!!
+                        val vardefAttrs = vardefStmt.attributes()
+                        val varType = vardefAttrs.getStringAttribute(typeNameAttr) ?: throw ParseError()
+                        map[varname] = varType
+                    }
                 }
             }
             return map

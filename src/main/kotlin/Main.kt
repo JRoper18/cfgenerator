@@ -2,7 +2,7 @@ import subscripts.generatePrograms
 
 fun main(args: Array<String>) {
     val runTypesToSubscripts = mapOf<String, (args: Array<String>) -> Unit>(
-        "generate" to { generatePrograms(args) }
+        "generate" to { generatePrograms(it) }
     )
     if(args.isEmpty()) {
         System.err.println("Must give a name of a subcommand to run! Possible subcommands: ")
