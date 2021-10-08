@@ -22,31 +22,33 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
 
-const val MAX_COUROUTINES = 10
+const val MAX_COROUTINES = 10
 
 suspend fun generateDeepcoderPrograms(args: Array<String>) {
-    val parser = ArgParser("example")
+    val parser = ArgParser("generate")
     println(args.joinToString(" "))
-    val outputIn by parser.option(ArgType.String, shortName = "o", description = "Output file name")
-    val numToMakeIn by parser.option(ArgType.Int, shortName = "n", description = "Number of examples to make")
-//    val debugIn by parser.option(ArgType.Boolean, shortName = "d", description = "Turn on debug mode").default(false)
+    val outputFileName by parser.option(ArgType.String, fullName = "output", shortName = "o", description = "Output file name").default("/dev/null")
+    val numToMake by parser.option(ArgType.Int, shortName = "n", description = "Number of examples to make").default(1)
+    val makeUseful by parser.option(ArgType.Boolean, fullName = "useful", description = "If true, we'll only count useful problems in the total count.").default(false)
     parser.parse(args)
     var numBad = AtomicInteger(0)
     var numRunnable = AtomicInteger(0)
     var numUseful = AtomicInteger(0)
-    val numToMake = numToMakeIn ?: 999999999
     val nonUniformExceptions = mutableMapOf<String, MutableList<Pair<Exception, GenericGrammarNode>>>()
-    val numPerCoroutine = (numToMake / MAX_COUROUTINES).toInt()
+    val numPerCoroutine = (numToMake / MAX_COROUTINES)
+    val numCoroutines = if(makeUseful) MAX_COROUTINES else minOf(MAX_COROUTINES, numToMake)
+    var doneFlag = false // Set to true if we're creating only useful programs and we've reached all the useful programs.
     val time = measureTimeMillis {
-        val outputFileName = outputIn ?: "/dev/null"
         val mutex = Mutex()
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 5, random = Random(12234))
         val strfier = ProgramStringifier()
         File(outputFileName).printWriter().use { outF ->
             coroutineScope {
-                repeat(minOf(MAX_COUROUTINES, numToMake)) {
+                repeat(numCoroutines) {
                     launch {
-                        for(num in 0 until numPerCoroutine) {
+                        var num = 0
+                        while((num < numPerCoroutine || makeUseful) && !doneFlag) {
+                            num += 1
                             val program = generator.generate(listOf(BasicRuleConstraint(NodeAttribute("length", "3"))))
                             val inputVars = DeepCoderInterpreter.getInputs(program)
                             val ioExamples = mutableListOf<Pair<String, String>>()
@@ -72,7 +74,12 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                             if(!useful) {
                                 continue
                             }
-                            numUseful.incrementAndGet()
+                            val usefulNow = numUseful.incrementAndGet()
+                            if(usefulNow >= numToMake && makeUseful) {
+                                doneFlag = true // This mechanism can occasionally cause us to generate a few extra examples.
+                                // That's fine, because that only happens if they're all generated at the same-ish time
+                                // So we're not waiting a while, anyways.
+                            }
                             mutex.withLock {
                                 // Lock the file writing.
                                 outF.println("Program: ")
