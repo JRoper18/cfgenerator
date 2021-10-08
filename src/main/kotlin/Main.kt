@@ -1,21 +1,29 @@
-import subscripts.generatePrograms
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import subscripts.generateDeepcoderPrograms
 
-fun main(args: Array<String>) {
+fun main(args: Array<String>) = runBlocking {
     val runTypesToSubscripts = mapOf<String, (args: Array<String>) -> Unit>(
-        "generate" to { generatePrograms(it) }
+        "generate" to { this.launch {
+                generateDeepcoderPrograms(it)
+            }
+        }
     )
     if(args.isEmpty()) {
         System.err.println("Must give a name of a subcommand to run! Possible subcommands: ")
         runTypesToSubscripts.keys.forEach {
             System.err.println(it)
         }
-        return
+        return@runBlocking
     }
     val runType = args[0]
     val script = runTypesToSubscripts[runType]
     if(script == null){
         System.err.println("Cannot find subscript ${runType}")
-        return
+        return@runBlocking
     }
-    script(args.copyOfRange(1, args.size))
+    this.launch {
+        script(args.copyOfRange(1, args.size))
+    }
 }
