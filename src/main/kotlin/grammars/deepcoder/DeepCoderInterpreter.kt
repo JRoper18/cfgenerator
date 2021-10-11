@@ -175,7 +175,8 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
         val list = program.rhs[0]
         val stmt = program.rhs[2]
         interp(list)
-        return interpStmt(stmt)
+        val retStr = interpStmt(stmt)
+        return retStr
     }
 
     /**

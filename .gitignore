@@ -179,4 +179,4 @@ out/
 # End of https://www.toptal.com/developers/gitignore/api/gradle,intellij+all,java,kotlin,maven
 
 
-output.txt
+output*

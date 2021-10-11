@@ -18,7 +18,7 @@ data class DeepCoderVariables(val intVars: MutableMap<String, Int> = mutableMapO
         return ret
     }
     fun hasVar(name : String) : Boolean {
-        return (intVars[name] ?: listVars[name]) == null
+        return (intVars[name] ?: listVars[name]) != null
     }
     companion object {
         /**

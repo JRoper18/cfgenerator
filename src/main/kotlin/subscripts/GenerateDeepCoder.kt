@@ -56,6 +56,9 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                                 for(i in 0 until 10){
                                     val input = DeepCoderVariables.fromInputs(inputVars)
                                     val output = DeepCoderInterpreter(input.copy()).interp(program)
+                                    if(output.trim() == "Null") {
+                                        continue;
+                                    }
                                     ioExamples.add(Pair(input.toString(), output))
                                 }
                             } catch (e: DeepCoderInterpreter.ParseError) {
@@ -70,7 +73,7 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                             }
                             numRunnable.incrementAndGet()
                             // Okay, now we have a good program. Is it useful?
-                            val useful = program.symbolCount(FUNCTION_NAME) >= 1
+                            val useful = program.symbolCount(FUNCTION_NAME) >= 1 && ioExamples.size > 0;
                             if(!useful) {
                                 continue
                             }
@@ -80,14 +83,12 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                                 // That's fine, because that only happens if they're all generated at the same-ish time
                                 // So we're not waiting a while, anyways.
                             }
+                            val progStr = strfier.stringify(program).trim()
                             mutex.withLock {
-                                // Lock the file writing.
-                                outF.println("Program: ")
-                                val progStr = strfier.stringify(program).trim()
-                                outF.println(progStr)
-                                outF.println()
-                                outF.println("Examples:")
                                 println("Found a useful")
+                                // Lock the file writing.
+                                outF.println("<|splitter|>")
+                                outF.println("Examples:")
 //                                println(progStr)
                                 ioExamples.forEach {
                                     outF.println("Inputs: ")
@@ -96,8 +97,8 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                                     outF.println(it.second)
                                 }
                                 outF.println()
-                                outF.println()
-                                outF.println()
+                                outF.println("Program: ")
+                                outF.println(progStr)
                             }
                         }
                     }
