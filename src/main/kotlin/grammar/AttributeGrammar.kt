@@ -8,7 +8,9 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.tool.Grammar
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
 
@@ -174,18 +176,19 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
     }
 
     fun parse(progStr: String) {
-        val antlrStr = toAntlr("ThisGrammar")
         val tmpFile = File.createTempFile("tmp", ".g4")
+        val antlrStr = toAntlr(tmpFile.name.substringBefore('.'))
         tmpFile.writeText(antlrStr)
-        val g: Grammar = Grammar.load(tmpFile.name)
-        val progStrStream = progStr.chars().mapToObj {
-                it -> it as Char
-        } as CharStream
+        val g: Grammar = Grammar.load(tmpFile.path)
+        val progStrByteStream = progStr.byteInputStream(StandardCharsets.UTF_8)
+        val progStrStream = (CharStreams.fromStream(progStrByteStream, StandardCharsets.UTF_8));
         val lexEngine = g.createLexerInterpreter(progStrStream)
         val tokens = CommonTokenStream(lexEngine)
         val parser = g.createParserInterpreter(tokens)
         val t: ParseTree = parser.parse(g.getRule(this.start.toAntlrRuleName()).index)
         println("parse tree: " + t.toStringTree(parser))
+        println(t.())
         //TODO: Return our formatted tree
+
     }
 }

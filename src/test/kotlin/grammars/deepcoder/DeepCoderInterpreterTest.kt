@@ -31,8 +31,8 @@ internal class DeepCoderInterpreterTest {
 
     @Test
     fun testParse() {
-        val str = "p := [int]".trimIndent()
-//        val prog = deepCoderGrammar.parse(str, STMT)
+        val str = "p:=[int]".trimIndent()
+        val prog = deepCoderGrammar.parse(str)
 
     }
 

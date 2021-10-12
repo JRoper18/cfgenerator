@@ -12,7 +12,7 @@ internal class AttributeGrammarTest {
         println(antlr)
         val lines = antlr.split("\n")
         var lIdx = 0
-        File("./src/main/resources/DeepCoder.g4").forEachLine {
+        File("./src/test/resources/DeepCoder.g4").forEachLine {
             assertEquals(lines[lIdx].trim(), it.trim())
             lIdx += 1
         }
