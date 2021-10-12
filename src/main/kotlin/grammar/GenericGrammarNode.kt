@@ -6,7 +6,7 @@ import grammars.common.TerminalAPR
 sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
     var rhs: List<GrammarNode> = listOf()
     fun lhsSymbol() : Symbol {
-        return productionRule.rule.lsh
+        return productionRule.rule.lhs
     }
     fun attributes(): NodeAttributes {
         return synthesizedAttributes().union(inheritedAttributes())
@@ -76,7 +76,7 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
     }
 
     open fun verify() {
-        check(lhsSymbol().equals(this.productionRule.rule.lsh)) {
+        check(lhsSymbol().equals(this.productionRule.rule.lhs)) {
             "Our left hand symbol needs to match the symbol in our production rule. "
         }
         check(productionRule.rule.rhs.size == this.rhs.size) {

@@ -1,7 +1,11 @@
 package grammar
 
-data class ProductionRule(val lsh: Symbol, val rhs: List<Symbol>) {
+data class ProductionRule(val lhs: Symbol, val rhs: List<Symbol>) {
     override fun toString(): String {
-        return "${lsh} -> ${rhs}"
+        return "${lhs} -> ${rhs.joinToString(" ")}"
+    }
+
+    fun isRecursive() : Boolean {
+        return this.rhs.contains(this.lhs)
     }
 }

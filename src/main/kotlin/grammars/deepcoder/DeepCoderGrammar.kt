@@ -34,7 +34,7 @@ val FUNCTION_NAME = StringsetSymbol(mapOf(
     "Count" to setOf(NodeAttribute(typeNameAttr, intType)),
     "ZipWith" to setOf(NodeAttribute(typeNameAttr, listType)),
     "ScanL1" to setOf(NodeAttribute(typeNameAttr, listType)),
-    ), attributeName = functionNameAttr)
+    ), attributeName = functionNameAttr, displayName = "FUNCTION_NAME")
 internal val FUNCTION_ARGS = NtSym("FuncArgs")
 internal val FUNCTION_ARG = NtSym("FuncArg")
 internal val VARDEF = NtSym("VarDef")
@@ -52,10 +52,12 @@ internal val TYPEVAR_RULE = SynthesizeAttributeProductionRule(mapOf(typeNameAttr
     PR(VARDEF, listOf(TYPES)))
 internal val STMT_LIST_RULE = SizedListAttributeProductionRule(STMT_LIST, STMT, "\n")
 internal val FUNCTION_LIST_RULE = SizedListAttributeProductionRule(FUNCTION_ARGS, FUNCTION_ARG, " ")
+internal val LIST_INIT_RULE = InitAttributeProductionRule(TerminalProductionRule(STMT_LIST), "length", "0")
+internal val INIT_FUNCTION_ARGS_RULE = InitAttributeProductionRule(TerminalProductionRule(FUNCTION_ARGS), "length", "0")
 val deepCoderGrammar = AttributeGrammar(listOf(
     STMT_LIST_RULE,
-    InitAttributeProductionRule(TerminalProductionRule(STMT_LIST), "length", "0"),
-    InitAttributeProductionRule(TerminalProductionRule(FUNCTION_ARGS), "length", "0"),
+    LIST_INIT_RULE,
+    INIT_FUNCTION_ARGS_RULE,
     FUNCTION_LIST_RULE,
     FUNCTION_CALL_RULE,
     STMT_RULE,

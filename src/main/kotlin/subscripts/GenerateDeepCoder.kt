@@ -12,7 +12,6 @@ import grammars.deepcoder.deepCoderGrammar
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -61,7 +60,7 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                                     }
                                     ioExamples.add(Pair(input.toString(), output))
                                 }
-                            } catch (e: DeepCoderInterpreter.ParseError) {
+                            } catch (e: DeepCoderInterpreter.InterpretError) {
                                 //Whatever.
                                 numBad.incrementAndGet()
                                 continue
