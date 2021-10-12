@@ -36,6 +36,13 @@ sealed class Symbol(open val terminal: Boolean = false,
             "%" to "PERCENT",
             "(" to "LP",
             ")" to "RP",
+            "-" to "DASH",
+            "*" to "TIMES",
+            "+" to "PLUS",
+            "<" to "LT",
+            ">" to "GT",
+            "/" to "FSLASH",
+            "\\" to "BSLASH"
         )
     }
     fun toAntlrLexerName() : String {

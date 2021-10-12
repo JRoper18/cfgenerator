@@ -1,9 +1,16 @@
 package grammar
 
 import grammar.constraints.ConstraintGenerator
-import grammars.common.TERMINAL
 import grammars.common.TerminalAPR
 import grammars.common.makeStringsetRules
+import org.antlr.v4.runtime.CharStream
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTree
+import org.antlr.v4.tool.Grammar
+import java.io.File
+import java.nio.file.Paths
+
 
 class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constraints : Map<AttributedProductionRule, ConstraintGenerator>, val start : Symbol){
     // Maps LHS symbols to a list of possible RHS symbol lists.
@@ -13,11 +20,11 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
         }
     }
 
-    val symbols: List<Symbol> = givenRules.flatMap {
+    val symbols: Collection<Symbol> = givenRules.flatMap {
         it.rule.rhs + it.rule.lhs
-    }
+    }.toSet()
 
-    val rules : List<AttributedProductionRule> = givenRules + symbols.flatMap { symbol ->
+    val rules : Collection<AttributedProductionRule> = givenRules + symbols.flatMap { symbol ->
         var ret = listOf<AttributedProductionRule>()
         when(symbol) {
             is StringsetSymbol -> {
@@ -31,8 +38,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
             }
         }
         ret
-    }
-
+    }.toSet()
 
     init {
         // Validate the grammar. Every non-terminal symbol should have an expansion.
@@ -130,24 +136,32 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
     fun toAntlr(name : String) : String {
         val build = StringBuilder()
         build.append("grammar $name;\n")
-        symbols.forEach { symbol ->
+
+        // Include all symbols created in the stringset rules.
+        val expandedSymbols = this.rules.flatMap {
+            it.rule.rhs + it.rule.lhs
+        }.filter {
+            it.name.isNotEmpty() // Get rid of the terminal symbol (which is an empty string).
+        }.toSet()
+
+        expandedSymbols.forEach { symbol ->
             val ruleBuilder = StringBuilder()
             if(symbol.terminal) {
                 // Let's make a lexer rule from this.
-                ruleBuilder.append("${symbol.toAntlrLexerName()} : '${symbol.toRegexEscapedString()}'")
+                ruleBuilder.append("${symbol.toAntlrLexerName()} : '${symbol.toEscapedString()}'")
             } else {
                 ruleBuilder.append("${symbol.toAntlrRuleName()} : ")
                 var first = true
                 getPossibleExpansions(symbol).forEach { apr ->
                     if (!first) {
-                        ruleBuilder.append("\n\t| ")
+                        ruleBuilder.append("\n\t| ") // For every expansion, put it on a new line and indent it.
                     }
                     first = false
                     apr.rule.rhs.forEach {
                         if (it.terminal) {
-                            ruleBuilder.append("${it.toAntlrLexerName()} ")
+                            ruleBuilder.append("${it.toAntlrLexerName()} ") // This leads to the lexer rule
                         } else {
-                            ruleBuilder.append("${it.toAntlrRuleName()} ")
+                            ruleBuilder.append("${it.toAntlrRuleName()} ") // This leads to the production rule.
                         }
                     }
                 }
@@ -157,5 +171,21 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
             build.append("\n")
         }
         return build.toString()
+    }
+
+    fun parse(progStr: String) {
+        val antlrStr = toAntlr("ThisGrammar")
+        val tmpFile = File.createTempFile("tmp", ".g4")
+        tmpFile.writeText(antlrStr)
+        val g: Grammar = Grammar.load(tmpFile.name)
+        val progStrStream = progStr.chars().mapToObj {
+                it -> it as Char
+        } as CharStream
+        val lexEngine = g.createLexerInterpreter(progStrStream)
+        val tokens = CommonTokenStream(lexEngine)
+        val parser = g.createParserInterpreter(tokens)
+        val t: ParseTree = parser.parse(g.getRule(this.start.toAntlrRuleName()).index)
+        println("parse tree: " + t.toStringTree(parser))
+        //TODO: Return our formatted tree
     }
 }
