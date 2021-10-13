@@ -1,12 +1,18 @@
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import subscripts.evaluateDeepcoderPrograms
 import subscripts.generateDeepcoderPrograms
 
 fun main(args: Array<String>) = runBlocking {
     val runTypesToSubscripts = mapOf<String, (args: Array<String>) -> Unit>(
         "generate" to { this.launch {
                 generateDeepcoderPrograms(it)
+            }
+        },
+        "evaluate" to {
+            this.launch {
+                evaluateDeepcoderPrograms(it)
             }
         }
     )

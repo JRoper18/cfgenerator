@@ -7,7 +7,6 @@ import java.lang.Exception
 
 class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariables()) {
     internal class InterpretError : Exception("Interpret error for DeepCoder")
-    internal class ParseError : Exception("Parse/lexing error for deepcoder")
 
     private fun checkIsInList(l : List<Int>, idx : Int) {
         if(idx >= l.size || idx < 0){
