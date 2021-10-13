@@ -10,7 +10,7 @@ internal class AttributeGrammarTest {
     fun testToAntlr() {
         val antlr = (deepCoderGrammar.toAntlr("DeepCoder"))
         println(antlr)
-        val lines = antlr.split("\n")
+        val lines = antlr.grammarStr.split("\n")
         var lIdx = 0
         File("./src/test/resources/DeepCoder.g4").forEachLine {
             assertEquals(lines[lIdx].trim(), it.trim())
