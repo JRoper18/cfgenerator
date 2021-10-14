@@ -30,7 +30,7 @@ fUNCTION_NAME : Head
 	| ZipWith
 	| ScanL1
 	;
-varDef : fUNCTION_NAME funcArgs
+varDef : fUNCTION_NAME SPACE funcArgs
 	| intint
 	;
 lowercaseASCII : Q

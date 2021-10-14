@@ -3,6 +3,24 @@ package grammars.deepcoder
 import kotlin.random.Random
 
 data class DeepCoderVariables(val intVars: MutableMap<String, Int> = mutableMapOf(), val listVars: MutableMap<String, List<Int>> = mutableMapOf()) {
+    constructor(inputStr: String) : this() {
+        val decls = inputStr.trim().lines()
+        for(decl in decls) {
+            val split = decl.split(" = ")
+            val varname = split[0]
+            val varVal = split[1]
+            if(varVal[0] == '[') {
+                // It's a list.
+                val varListVal = varVal.removeSuffix("]").split(",").map {
+                    it.toInt()
+                }
+                listVars[varname] = varListVal
+            } else {
+                // It's an int.
+                intVars[varname] = varVal.toInt()
+            }
+        }
+    }
     fun generateListVar(name: String) : List<Int> {
         val listSize = Math.abs((Random.nextInt() % 10)) + 1
         val list = mutableListOf<Int>()

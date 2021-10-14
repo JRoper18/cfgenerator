@@ -47,7 +47,7 @@ internal val STMT_RULE = SynthesizeAttributeProductionRule(mapOf(varAttrName to 
 )))
 internal val TYPES = StringsetSymbol(setOf("[int]", "int"), attributeName = typeNameAttr)
 internal val FUNCTION_CALL_RULE = SynthesizeAttributeProductionRule(mapOf(functionNameAttr to 0, "length" to 1, typeNameAttr to 0),
-    PR(VARDEF, listOf(FUNCTION_NAME, FUNCTION_ARGS)))
+    PR(VARDEF, listOf(FUNCTION_NAME, StringSymbol(" "), FUNCTION_ARGS)))
 internal val TYPEVAR_RULE = SynthesizeAttributeProductionRule(mapOf(typeNameAttr to 0),
     PR(VARDEF, listOf(TYPES)))
 internal val STMT_LIST_RULE = SizedListAttributeProductionRule(STMT_LIST, STMT, "\n")
