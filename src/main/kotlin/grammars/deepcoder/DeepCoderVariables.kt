@@ -11,8 +11,8 @@ data class DeepCoderVariables(val intVars: MutableMap<String, Int> = mutableMapO
             val varVal = split[1]
             if(varVal[0] == '[') {
                 // It's a list.
-                val varListVal = varVal.removeSuffix("]").split(",").map {
-                    it.toInt()
+                val varListVal = varVal.removePrefix("[").removeSuffix("]").split(",").map {
+                    it.trim().toInt()
                 }
                 listVars[varname] = varListVal
             } else {

@@ -6,7 +6,7 @@ import grammars.common.SizedListAttributeProductionRule
 import java.lang.Exception
 
 class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariables()) {
-    internal class InterpretError : Exception("Interpret error for DeepCoder")
+    internal class InterpretError(inStr: String = "Interpret error") : Exception("Interpret error for DeepCoder: $inStr")
 
     private fun checkIsInList(l : List<Int>, idx : Int) {
         if(idx >= l.size || idx < 0){
@@ -14,10 +14,10 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
         }
     }
     private fun getList(varname : String) : List<Int> {
-        return variables.listVars[varname] ?: throw InterpretError();
+        return variables.listVars[varname] ?: throw InterpretError("$varname is not a list variable!");
     }
     private fun getInt(varname : String) : Int{
-        return variables.intVars[varname] ?: throw InterpretError();
+        return variables.intVars[varname] ?: throw InterpretError("$varname is not an int variable!");
     }
 
     companion object {
@@ -44,12 +44,12 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
     }
 
     fun interp(program: String) : String {
-        val lines = program.trim().split("\b")
+        val lines = program.trim().lines()
         var lastEval : String = ""
         for(line in lines) {
             val splitStmt = line.split(":=")
-            val varname = splitStmt[0]
-            val vardecl = splitStmt[1]
+            val varname = splitStmt[0].trim()
+            val vardecl = splitStmt[1].trim()
             if(vardecl == intType) {
                 lastEval = variables.intVars[varname].toString()
             }
@@ -60,17 +60,20 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
             } else {
                 // It's a function call.
                 val splitDecl = vardecl.split(" ")
-                val funcName = splitDecl[0]
+                val funcName = splitDecl[0].trim()
                 val funcVarInputs = splitDecl.subList(1, splitDecl.size)
                 if(intFunctions.containsKey(funcName)) {
                     val ret = intFunctions[funcName]!!(funcVarInputs)
                     variables.intVars[varname] = ret
                     lastEval = ret.toString()
                 }
-                else {
+                else if(listFunctions.containsKey(funcName)){
                     val ret = listFunctions[funcName]!!(funcVarInputs)
                     variables.listVars[varname] = ret
                     lastEval = ret.toString()
+                }
+                else {
+                    throw IllegalArgumentException("Cannot find function with name $funcName")
                 }
             }
         }

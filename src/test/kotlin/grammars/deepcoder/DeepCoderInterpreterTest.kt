@@ -12,9 +12,6 @@ import kotlin.random.Random
 
 internal class DeepCoderInterpreterTest {
 
-    @Test
-    fun testInterp() {
-    }
 
     @Test
     fun testInterpStmt() {
@@ -34,6 +31,17 @@ internal class DeepCoderInterpreterTest {
             assert((interpreter.variables.intVars.size + interpreter.variables.listVars.size == 1) || DeepCoderInterpreter.getInputs(program).size == 1)
         }
 
+    }
+
+    @Test
+    fun testInterpString() {
+        val dcVars = DeepCoderVariables(listVars = mutableMapOf("c" to listOf(-1, 1, 2, 3, 0), "u" to listOf()))
+        val interpreter = DeepCoderInterpreter(dcVars)
+        val progStr = "u:=[int]\n" +
+                "c:=[int]\n" +
+                "m:=Count (>0) c\n"
+        val output = interpreter.interp(progStr)
+        assertEquals("3", output)
     }
 
 }
