@@ -1,13 +1,9 @@
 package subscripts
 
+import generators.ProgramGenerationResult.PROGRAM_STATUS
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.GenericGrammarNode
-import grammar.NodeAttribute
-import grammar.constraints.BasicRuleConstraint
-import grammars.deepcoder.DeepCoderInterpreter
-import grammars.deepcoder.DeepCoderVariables
-import grammars.deepcoder.FUNCTION_NAME
 import grammars.deepcoder.deepCoderGrammar
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -48,31 +44,16 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                         var num = 0
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
-                            val program = generator.generate(listOf(BasicRuleConstraint(NodeAttribute("length", "3"))))
-                            val inputVars = DeepCoderInterpreter.getInputs(program)
-                            val ioExamples = mutableListOf<Pair<String, String>>()
-                            try {
-                                for(i in 0 until 10){
-                                    val input = DeepCoderVariables.fromInputs(inputVars)
-                                    val output = DeepCoderInterpreter(input.copy()).interp(program)
-                                    if(output.trim() == "Null") {
-                                        continue;
-                                    }
-                                    ioExamples.add(Pair(input.toString(), output))
-                                }
-                            } catch (e: DeepCoderInterpreter.InterpretError) {
-                                //Whatever.
+                            val generationResult = generateDeepcoderProgramAndExamples(generator = generator, nonUniformExceptions)
+                            if(generationResult.status == PROGRAM_STATUS.BAD) {
                                 numBad.incrementAndGet()
-                                continue
-                            } catch (e: Exception) {
-                                val key = e.javaClass.name
-                                nonUniformExceptions.putIfAbsent(key, mutableListOf<Pair<Exception, GenericGrammarNode>>())
-                                nonUniformExceptions[key]!!.add(Pair(e, program))
-                                continue
+                            } else if(generationResult.status == PROGRAM_STATUS.RUNNABLE) {
+                                numRunnable.incrementAndGet()
                             }
-                            numRunnable.incrementAndGet()
+                            val program = generationResult.program
+                            val examples = generationResult.examples
                             // Okay, now we have a good program. Is it useful?
-                            val useful = program.symbolCount(FUNCTION_NAME) >= 1 && ioExamples.size > 0;
+                            val useful = isDeepcoderProgramUseful(program, examples.size)
                             if(!useful) {
                                 continue
                             }
@@ -89,7 +70,7 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
                                 outF.println("<|splitter|>")
                                 outF.println("Examples:")
 //                                println(progStr)
-                                ioExamples.forEach {
+                                examples.forEach {
                                     outF.println("Inputs: ")
                                     outF.println(it.first)
                                     outF.println("Output: ")

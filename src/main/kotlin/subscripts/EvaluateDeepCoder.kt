@@ -1,28 +1,14 @@
 package subscripts
 
-import grammar.GenericGrammarNode
-import grammars.deepcoder.DeepCoderInterpreter
-import grammars.deepcoder.DeepCoderVariables
-import grammars.deepcoder.deepCoderGrammar
+import generators.ProgramGenerator
+import grammars.deepcoder.*
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
-import kotlinx.cli.default
-import kotlinx.cli.required
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
-suspend fun <A> Iterable<A>.pforall(f: suspend (A) -> Unit) = coroutineScope {
-    map {
-        async {
-            f(it)
-            true
-        }
-    }.awaitAll()
-}
+import kotlin.random.Random
 
 suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
     // Given a program, see if it satisfies the input/output example.
@@ -33,9 +19,26 @@ suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
         fullName = "input",
         shortName = "i",
         description = "Input file name"
-    ).required()
+    )
+    val numToEval by parser.option(
+        ArgType.Int,
+        fullName = "num",
+        shortName = "n",
+        description = "Number of examples to generate, if not using an input file. " +
+                "Cannot be used in conjunction with input files. "
+    )
     parser.parse(args)
-    val evalExamples = File(inputFileName).readText().split("<|splitter|>")
+    require(numToEval != null || inputFileName != null)
+    require(!(numToEval != null && inputFileName != null))
+    var evalExamples : List<String> = listOf()
+    if(inputFileName != null) {
+        evalExamples = File(inputFileName).readText().split("<|splitter|>")
+    }
+    else {
+        val generator = ProgramGenerator(deepCoderGrammar, random = Random(842L))
+        // Generate stuff to eval on.
+        generateDeepcoderProgramAndExamples(generator)
+    }
     val numRunnableExamples = AtomicInteger(0)
     val numCorrectExamples = AtomicInteger(0)
     val numCorrectPrograms = AtomicInteger(0)
