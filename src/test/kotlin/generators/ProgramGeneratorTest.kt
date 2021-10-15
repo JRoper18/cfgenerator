@@ -9,7 +9,7 @@ import grammar.constraints.BasicRuleConstraint
 import grammars.common.InitAttributeProductionRule
 import grammars.common.SizedListAttributeProductionRule
 import grammars.common.TerminalProductionRule
-import grammars.deepcoder.deepCoderGrammar
+import grammars.deepcoder.DeepCoderGrammar
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -36,8 +36,8 @@ internal class ProgramGeneratorTest {
     @Test
     fun testDeterminism() {
         // Just use deepcoder, it's simple but not so simple that it's inherently deterministic.
-        val gen1 = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
-        val gen2 = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val gen1 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
+        val gen2 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val stringifier = ProgramStringifier()
         assertEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
         assertEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))

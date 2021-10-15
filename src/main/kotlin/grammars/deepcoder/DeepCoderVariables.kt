@@ -48,8 +48,8 @@ data class DeepCoderVariables(val intVars: MutableMap<String, Int> = mutableMapO
                 val varname = it.key
                 val vartype = it.value
                 when(vartype){
-                    intType -> vars.generateIntVar(varname)
-                    listType -> vars.generateListVar(varname)
+                    DeepCoderGrammar.intType -> vars.generateIntVar(varname)
+                    DeepCoderGrammar.listType -> vars.generateListVar(varname)
                 }
             }
             return vars

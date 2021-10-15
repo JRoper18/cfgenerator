@@ -113,42 +113,4 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
         }
         return AntlrResult(build.toString(), ruleMap.toMap())
     }
-
-    fun fromAntlrParsetree(grammar: Grammar, ctx: RuleContext, antlrToAPRS: Map<String, List<APR>>) : GenericGrammarNode {
-        val rule = grammar.getRule(ctx.ruleIndex)
-        val alts = antlrToAPRS[rule.name]!!
-        val altIdx = if(ctx.altNumber == 0) 0 else ctx.altNumber-1
-        val apr = alts[altIdx]
-        val node = RootGrammarNode(apr)
-        val childNodes = mutableListOf<GenericGrammarNode>()
-        for(cidx in 0 until ctx.childCount) {
-            val childData = ctx.getChild(cidx).payload
-            when(childData) {
-                is RuleContextWithAltNum -> {
-                    childNodes.add(fromAntlrParsetree(grammar, childData, antlrToAPRS))
-                }
-                is CommonToken -> {
-                    childNodes.add(RootGrammarNode(TerminalAPR(StringSymbol(childData.text))))
-                }
-            }
-        }
-        return node.withChildren(childNodes)
-        // Docs: https://www.antlr.org/api/Java/org/antlr/v4/runtime/tree/ParseTree.html
-
-    }
-
-    fun parse(progStr: String, start : Symbol = this.start) : GenericGrammarNode {
-        val tmpFile = File.createTempFile("tmp", ".g4")
-        val antlrResult = toAntlr(tmpFile.name.substringBefore('.'))
-        tmpFile.writeText(antlrResult.grammarStr)
-        val g: Grammar = Grammar.load(tmpFile.path)
-        val progStrByteStream = progStr.byteInputStream(StandardCharsets.UTF_8)
-        val progStrStream = (CharStreams.fromStream(progStrByteStream, StandardCharsets.UTF_8));
-        val lexEngine = g.createLexerInterpreter(progStrStream)
-        val tokens = CommonTokenStream(lexEngine)
-        val parser = DeepCoderParser(tokens)
-        val ctx = parser.stmtList() as RuleContextWithAltNum
-        println(ctx.toStringTree(parser))
-        return fromAntlrParsetree(g, ctx, antlrResult.ruleMap)
-    }
 }
