@@ -1,6 +1,6 @@
 package grammar
 
-import grammars.deepcoder.DeepCoderGrammar
+import grammars.deepcoder.deepCoderGrammar
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -8,7 +8,7 @@ import java.io.File
 internal class AttributeGrammarTest {
     @Test
     fun testToAntlr() {
-        val antlr = (DeepCoderGrammar.grammar.toAntlr("DeepCoder"))
+        val antlr = (deepCoderGrammar.toAntlr("DeepCoder"))
         println(antlr)
         val lines = antlr.grammarStr.split("\n")
         var lIdx = 0

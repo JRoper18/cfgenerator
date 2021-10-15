@@ -27,14 +27,14 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
         fun getInputs(program: GenericGrammarNode) : Map<String, String> {
             val map = mutableMapOf<String, String>()
             program.forEachInTree {
-                if(it.lhsSymbol() == DeepCoderGrammar.STMT){
+                if(it.lhsSymbol() == STMT){
                     val vardefStmt = it.rhs[2]
-                    if (vardefStmt.productionRule == DeepCoderGrammar.TYPEVAR_RULE) {
+                    if (vardefStmt.productionRule == TYPEVAR_RULE) {
                         // This means it's not just ANY variable definition: It's a NEW/input variable definition. 
                         val attrs = it.attributes()
-                        val varname = attrs.getStringAttribute(DeepCoderGrammar.varAttrName)!!
+                        val varname = attrs.getStringAttribute(varAttrName)!!
                         val vardefAttrs = vardefStmt.attributes()
-                        val varType = vardefAttrs.getStringAttribute(DeepCoderGrammar.typeNameAttr) ?: throw InterpretError()
+                        val varType = vardefAttrs.getStringAttribute(typeNameAttr) ?: throw InterpretError()
                         map[varname] = varType
                     }
                 }
@@ -47,10 +47,10 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
                 val splitStmt = str.split(":=")
                 val varname = splitStmt[0]
                 val vardecl = splitStmt[1]
-                if(vardecl == DeepCoderGrammar.intType) {
+                if(vardecl == intType) {
 //                    val node = RootGrammarNode()
                 }
-                else if(vardecl == DeepCoderGrammar.listType) {
+                else if(vardecl == listType) {
                     // Same here.
 
                 } else {
@@ -62,7 +62,7 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
         }
     }
     fun interp(program: GenericGrammarNode) : String {
-        require(program.lhsSymbol() == DeepCoderGrammar.STMT_LIST)
+        require(program.lhsSymbol() == STMT_LIST)
         if(program.rhs.size < 2){
             //It's a terminal list.
             return "Null";
@@ -79,36 +79,36 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
      * Returns a string representation of the value of the variable just assigned.
      */
     fun interpStmt(stmt: GenericGrammarNode) : String {
-        require(stmt.lhsSymbol() == DeepCoderGrammar.STMT)
+        require(stmt.lhsSymbol() == STMT)
         val attrs = stmt.attributes()
-        val varname = attrs.getStringAttribute(DeepCoderGrammar.varAttrName)!!
+        val varname = attrs.getStringAttribute(varAttrName)!!
         val vardefStmt = stmt.rhs[2]
         val vardefAttrs = vardefStmt.attributes()
-        val varType = vardefAttrs.getStringAttribute(DeepCoderGrammar.typeNameAttr)
+        val varType = vardefAttrs.getStringAttribute(typeNameAttr)
 
-        if(vardefStmt.productionRule == DeepCoderGrammar.FUNCTION_CALL_RULE) {
+        if(vardefStmt.productionRule == FUNCTION_CALL_RULE) {
             if(variables.hasVar(varname)){ //Can't re-declare vars.
                 throw InterpretError()
             }
-            val funcName = vardefAttrs.getStringAttribute(DeepCoderGrammar.functionNameAttr)
+            val funcName = vardefAttrs.getStringAttribute(functionNameAttr)
             val numFuncArgs = vardefAttrs.getStringAttribute("length")
             val funcArgsNode = vardefStmt.rhs[1]
             check(funcArgsNode.productionRule is SizedListAttributeProductionRule)
             val funcVarInputs = (funcArgsNode.productionRule as SizedListAttributeProductionRule).unroll(funcArgsNode).map {
                 it.rhs[0].rhs[0].lhsSymbol().name
             }
-            if(varType == DeepCoderGrammar.intType) {
+            if(varType == intType) {
                 val ret = intFunctions[funcName]!!(funcVarInputs)
                 variables.intVars[varname] = ret
                 return ret.toString()
             }
-            if(varType == DeepCoderGrammar.listType) {
+            if(varType == listType) {
                 val ret = listFunctions[funcName]!!(funcVarInputs)
                 variables.listVars[varname] = ret
                 return ret.toString()
             }
         }
-        else if(vardefStmt.productionRule == DeepCoderGrammar.TYPEVAR_RULE) {
+        else if(vardefStmt.productionRule == TYPEVAR_RULE) {
             // An input var. Hope we've specified something for it...
         }
         else {

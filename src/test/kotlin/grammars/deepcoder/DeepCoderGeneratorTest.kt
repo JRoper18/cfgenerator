@@ -24,7 +24,7 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun generate() {
-        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
         val program = RootGrammarNode(UnexpandedAPR(NtSym("StmtList")))
         val success = generator.expandNode(program, listOf(BasicRuleConstraint(NodeAttribute("length", "3"))))
         assert(success)
@@ -37,13 +37,13 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerateFunctionNameWithConstraint() {
-        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
-        val cons = listOf(BasicRuleConstraint(NodeAttribute(DeepCoderGrammar.functionNameAttr, "Head")))
-        val program = RootGrammarNode(UnexpandedAPR(DeepCoderGrammar.FUNCTION_NAME))
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val cons = listOf(BasicRuleConstraint(NodeAttribute(functionNameAttr, "Head")))
+        val program = RootGrammarNode(UnexpandedAPR(FUNCTION_NAME))
         val success = generator.expandNode(program, cons)
         assert(success)
         assertNotNull(program)
-        assertEquals("Head", program.attributes().getStringAttribute(DeepCoderGrammar.functionNameAttr))
+        assertEquals("Head", program.attributes().getStringAttribute(functionNameAttr))
         val progStr = (ProgramStringifier().stringify(program))
         program.verify()
         assertContains(progStr, "Head")
@@ -51,8 +51,8 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerateFunctionNameWithoutConstraint() {
-        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
-        val program = RootGrammarNode(UnexpandedAPR(DeepCoderGrammar.FUNCTION_NAME))
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val program = RootGrammarNode(UnexpandedAPR(FUNCTION_NAME))
         generator.expandNode(program)
         assertNotNull(program)
         val progStr = (ProgramStringifier().stringify(program))
@@ -62,7 +62,7 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerateStatement() {
-        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
         val program = makeStmt(generator)
         val attrs = program.attributes()
         println(attrs)

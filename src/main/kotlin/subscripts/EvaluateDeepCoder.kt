@@ -1,12 +1,9 @@
 package subscripts
 
 import grammar.GenericGrammarNode
-import grammar.RootGrammarNode
-import grammars.common.TERMINAL
-import grammars.common.TerminalAPR
 import grammars.deepcoder.DeepCoderInterpreter
 import grammars.deepcoder.DeepCoderVariables
-import grammars.deepcoder.DeepCoderGrammar
+import grammars.deepcoder.deepCoderGrammar
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -43,8 +40,7 @@ suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
         try {
             val splitExample = example.split("Program:")
             val programStr = splitExample[1].trim()
-//            val program = DeepCoderGrammar.grammar.parse(programStr)
-            val program = RootGrammarNode(TerminalAPR(TERMINAL))
+            val program = deepCoderGrammar.parse(programStr)
             program.verify()
             val inputOutputExamples = splitExample[0].removePrefix("Examples:\n").trim().split("Inputs:")
             inputOutputExamples.forEach {

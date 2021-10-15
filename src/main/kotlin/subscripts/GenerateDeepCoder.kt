@@ -5,10 +5,10 @@ import generators.ProgramStringifier
 import grammar.GenericGrammarNode
 import grammar.NodeAttribute
 import grammar.constraints.BasicRuleConstraint
-import grammars.deepcoder.DeepCoderGrammar
-import grammars.deepcoder.DeepCoderGrammar.FUNCTION_NAME
 import grammars.deepcoder.DeepCoderInterpreter
 import grammars.deepcoder.DeepCoderVariables
+import grammars.deepcoder.FUNCTION_NAME
+import grammars.deepcoder.deepCoderGrammar
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -39,7 +39,7 @@ suspend fun generateDeepcoderPrograms(args: Array<String>) {
     var doneFlag = false // Set to true if we're creating only useful programs and we've reached all the useful programs.
     val time = measureTimeMillis {
         val mutex = Mutex()
-        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 5, random = Random(12234))
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 5, random = Random(12234))
         val strfier = ProgramStringifier()
         File(outputFileName).printWriter().use { outF ->
             coroutineScope {
