@@ -1,4 +1,7 @@
 grammar DeepCoder;
+
+options {contextSuperClass = org.antlr.v4.runtime.RuleContextWithAltNum;}
+
 stmtList : stmtList NEWLINE stmt
 	| stmt
 	;

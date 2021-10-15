@@ -16,10 +16,7 @@ fun UnexpandedAPR(lsh: Symbol) : APR {
     return APR(TerminalProductionRule(lsh))
 }
 fun ListProductionRule(listName: NtSym, unitName: Symbol, separator: String = ""): ProductionRule{
-    if(separator.isEmpty()){
-        return ProductionRule(listName, listOf(listName, StringSymbol(separator), unitName))
-    }
-    return ProductionRule(listName, listOf(listName, StringSymbol(separator), unitName))
+    return ProductionRule(listName, listOf(unitName, StringSymbol(separator), listName))
 }
 fun makeStringsetRules(symbol: StringsetSymbol) : List<AttributedProductionRule> {
     return symbol.stringset.map {

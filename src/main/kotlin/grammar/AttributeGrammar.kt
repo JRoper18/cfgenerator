@@ -1,11 +1,14 @@
 package grammar
 
+import DeepCoderParser
 import grammar.constraints.ConstraintGenerator
 import grammars.common.TerminalAPR
 import grammars.common.makeStringsetRules
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTree
+import org.antlr.v4.runtime.tree.TerminalNodeImpl
 import org.antlr.v4.tool.Grammar
+import org.antlr.v4.tool.GrammarInterpreterRuleContext
 import org.antlr.v4.tool.Rule
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -98,7 +101,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
                             ruleBuilder.append("${it.toAntlrRuleName()} ") // This leads to the production rule.
                         }
                     }
-                    ruleBuilder.append("# Label$labelIdx")
+//                    ruleBuilder.append("# Label$labelIdx")
                     labelIdx += 1
 
                 }
@@ -111,30 +114,30 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
         return AntlrResult(build.toString(), ruleMap.toMap())
     }
 
-    fun fromAntlrParsetree(grammar: Grammar, pt: ParseTree, antlrToAPRS: Map<String, List<APR>>) : GenericGrammarNode {
-        val payload = pt.payload // Either a token or a RuleContext, according to the docs:
-        // Docs: https://www.antlr.org/api/Java/org/antlr/v4/runtime/tree/ParseTree.html
-        when(payload) {
-            is RuleContext -> {
-                val rule = grammar.getRule(payload.ruleIndex)
-                val alts = antlrToAPRS[rule.name]!!
-                val apr = alts[payload.altNumber-1]
-                val node = RootGrammarNode(apr)
-                val childNodes = mutableListOf<GenericGrammarNode>()
-                for(cidx in 0 until pt.childCount) {
-                    childNodes.add(fromAntlrParsetree(grammar, pt.getChild(cidx), antlrToAPRS))
+    fun fromAntlrParsetree(grammar: Grammar, ctx: RuleContext, antlrToAPRS: Map<String, List<APR>>) : GenericGrammarNode {
+        val rule = grammar.getRule(ctx.ruleIndex)
+        val alts = antlrToAPRS[rule.name]!!
+        val altIdx = if(ctx.altNumber == 0) 0 else ctx.altNumber-1
+        val apr = alts[altIdx]
+        val node = RootGrammarNode(apr)
+        val childNodes = mutableListOf<GenericGrammarNode>()
+        for(cidx in 0 until ctx.childCount) {
+            val childData = ctx.getChild(cidx).payload
+            when(childData) {
+                is RuleContextWithAltNum -> {
+                    childNodes.add(fromAntlrParsetree(grammar, childData, antlrToAPRS))
                 }
-                return node.withChildren(childNodes)
-            }
-            is Token ->
-                return RootGrammarNode(TerminalAPR(StringSymbol(payload.text)))
-            else -> {
-                throw IllegalStateException("Payload is either a Token or a RuleContext according to ANTLR docs. WTF?")
+                is CommonToken -> {
+                    childNodes.add(RootGrammarNode(TerminalAPR(StringSymbol(childData.text))))
+                }
             }
         }
+        return node.withChildren(childNodes)
+        // Docs: https://www.antlr.org/api/Java/org/antlr/v4/runtime/tree/ParseTree.html
+
     }
 
-    fun parse(progStr: String, start: Symbol = this.start) : GenericGrammarNode {
+    fun parse(progStr: String, start : Symbol = this.start) : GenericGrammarNode {
         val tmpFile = File.createTempFile("tmp", ".g4")
         val antlrResult = toAntlr(tmpFile.name.substringBefore('.'))
         tmpFile.writeText(antlrResult.grammarStr)
@@ -143,10 +146,9 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
         val progStrStream = (CharStreams.fromStream(progStrByteStream, StandardCharsets.UTF_8));
         val lexEngine = g.createLexerInterpreter(progStrStream)
         val tokens = CommonTokenStream(lexEngine)
-//        val parser = g.createParserInterpreter(tokens)
-        val parser = g.createGrammarParserInterpreter(tokens)
-        parser.context = RuleContextWithAltNum()
-        val t: ParseTree = parser.parse(g.getRule(start.toAntlrRuleName()).index)
-        return fromAntlrParsetree(g, t, antlrResult.ruleMap)
+        val parser = DeepCoderParser(tokens)
+        val ctx = parser.stmtList() as RuleContextWithAltNum
+        println(ctx.toStringTree(parser))
+        return fromAntlrParsetree(g, ctx, antlrResult.ruleMap)
     }
 }
