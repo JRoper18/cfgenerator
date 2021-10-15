@@ -41,25 +41,40 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
             }
             return map
         }
-        fun fromString(str: String) {
-            val lines = str.trim().split("\b")
-            for(line in lines) {
-                val splitStmt = str.split(":=")
-                val varname = splitStmt[0]
-                val vardecl = splitStmt[1]
-                if(vardecl == intType) {
-//                    val node = RootGrammarNode()
-                }
-                else if(vardecl == listType) {
-                    // Same here.
+    }
 
-                } else {
-                    // It's a function call.
+    fun interp(program: String) : String {
+        val lines = program.trim().split("\b")
+        var lastEval : String = ""
+        for(line in lines) {
+            val splitStmt = line.split(":=")
+            val varname = splitStmt[0]
+            val vardecl = splitStmt[1]
+            if(vardecl == intType) {
+                lastEval = variables.intVars[varname].toString()
+            }
+            else if(vardecl == listType) {
+                // Same here.
+                lastEval = variables.listVars[varname].toString()
 
+            } else {
+                // It's a function call.
+                val splitDecl = vardecl.split(" ")
+                val funcName = splitDecl[0]
+                val funcVarInputs = splitDecl.subList(1, splitDecl.size)
+                if(intFunctions.containsKey(funcName)) {
+                    val ret = intFunctions[funcName]!!(funcVarInputs)
+                    variables.intVars[varname] = ret
+                    lastEval = ret.toString()
                 }
-//                val stmtNode
+                else {
+                    val ret = listFunctions[funcName]!!(funcVarInputs)
+                    variables.listVars[varname] = ret
+                    lastEval = ret.toString()
+                }
             }
         }
+        return lastEval
     }
     fun interp(program: GenericGrammarNode) : String {
         require(program.lhsSymbol() == STMT_LIST)

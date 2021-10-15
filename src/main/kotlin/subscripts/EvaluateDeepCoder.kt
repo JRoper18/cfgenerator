@@ -40,15 +40,13 @@ suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
         try {
             val splitExample = example.split("Program:")
             val programStr = splitExample[1].trim()
-            val program = deepCoderGrammar.parse(programStr)
-            program.verify()
             val inputOutputExamples = splitExample[0].removePrefix("Examples:\n").trim().split("Inputs:")
             inputOutputExamples.forEach {
                 numTotalExamples.incrementAndGet()
                 val ioSplit = it.split("Output")
                 val input = DeepCoderVariables(ioSplit[0].trim())
                 val interpreter = DeepCoderInterpreter(input)
-                val actualOutput = interpreter.interp(program)
+                val actualOutput = interpreter.interp(programStr)
                 numRunnableExamples.incrementAndGet()
                 val expectedOutput = ioSplit[1].trim()
                 if(expectedOutput.trim() == actualOutput.trim()) {
