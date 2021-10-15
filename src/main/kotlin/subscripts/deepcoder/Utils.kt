@@ -2,6 +2,7 @@ package subscripts
 
 import generators.ProgramGenerationResult
 import generators.ProgramGenerator
+import generators.ProgramStringifier
 import grammar.GenericGrammarNode
 import grammar.NodeAttribute
 import grammar.RootGrammarNode
@@ -53,4 +54,18 @@ fun generateDeepcoderProgramAndExamples(generator: ProgramGenerator,
         return ProgramGenerationResult(program, ioExamples.toList(), ProgramGenerationResult.PROGRAM_STATUS.EXCEPTIONED)
     }
     return ProgramGenerationResult(program, ioExamples.toList(), ProgramGenerationResult.PROGRAM_STATUS.RUNNABLE)
+}
+
+fun generationResultToString(result: ProgramGenerationResult) : String {
+    val build = StringBuilder()
+    build.append("Examples:\n")
+    result.examples.forEach {
+        build.append("Inputs: \n")
+        build.append(it.first + "\n")
+        build.append("Output: \n")
+        build.append(it.second + "\n")
+    }
+    build.append("\nProgram: \n")
+    build.append(ProgramStringifier().stringify(result.program) + "\n")
+    return build.toString()
 }

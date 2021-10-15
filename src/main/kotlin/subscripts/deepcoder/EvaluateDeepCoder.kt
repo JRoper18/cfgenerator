@@ -37,7 +37,11 @@ suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
     else {
         val generator = ProgramGenerator(deepCoderGrammar, random = Random(842L))
         // Generate stuff to eval on.
-        generateDeepcoderProgramAndExamples(generator)
+        evalExamples = generateDeepcoderPrograms(makeUseful = true, numToMake = numToEval!!, canSaveToReturnMemory = {
+            isDeepcoderProgramUseful(it.program, it.examples.size)
+        }).map {
+            generationResultToString(it)
+        }
     }
     val numRunnableExamples = AtomicInteger(0)
     val numCorrectExamples = AtomicInteger(0)
@@ -45,6 +49,7 @@ suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
     val numTotalExamples = AtomicInteger(0)
     val weirdMutex = Mutex()
     val weirdMap = mutableMapOf<String, MutableList<Pair<Exception, String>>>()
+
     evalExamples.pforall { example ->
         try {
             val splitExample = example.split("Program:")
