@@ -21,8 +21,6 @@ import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
 
-const val MAX_COROUTINES = 10
-
 /**
  * outputFileName is what it saves
  * makeUseful is a flag that's true if you want to only make/output useful programs

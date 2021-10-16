@@ -1,6 +1,5 @@
 package grammar
 
-import DeepCoderParser
 import grammar.constraints.ConstraintGenerator
 import grammars.common.TerminalAPR
 import grammars.common.makeStringsetRules
@@ -136,19 +135,19 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
         // Docs: https://www.antlr.org/api/Java/org/antlr/v4/runtime/tree/ParseTree.html
 
     }
-
-    fun parse(progStr: String, start : Symbol = this.start) : GenericGrammarNode {
-        val tmpFile = File.createTempFile("tmp", ".g4")
-        val antlrResult = toAntlr(tmpFile.name.substringBefore('.'))
-        tmpFile.writeText(antlrResult.grammarStr)
-        val g: Grammar = Grammar.load(tmpFile.path)
-        val progStrByteStream = progStr.byteInputStream(StandardCharsets.UTF_8)
-        val progStrStream = (CharStreams.fromStream(progStrByteStream, StandardCharsets.UTF_8));
-        val lexEngine = g.createLexerInterpreter(progStrStream)
-        val tokens = CommonTokenStream(lexEngine)
-        val parser = DeepCoderParser(tokens)
-        val ctx = parser.stmtList() as RuleContextWithAltNum
-        println(ctx.toStringTree(parser))
-        return fromAntlrParsetree(g, ctx, antlrResult.ruleMap)
-    }
+    // Until I get antlr working this is gone. 
+    // fun parse(progStr: String, start : Symbol = this.start) : GenericGrammarNode {
+    //     val tmpFile = File.createTempFile("tmp", ".g4")
+    //     val antlrResult = toAntlr(tmpFile.name.substringBefore('.'))
+    //     tmpFile.writeText(antlrResult.grammarStr)
+    //     val g: Grammar = Grammar.load(tmpFile.path)
+    //     val progStrByteStream = progStr.byteInputStream(StandardCharsets.UTF_8)
+    //     val progStrStream = (CharStreams.fromStream(progStrByteStream, StandardCharsets.UTF_8));
+    //     val lexEngine = g.createLexerInterpreter(progStrStream)
+    //     val tokens = CommonTokenStream(lexEngine)
+    //     val parser = DeepCoderParser(tokens)
+    //     val ctx = parser.stmtList() as RuleContextWithAltNum
+    //     println(ctx.toStringTree(parser))
+    //     return fromAntlrParsetree(g, ctx, antlrResult.ruleMap)
+    // }
 }
