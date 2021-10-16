@@ -24,15 +24,17 @@ suspend fun <A> Iterable<A>.pforall(f: suspend (A) -> Unit) = coroutineScope {
     }.awaitAll()
 }
 
+const val MAX_COROUTINES = 20;
+
 fun isDeepcoderProgramUseful(program: RootGrammarNode, numWorkingExamples : Int) : Boolean {
-    return program.symbolCount(FUNCTION_NAME) >= 1 && numWorkingExamples > 0;
+    return program.symbolCount(FUNCTION_NAME) >= 2 && numWorkingExamples > 0;
 }
 fun generateDeepcoderProgramAndExamples(generator: ProgramGenerator,
                                         generationExceptions: MutableMap<String, MutableList<Pair<Exception, GenericGrammarNode>>> = mutableMapOf(),
                                         numExamples : Int = 10,
 
                                         ) : ProgramGenerationResult {
-    val program = generator.generate(listOf(BasicRuleConstraint(NodeAttribute("length", "3"))))
+    val program = generator.generate(listOf(BasicRuleConstraint(NodeAttribute("length", "4"))))
     val inputVars = DeepCoderInterpreter.getInputs(program)
     val ioExamples = mutableListOf<Pair<String, String>>()
     try {

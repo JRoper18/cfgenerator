@@ -11,6 +11,12 @@ data class NodeAttributes(
         return stringAttributes[key]
     }
 
+    fun matchingAttributeKeys(match: Regex) : Collection<String> {
+        return this.stringAttributes.keys.filter {
+            match.matches(it)
+        }
+    }
+
     fun copyAttributeIfPresent(key: String, into: NodeAttributes) {
         val stringAttr = getStringAttribute(key)
         if(stringAttr != null) {
