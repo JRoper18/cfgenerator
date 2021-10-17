@@ -34,7 +34,9 @@ data class NodeAttributes(
     fun union(other: NodeAttributes) : NodeAttributes{
         val new = this.copy()
         new.stringAttributes.putAll(other.stringAttributes)
-        require(new.stringAttributes.size == other.stringAttributes.size + this.stringAttributes.size) // No duplicated/overridden attributes.
+        require(new.stringAttributes.size == other.stringAttributes.size + this.stringAttributes.size) {
+            "Could not make union of nodeattributes as they are non-distinct: \n$other\n$this"
+        }
         return new
     }
     fun isEmpty() : Boolean {
@@ -64,6 +66,10 @@ data class NodeAttributes(
     }
     override fun toString() : String {
         return this.stringAttributes.toString()
+    }
+
+    fun copy() : NodeAttributes {
+        return NodeAttributes(stringAttributes.toMutableMap())
     }
 
 }

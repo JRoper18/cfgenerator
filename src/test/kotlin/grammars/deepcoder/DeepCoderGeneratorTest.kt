@@ -5,6 +5,7 @@ import generators.ProgramStringifier
 import grammar.NodeAttribute
 import grammar.NtSym
 import grammar.RootGrammarNode
+import grammar.Symbol
 import grammar.constraints.BasicRuleConstraint
 import grammars.common.UnexpandedAPR
 
@@ -12,12 +13,16 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 
-internal fun makeStmt(generator: ProgramGenerator) : RootGrammarNode {
-    val program = RootGrammarNode(UnexpandedAPR(NtSym("Stmt")))
+internal fun makeProgramFromSymbol(generator: ProgramGenerator, symbol: Symbol) : RootGrammarNode{
+    val program = RootGrammarNode(UnexpandedAPR(symbol))
     val success = generator.expandNode(program)
     assert(success)
     assertNotNull(program)
     return program
+
+}
+internal fun makeStmt(generator: ProgramGenerator) : RootGrammarNode {
+    return makeProgramFromSymbol(generator, STMT)
 }
 
 internal class DeepCoderGeneratorTest {
@@ -25,8 +30,9 @@ internal class DeepCoderGeneratorTest {
     @Test
     fun generate() {
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
-        val program = RootGrammarNode(UnexpandedAPR(NtSym("StmtList")))
+        val program = RootGrammarNode(UnexpandedAPR(STMT_LIST))
         val success = generator.expandNode(program, listOf(BasicRuleConstraint(NodeAttribute("length", "3"))))
+        println(program)
         assert(success)
         program.verify()
         println(program)
@@ -70,5 +76,12 @@ internal class DeepCoderGeneratorTest {
         val progStr = (ProgramStringifier().stringify(program))
         assertContains(progStr, ":=")
         program.verify()
+    }
+
+    @Test
+    fun testGenerateVarDecl() {
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val program = makeProgramFromSymbol(generator, VARNAME)
+        println(program.toString(true))
     }
 }

@@ -43,7 +43,8 @@ class SynthesizedCombinedAttributeProductionRule(val synthesisRules : List<Synth
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         var attrs = NodeAttributes()
         for(rule in rules) {
-            attrs = attrs.union(rule.makeSynthesizedAttributes(childAttributes))
+            val ruleAttrs = rule.makeSynthesizedAttributes(childAttributes)
+            attrs = attrs.union(ruleAttrs)
         }
         return attrs;
     }

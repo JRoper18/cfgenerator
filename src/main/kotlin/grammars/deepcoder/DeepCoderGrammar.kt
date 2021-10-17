@@ -8,6 +8,7 @@ import grammars.common.*
 
 internal val STMT = NtSym("Stmt")
 internal val STMT_LIST = NtSym("StmtList")
+internal val VARNAME = NtSym("VarName")
 internal val LAMBDA_FUNC = StringsetSymbol(setOf(
     "(+1)", "(-1)", "(*2)", "(/2)", "(*(-1))", "(**2)", "(*3)", "(/3)", "(*4)", "(/4)", //Int -> int
     "(>0)", "(<0)", "(%2==0)", "(%2 == 1)", //Int -> bool
@@ -41,10 +42,12 @@ internal val VARDEF = NtSym("VarDef")
 const val varAttrName = "varName"
 internal val STMT_RULE = SynthesizeAttributeProductionRule(mapOf(varAttrName to 0),
     PR(STMT, listOf( // A statement is just a function call going into a variable.
-    StringsetSymbol(lowercaseASCII, displayName = "lowercaseASCII", attributeName = varAttrName),
+    VARNAME,
     StringSymbol(":="),
     VARDEF,
 )))
+internal val VARDECL_RULE_BASE = VariableDeclarationRule(VARNAME, StringsetSymbol(lowercaseASCII, displayName = "lowercaseASCII", attributeName = varAttrName), varAttrName)
+internal val VARDECL_RULE = SynthesizeAttributeProductionRule(mapOf(varAttrName to 0), VARDECL_RULE_BASE.rule).withOtherRule(VARDECL_RULE_BASE)
 internal val TYPES = StringsetSymbol(setOf("[int]", "int"), attributeName = typeNameAttr)
 internal val FUNCTION_CALL_RULE = SynthesizeAttributeProductionRule(mapOf(functionNameAttr to 0, "length" to 1, typeNameAttr to 0),
     PR(VARDEF, listOf(FUNCTION_NAME, StringSymbol(" "), FUNCTION_ARGS)))
@@ -56,6 +59,7 @@ internal val LIST_INIT_RULE = InitAttributeProductionRule(ProductionRule(STMT_LI
 internal val INIT_FUNCTION_ARGS_RULE = InitAttributeProductionRule(ProductionRule(FUNCTION_ARGS, listOf(FUNCTION_ARG)), "length", "1")
 val deepCoderGrammar = AttributeGrammar(listOf(
     STMT_LIST_RULE,
+    VARDECL_RULE,
     LIST_INIT_RULE,
     INIT_FUNCTION_ARGS_RULE,
     FUNCTION_LIST_RULE,

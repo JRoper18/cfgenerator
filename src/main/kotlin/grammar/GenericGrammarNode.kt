@@ -41,9 +41,13 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         return this
     }
 
+
     override fun toString(): String {
+        return this.toString(printAttrs = true)
+    }
+    fun toString(printAttrs: Boolean = true): String {
         val buffer = StringBuilder(50)
-        print(buffer, "", "")
+        print(buffer, "", "", printAttrs)
         return buffer.toString()
     }
 
@@ -59,9 +63,9 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         while (it.hasNext()) {
             val next = it.next()
             if (it.hasNext()) {
-                next.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ")
+                next.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ", printAttrs = printAttrs)
             } else {
-                next.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ")
+                next.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ", printAttrs = printAttrs)
             }
         }
     }
