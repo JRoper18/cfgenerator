@@ -40,14 +40,15 @@ suspend fun generateDeepcoderPrograms(
     val numBad = AtomicInteger(0)
     val numRunnable = AtomicInteger(0)
     val numUseful = AtomicInteger(0)
+    val numExceptioned = AtomicInteger(0)
     val nonUniformExceptions = mutableMapOf<String, MutableList<Pair<Exception, GenericGrammarNode>>>()
-    val numPerCoroutine = (numToMake / MAX_COROUTINES)
+    val numPerCoroutine = Math.ceil(numToMake.toDouble() / MAX_COROUTINES.toDouble()).toInt()
     val numCoroutines = if(makeUseful) MAX_COROUTINES else minOf(MAX_COROUTINES, numToMake)
+    val strfier = ProgramStringifier()
     var doneFlag = false // Set to true if we're creating only useful programs and we've reached all the useful programs.
     val time = measureTimeMillis {
         val mutex = Mutex()
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 5, random = Random(12234))
-        val strfier = ProgramStringifier()
         File(outputFileName).printWriter().use { outF ->
             coroutineScope {
                 repeat(numCoroutines) {
@@ -63,6 +64,8 @@ suspend fun generateDeepcoderPrograms(
                                 numBad.incrementAndGet()
                             } else if(generationResult.status == PROGRAM_STATUS.RUNNABLE) {
                                 numRunnable.incrementAndGet()
+                            } else {
+                                numExceptioned.incrementAndGet()
                             }
                             val program = generationResult.program
                             val examples = generationResult.examples
@@ -94,8 +97,17 @@ suspend fun generateDeepcoderPrograms(
     logOutputStream.println("NUM USEFUL: ${numUseful}")
     logOutputStream.println("NUM BAD: ${numBad}")
     logOutputStream.println("NUM RUNNABLE: ${numRunnable}")
-    logOutputStream.println("NUM WEIRD: ${nonUniformExceptions.values.size}")
-
+    logOutputStream.println("NUM EXCEPTIONED: ${numExceptioned}")
+    if(nonUniformExceptions.isNotEmpty()) {
+        logOutputStream.println("NUM WEIRD: ${nonUniformExceptions.values.reduce { acc, mutableList ->
+            (acc + mutableList).toMutableList()
+        }.size}")
+    }
+    logOutputStream.println(nonUniformExceptions.values.map {
+        it.map {
+            it.first.stackTraceToString() + "\n" + strfier.stringify(it.second) + "\n" + it
+        }
+    })
     return savedResults.toList()
 }
 suspend fun generateDeepcoderProgramsCmd(args: Array<String>) {

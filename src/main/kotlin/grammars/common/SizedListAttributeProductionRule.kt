@@ -39,16 +39,5 @@ class SizedListAttributeProductionRule(listName: NtSym,
         )
     }
 
-    fun unroll(listNode: GenericGrammarNode) : List<GenericGrammarNode> {
-        require(listNode.productionRule == this)
-        val list = listNode.rhs[0]
-        val unit = listNode.rhs[2]
-        if(list.productionRule is SizedListAttributeProductionRule) {
-            return (list.productionRule as SizedListAttributeProductionRule).unroll(list) + listOf(unit)
-        }
-        else {
-            // Our sublist is a terminator/other version of a list.
-            return listOf(unit)
-        }
-    }
+
 }

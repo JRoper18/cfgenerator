@@ -22,7 +22,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
      */
     fun getConstraintSubstitutions(nodeAttributes: NodeAttributes, expansions: List<AttributedProductionRule>, additionalConstraints: List<RuleConstraint>): Map<AttributedProductionRule, List<List<RuleConstraint>>> {
         val agExpansionConstraints = expansions.map {
-            Pair(it,ag.constraints[it]?.generate(attrs = nodeAttributes, random = this.random) ?: listOf())
+            Pair(it,ag.constraints[it.rule]?.generate(attrs = nodeAttributes, random = this.random) ?: listOf())
         }
         return agExpansionConstraints.map { entry ->
             val apr = entry.first

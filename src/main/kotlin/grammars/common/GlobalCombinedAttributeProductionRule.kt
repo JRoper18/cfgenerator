@@ -18,13 +18,13 @@ class GlobalCombinedAttributeProductionRule(val attrKeyRegexes : Set<Regex>, val
         siblingAttributes: List<NodeAttributes>
     ): NodeAttributes {
         var attrs = combinedWith.makeInheritedAttributes(myIdx, parentAttributes, siblingAttributes)
+
         (siblingAttributes.subList(0, myIdx) + listOf(parentAttributes)).forEach { attr ->
             attrKeyRegexes.forEach {
                 val filteredAttrs = attr.filterRegex(it)
                 attrs = attrs.union(filteredAttrs)
             }
         }
-        attrs = attrs.union(parentAttributes)
         return attrs
     }
 

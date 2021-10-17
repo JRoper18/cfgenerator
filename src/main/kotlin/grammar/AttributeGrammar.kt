@@ -16,7 +16,7 @@ import java.nio.file.Paths
 
 
 class AttributeGrammar(givenRules: List<AttributedProductionRule>,
-                       val constraints : Map<AttributedProductionRule, ConstraintGenerator>,
+                       val constraints : Map<ProductionRule, ConstraintGenerator>,
                        val start : Symbol,
                        val globalAttributeRegexes : Set<Regex> = setOf(Regex(VariableDeclarationRule.DECLARED_VAR_ATTRIBUTE_KEY_REGEX))){
     // Maps LHS symbols to a list of possible RHS symbol lists.
@@ -57,7 +57,9 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         }
         // Validate that each constraint actually correlates with a rule.
         constraints.forEach {
-            require(givenRules.contains(it.key)) {
+            require(givenRules.map {
+                it.rule
+            }.contains(it.key)) {
                 "Rule ${it.key} is not present in the grammar but has a constraint."
             }
         }

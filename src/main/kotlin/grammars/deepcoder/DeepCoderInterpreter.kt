@@ -2,6 +2,7 @@ package grammars.deepcoder
 
 import grammar.GenericGrammarNode
 import grammar.RootGrammarNode
+import grammars.common.ListProductionRule
 import grammars.common.SizedListAttributeProductionRule
 import java.lang.Exception
 
@@ -104,16 +105,36 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
         val vardefAttrs = vardefStmt.attributes()
         val varType = vardefAttrs.getStringAttribute(typeNameAttr)
 
-        if(vardefStmt.productionRule == FUNCTION_CALL_RULE) {
+        if(vardefStmt.productionRule.rule == FUNCTION_CALL_RULE.rule) {
             if(variables.hasVar(varname)){ //Can't re-declare vars.
                 throw InterpretError()
             }
             val funcName = vardefAttrs.getStringAttribute(functionNameAttr)
-            val numFuncArgs = vardefAttrs.getStringAttribute("length")
-            val funcArgsNode = vardefStmt.rhs[1]
-            check(funcArgsNode.productionRule is SizedListAttributeProductionRule)
-            val funcVarInputs = (funcArgsNode.productionRule as SizedListAttributeProductionRule).unroll(funcArgsNode).map {
-                it.rhs[0].rhs[0].lhsSymbol().name
+            val funcArgsNode = vardefStmt.rhs[2]
+            val numFuncArgs = funcArgsNode.attributes().getStringAttribute("length")
+            val funcArgsRule = funcArgsNode.productionRule.rule
+            check(numFuncArgs != null) {
+                "Length is not defined for this list!"
+            }
+            var funcVarInputs = listOf<String>()
+            if(funcArgsRule is ListProductionRule) {
+                funcVarInputs = (funcArgsNode.productionRule.rule as ListProductionRule).unroll(funcArgsNode).map {
+                    it.rhs[0].rhs[0].lhsSymbol().name
+                }
+            }
+            else if(funcArgsRule == INIT_FUNCTION_ARGS_RULE.rule){
+                // It's a single variable arg.
+                val funcArg = funcArgsNode.rhs[0]
+                if(funcArg.productionRule.rule == FUNCARG_VARIABLE.rule) {
+                    funcVarInputs = listOf(funcArg.attributes().getStringAttribute(varAttrName)!!)
+                }
+                else {
+                    // It must be having a single arg, but it's a lambda or something, which is invalid.
+                    throw InterpretError()
+                }
+            }
+            else {
+                throw InterpretError()
             }
             if(varType == intType) {
                 val ret = intFunctions[funcName]!!(funcVarInputs)
@@ -126,7 +147,7 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
                 return ret.toString()
             }
         }
-        else if(vardefStmt.productionRule == TYPEVAR_RULE) {
+        else if(vardefStmt.productionRule.rule == TYPEVAR_RULE.rule) {
             // An input var. Hope we've specified something for it...
         }
         else {
