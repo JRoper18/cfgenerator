@@ -1,8 +1,7 @@
 package grammar
 
 import grammar.constraints.ConstraintGenerator
-import grammars.common.TerminalAPR
-import grammars.common.makeStringsetRules
+import grammars.common.*
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNodeImpl
@@ -16,7 +15,10 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
 
-class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constraints : Map<AttributedProductionRule, ConstraintGenerator>, val start : Symbol){
+class AttributeGrammar(givenRules: List<AttributedProductionRule>,
+                       val constraints : Map<AttributedProductionRule, ConstraintGenerator>,
+                       val start : Symbol,
+                       val globalAttributeRegexes : Set<Regex> = setOf(Regex(VariableDeclarationRule.DECLARED_VAR_ATTRIBUTE_KEY_REGEX))){
     // Maps LHS symbols to a list of possible RHS symbol lists.
     val expansions: Map<Symbol, List<AttributedProductionRule>> by lazy {
         this.rules.groupBy {
@@ -28,7 +30,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
         it.rule.rhs + it.rule.lhs
     }.toSet()
 
-    val rules : Collection<AttributedProductionRule> = givenRules + symbols.flatMap { symbol ->
+    val rules : Collection<AttributedProductionRule> = (givenRules + symbols.flatMap { symbol ->
         var ret = listOf<AttributedProductionRule>()
         when(symbol) {
             is StringsetSymbol -> {
@@ -42,7 +44,9 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>, val constrain
             }
         }
         ret
-    }.toSet()
+    }.toSet()).map { apr ->
+        GlobalCombinedAttributeProductionRule(this.globalAttributeRegexes, apr)
+    }
 
     init {
         // Validate the grammar. Every non-terminal symbol should have an expansion.

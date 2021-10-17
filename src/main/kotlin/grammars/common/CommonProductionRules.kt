@@ -16,7 +16,8 @@ fun UnexpandedAPR(lsh: Symbol) : APR {
     return APR(TerminalProductionRule(lsh))
 }
 fun ListProductionRule(listName: NtSym, unitName: Symbol, separator: String = ""): ProductionRule{
-    return ProductionRule(listName, listOf(unitName, StringSymbol(separator), listName))
+    return ProductionRule(listName, listOf(listName, StringSymbol(separator), unitName)) // HAS to be left-recursive.
+    // I forget why, but our expandNode has this assumption baked in somehow.
 }
 fun makeStringsetRules(symbol: StringsetSymbol) : List<AttributedProductionRule> {
     return symbol.stringset.map {

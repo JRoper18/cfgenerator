@@ -12,6 +12,7 @@ class VariableDeclarationRule(val lhs : Symbol, val rhs : Symbol, val subruleVar
     AttributedProductionRule(ProductionRule(lhs, listOf(rhs))) {
     companion object {
         const val DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX = "_is_declared_var"
+        const val DECLARED_VAR_ATTRIBUTE_KEY_REGEX = "\\w$DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX"
     }
 
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {

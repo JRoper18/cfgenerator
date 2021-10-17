@@ -17,6 +17,12 @@ data class NodeAttributes(
         }
     }
 
+    fun filterRegex(r : Regex) : NodeAttributes {
+        return NodeAttributes(this.stringAttributes.filter {
+            r.matches(it.key)
+        }.toMutableMap())
+    }
+
     fun copyAttributeIfPresent(key: String, into: NodeAttributes) {
         val stringAttr = getStringAttribute(key)
         if(stringAttr != null) {
@@ -33,9 +39,14 @@ data class NodeAttributes(
 
     fun union(other: NodeAttributes) : NodeAttributes{
         val new = this.copy()
-        new.stringAttributes.putAll(other.stringAttributes)
-        require(new.stringAttributes.size == other.stringAttributes.size + this.stringAttributes.size) {
-            "Could not make union of nodeattributes as they are non-distinct: \n$other\n$this"
+        for(attr in other.stringAttributes) {
+            val thisAttrVal = this.getStringAttribute(attr.key)
+            if(thisAttrVal != null) {
+                require(thisAttrVal == attr.value) {
+                    "Attribute with key ${attr.key} must match: ${attr.value} vs. ${thisAttrVal}"
+                }
+            }
+            new.stringAttributes[attr.key] = attr.value
         }
         return new
     }

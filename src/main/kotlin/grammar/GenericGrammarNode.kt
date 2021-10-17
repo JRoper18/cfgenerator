@@ -56,7 +56,8 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         buffer.append(productionRule.rule.toString())
         if(printAttrs){
             buffer.append(' ')
-            buffer.append(this.attributes())
+            val attrs = this.attributes()
+            buffer.append(attrs)
         }
         buffer.append('\n')
         val it = rhs.iterator()
