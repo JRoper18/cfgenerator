@@ -111,8 +111,8 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         }
 
         this.rhs.forEach {
-            check(it.parent === this) {
-                "Child pointers to parent must be the parent. \n${this}"
+            check(it.parent == this) {
+                "Child pointers to parent must be the parent. \nExpected parent: \n${this}\nActual:\n${it.parent}it"
             }
         }
 

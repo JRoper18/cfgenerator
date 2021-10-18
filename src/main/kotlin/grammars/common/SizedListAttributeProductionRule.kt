@@ -5,11 +5,11 @@ import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.RuleConstraint
 
 class SizedListAttributeProductionRule(listName: NtSym,
-                                       unitName: Symbol,
+                                       val unit: Symbol,
                                        separator: String = "") : SingleAttributeProductionRule(
 
 
-    ListProductionRule(listName, unitName, separator)) {
+    ListProductionRule(listName, unit, separator)) {
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         val listAttrs = childAttributes[0]
         val sizeKey = "length"
@@ -32,10 +32,11 @@ class SizedListAttributeProductionRule(listName: NtSym,
         attr: NodeAttribute,
         nodesThatFit: List<GenericGrammarNode>
     ): List<GenericGrammarNode> {
+        val unitRule = if(this.unit.terminal) TerminalAPR(this.rule.rhs[2]) else UnexpandedAPR(this.rule.rhs[2])
         return listOf(
             nodesThatFit[0],
             RootGrammarNode(TerminalAPR(this.rule.rhs[1])),
-            RootGrammarNode(UnexpandedAPR(this.rule.rhs[2])),
+            RootGrammarNode(unitRule),
         )
     }
 
