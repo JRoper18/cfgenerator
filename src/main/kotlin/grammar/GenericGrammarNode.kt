@@ -4,22 +4,54 @@ import grammars.common.TerminalAPR
 import grammars.common.UnexpandedAPR
 
 
-sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
+sealed class GenericGrammarNode(
+    productionRule: AttributedProductionRule
+){
+    var productionRule : AttributedProductionRule = productionRule
+    set(value) {
+        clearAttributeCache()
+        field = value
+    }
+
+    private var cachedSynthAttrs : NodeAttributes? = null
+    private var cachedInheritedAttrs : NodeAttributes? = null
+    private var cachedAttrs : NodeAttributes? = null
+    protected fun clearAttributeCache() {
+        cachedSynthAttrs = null
+        cachedAttrs = null
+        cachedInheritedAttrs = null
+    }
+    private fun isSynthesizedCached() : Boolean {
+        return cachedSynthAttrs != null
+    }
+    private fun isAttributesCached() : Boolean {
+        return cachedAttrs != null
+    }
     var rhs: List<GrammarNode> = listOf()
         private set // People shouldn't set this field because they may forget to set parent pointers.
     fun lhsSymbol() : Symbol {
         return productionRule.rule.lhs
     }
     fun attributes(): NodeAttributes {
-        return synthesizedAttributes().union(inheritedAttributes())
+        if(isAttributesCached()) {
+            return cachedAttrs!!
+        }
+        val ret = synthesizedAttributes().union(inheritedAttributes())
+        cachedAttrs = ret
+        return ret
     }
     fun synthesizedAttributes(): NodeAttributes {
+        if(isSynthesizedCached()) {
+            return cachedSynthAttrs!!
+        }
         if(this.isUnexpanded()) {
             return NodeAttributes()
         }
-        return productionRule.makeSynthesizedAttributes(rhs.map {
+        val ret = productionRule.makeSynthesizedAttributes(rhs.map {
             it.attributes()
         })
+        cachedSynthAttrs = ret
+        return ret
     }
     abstract fun inheritedAttributes(): NodeAttributes
     abstract fun depth() : Int
@@ -27,16 +59,14 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
     fun withParent(parent: GenericGrammarNode, index : Int) : GrammarNode {
         val node = GrammarNode(productionRule, parent, index)
         node.withChildren(this.rhs)
+        this.cachedInheritedAttrs = null
+        this.cachedAttrs = null
         return node
     }
 
-    fun withChildSymbols(unexpandedData : List<Symbol>) : GenericGrammarNode {
-        this.rhs = unexpandedData.mapIndexed { index, symbol ->
-            GrammarNode(TerminalAPR(symbol), this, index)
-        }
-        return this
-    }
     fun withChildren(children: List<GenericGrammarNode>): GenericGrammarNode {
+        this.cachedSynthAttrs = null
+        this.cachedAttrs = null
         this.rhs = children.mapIndexed { index, child ->
             child.withParent(this, index)
         }
@@ -46,12 +76,19 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
     fun withExpansionTemporary(rule: APR, children : List<GenericGrammarNode>, f : (GenericGrammarNode) -> Unit, keep : () -> Boolean = {
         false
     }) {
+        val oldSynthCache = cachedSynthAttrs
+        val oldInheritedCache = cachedInheritedAttrs
+        val oldAttrCache = cachedAttrs
+        this.clearAttributeCache()
         this.withChildren(children)
         this.productionRule = rule
         f(this)
         if(!keep()){
             this.productionRule = UnexpandedAPR(this.lhsSymbol())
             this.withChildren(listOf())
+            cachedAttrs = oldAttrCache
+            cachedInheritedAttrs = oldInheritedCache
+            cachedSynthAttrs = oldSynthCache
         }
     }
 

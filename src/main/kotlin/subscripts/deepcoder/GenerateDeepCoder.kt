@@ -57,6 +57,9 @@ suspend fun generateDeepcoderPrograms(
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
                             val generationResult = generateDeepcoderProgramAndExamples(generator = generator, nonUniformExceptions)
+                            val program = generationResult.program
+                            val examples = generationResult.examples
+
                             if(canSaveToReturnMemory(generationResult)) {
                                 savedResults.add(generationResult)
                             }
@@ -67,10 +70,9 @@ suspend fun generateDeepcoderPrograms(
                             } else {
                                 numExceptioned.incrementAndGet()
                             }
-                            val program = generationResult.program
-                            val examples = generationResult.examples
-                            val progStr = strfier.stringify(program).trim()
-                            logOutputStream.println(progStr)
+                            
+//                            val progStr = strfier.stringify(program).trim()
+//                            logOutputStream.println(progStr)
 
                             // Okay, now we have a good program. Is it useful?
                             val useful = isDeepcoderProgramUseful(program, examples.size)
