@@ -30,7 +30,7 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
             program.forEachInTree {
                 if(it.lhsSymbol() == STMT){
                     val vardefStmt = it.rhs[2]
-                    if (vardefStmt.productionRule == TYPEVAR_RULE) {
+                    if (vardefStmt.productionRule.rule == TYPEVAR_RULE.rule) {
                         // This means it's not just ANY variable definition: It's a NEW/input variable definition. 
                         val attrs = it.attributes()
                         val varname = attrs.getStringAttribute(varAttrName)!!

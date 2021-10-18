@@ -40,7 +40,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
                 //Ignore
             }
             is StringSymbol -> {
-                ret = listOf(TerminalAPR(symbol))
+                //Ignore too
             }
         }
         ret

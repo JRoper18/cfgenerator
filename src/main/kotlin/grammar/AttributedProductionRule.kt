@@ -1,6 +1,7 @@
 package grammar
 
 import grammar.constraints.RuleConstraint
+import grammars.common.TerminalAPR
 import grammars.common.UnexpandedAPR
 
 open class AttributedProductionRule(val rule: ProductionRule) {
@@ -37,7 +38,12 @@ open class AttributedProductionRule(val rule: ProductionRule) {
 
     fun makeChildren() : List<GenericGrammarNode> {
         return this.rule.rhs.map {
-            RootGrammarNode(UnexpandedAPR(it))
+            if(it.terminal) {
+                RootGrammarNode(TerminalAPR(it))
+            }
+            else {
+                RootGrammarNode(UnexpandedAPR(it))
+            }
         }
     }
 

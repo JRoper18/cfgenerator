@@ -6,14 +6,15 @@ import grammar.StringsetSymbol
 import grammar.constraints.RuleConstraint
 
 val TERMINAL = StringSymbol("")
+val UNEXPANDED = StringSymbol("UNEXPANDED")
 fun TerminalProductionRule(lhs: Symbol) : ProductionRule{
-    return ProductionRule(lhs, listOf(TERMINAL))
+    return ProductionRule(lhs, listOf())
 }
 fun TerminalAPR(lsh: Symbol) : APR {
     return APR(TerminalProductionRule(lsh))
 }
 fun UnexpandedAPR(lsh: Symbol) : APR {
-    return APR(TerminalProductionRule(lsh))
+    return APR(PR(lsh, listOf(UNEXPANDED)))
 }
 fun makeStringsetRules(symbol: StringsetSymbol) : List<AttributedProductionRule> {
     return symbol.stringset.map {

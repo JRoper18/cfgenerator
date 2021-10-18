@@ -1,6 +1,7 @@
 package grammar
 
 import grammars.common.TerminalAPR
+import grammars.common.UnexpandedAPR
 
 
 sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
@@ -43,37 +44,42 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
 
 
     override fun toString(): String {
-        return this.toString(printAttrs = true)
+        return this.toString(printAttrs = true, printAPR = false)
     }
-    fun toString(printAttrs: Boolean = true): String {
+    fun toString(printAttrs: Boolean = true, printAPR : Boolean = true): String {
         val buffer = StringBuilder(50)
-        print(buffer, "", "", printAttrs)
+        print(buffer, "", "", printAttrs, printAPR)
         return buffer.toString()
     }
 
-    protected fun print(buffer: StringBuilder, prefix: String, childrenPrefix: String, printAttrs : Boolean = true) {
+    protected fun print(buffer: StringBuilder, prefix: String, childrenPrefix: String, printAttrs : Boolean = true, printAPR: Boolean = false) {
         buffer.append(prefix)
-        buffer.append(productionRule.rule.toString())
+        if(printAPR) {
+            buffer.append(this.productionRule.toString())
+        }
+        else {
+            buffer.append(productionRule.rule.toString())
+        }
         if(printAttrs){
             buffer.append(' ')
             val attrs = this.synthesizedAttributes()
             buffer.append(attrs)
             buffer.append(" I ${this.inheritedAttributes()}")
-
         }
         buffer.append('\n')
         val it = rhs.iterator()
         while (it.hasNext()) {
             val next = it.next()
             if (it.hasNext()) {
-                next.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ", printAttrs = printAttrs)
+                next.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ", printAttrs = printAttrs, printAPR = printAPR)
             } else {
-                next.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ", printAttrs = printAttrs)
+                next.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ", printAttrs = printAttrs, printAPR = printAPR)
             }
         }
     }
     fun isUnexpanded() : Boolean {
-        return (this.rhs.size != this.productionRule.rule.rhs.size && !this.lhsSymbol().terminal)
+        return ((this.rhs.size != this.productionRule.rule.rhs.size && !this.lhsSymbol().terminal) ||
+                this.productionRule.rule == UnexpandedAPR(this.lhsSymbol()).rule)
     }
     fun getUnexpandedNodes() : List<GenericGrammarNode> {
         val thisUnexpanded = if(isUnexpanded()) listOf(this) else listOf()
@@ -102,6 +108,17 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
             check(actualSym.equals(symbol)) {
                 "Our RHS symbol at index ${index} should be $symbol but is $actualSym"
             }
+        }
+
+        this.rhs.forEach {
+            check(it.parent === this) {
+                "Child pointers to parent must be the parent. \n${this}"
+            }
+        }
+
+        // Repeat verification on the children.
+        this.rhs.forEach {
+            it.verify()
         }
     }
 

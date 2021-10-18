@@ -71,7 +71,7 @@ internal class DeepCoderGeneratorTest {
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
         val program = makeStmt(generator)
         val attrs = program.attributes()
-        println(attrs)
+        println(program)
         assertNotNull(attrs.getStringAttribute("varName"))
         val progStr = (ProgramStringifier().stringify(program))
         assertContains(progStr, ":=")

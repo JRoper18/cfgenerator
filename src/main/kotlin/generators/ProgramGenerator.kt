@@ -3,6 +3,7 @@ package generators
 import grammar.RootGrammarNode
 import grammar.*
 import grammar.constraints.RuleConstraint
+import grammars.common.TerminalAPR
 import grammars.common.UnexpandedAPR
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.*
@@ -70,11 +71,15 @@ class ProgramGenerator(val ag: AttributeGrammar,
         }
         val lhsSymbol = node.lhsSymbol()
         val attributes = node.attributes()
-        if(!node.isUnexpanded()){
-            // If the node's unexpanded (ie terminal) then just return if it satisfies the constraints.
-            return additionalConstraints.find {
+        if(node.lhsSymbol().terminal){
+            // If the node's is terminal then just return if it satisfies the constraints.
+            val fillsCons = additionalConstraints.find {
                 !it.satisfies(attributes)
             } == null // Return the first constraint that doesn't satisfy, null if they all satisfy.
+            if(fillsCons) {
+                node.productionRule = TerminalAPR(node.lhsSymbol())
+            }
+            return fillsCons
         }
         val expansions = ag.getPossibleExpansions(lhsSymbol)
         var foundSatisfying = false
@@ -108,13 +113,19 @@ class ProgramGenerator(val ag: AttributeGrammar,
                         var foundSatisfyingSubprogram = false
                         // For each symbol in our grammar, find one that gives us a satisfying subprogram.
                         val symbol = expansion.rule.rhs[i]
-                        satisfyingSubprogram = RootGrammarNode(UnexpandedAPR(symbol))
-                        foundSatisfyingSubprogram = expandNode(satisfyingSubprogram, allNewConstraintsForThisChild, depth + 1) //Make a satisfying subprogram for the make...() call.
-                        if(foundSatisfyingSubprogram) {
-                            satisfyingSubprograms.add(satisfyingSubprogram)
+                        if(symbol.terminal) {
+                            // Can't go farther down from here.
                         }
                         else {
-                            break;
+                            satisfyingSubprogram = RootGrammarNode(UnexpandedAPR(symbol))
+                            foundSatisfyingSubprogram = expandNode(satisfyingSubprogram, allNewConstraintsForThisChild, depth + 1) //Make a satisfying subprogram for the make...() call.
+                            if(foundSatisfyingSubprogram) {
+                                satisfyingSubprograms.add(satisfyingSubprogram)
+                            }
+                            else {
+                                break;
+                            }
+
                         }
                     }
                     if(satisfyingSubprograms.size != allNewFittingAttributes.size) {
@@ -125,7 +136,8 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 }
                 //Now, just expand the children trees.
                 for(child in newChildren){
-                    for(unexpanded in child.getUnexpandedNodes()) {
+                    val allUnexpanded = child.getUnexpandedNodes()
+                    for(unexpanded in allUnexpanded) {
                         val canExpand = expandNode(unexpanded, listOf())
                         if(!canExpand){
                             expansionIsGood = false
