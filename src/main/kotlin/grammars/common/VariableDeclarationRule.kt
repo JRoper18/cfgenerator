@@ -47,14 +47,4 @@ class VariableDeclarationRule(val lhs : Symbol, val rhs : Symbol, val subruleVar
             BasicRuleConstraint(it)
         }))
     }
-
-    override fun makeChildrenForAttributes(
-        attrs: NodeAttributes,
-        nodesThatFit: List<GenericGrammarNode>
-    ): List<GenericGrammarNode> {
-        require(nodesThatFit.size == 1) {
-            "This rule only takes a single child. "
-        }
-        return nodesThatFit
-    }
 }

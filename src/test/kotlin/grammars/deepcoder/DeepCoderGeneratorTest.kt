@@ -31,16 +31,16 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerate() {
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1, random = Random(19L))
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1, random = Random(100L))
 
-        repeat(1){
+        repeat(5){
             val program = RootGrammarNode(UnexpandedAPR(STMT_LIST))
             val success = generator.expandNode(program, listOf(BasicRuleConstraint(NodeAttribute("length", "3"))))
             assert(success)
             program.verify()
             val progStr = (ProgramStringifier().stringify(program))
             println(progStr)
-            println(program)
+//            println(program)
             assert(program.attributes().getStringAttribute("length")!!.toInt() > 0)
 
         }

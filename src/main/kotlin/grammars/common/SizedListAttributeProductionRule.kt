@@ -24,7 +24,14 @@ class SizedListAttributeProductionRule(listName: NtSym,
     override fun canMakeProgramWithAttribute(attr: NodeAttribute): Pair<Boolean, List<List<RuleConstraint>>> {
         val size = attr.second.toIntOrNull()
         val canMake = attr.first == "length" && (size != null) && size > 0
-        val constraints = if(!canMake || size == 0) listOf() else listOf(listOf<RuleConstraint>(BasicRuleConstraint(Pair(attr.first, ((size ?: 1) - 1).toString()))))
+        if(!canMake) {
+            return cantMakeProgramReturn
+        }
+        val constraints = if(!canMake || size == 0) noConstraints else listOf(
+            listOf<RuleConstraint>(BasicRuleConstraint(Pair(attr.first, ((size ?: 1) - 1).toString()))),
+            listOf(),
+            listOf()
+        )
         return Pair(canMake, constraints)
     }
 

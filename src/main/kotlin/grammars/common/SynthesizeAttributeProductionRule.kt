@@ -38,22 +38,12 @@ class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule
                 constraintList[childIdx].add(BasicRuleConstraint(attr))
             }
             else {
-                return Pair(false, listOf()) // We can't make that attribute.
+                return cantMakeProgramReturn // We can't make that attribute.
             }
         }
         return Pair(true, constraintList.map {
             it.toList()
         }.toList())
-    }
-
-    override fun makeChildrenForAttributes(
-        attr: NodeAttributes,
-        nodesThatFit: List<GenericGrammarNode>
-    ): List<GenericGrammarNode> {
-        require(nodesThatFit.size == this.rule.rhs.size) {
-            "Nodes that fit for synthesized attributes must match the size of the rhs!"
-        }
-        return nodesThatFit
     }
 
     fun withOtherRule(otherRule: AttributedProductionRule) : SynthesizedCombinedAttributeProductionRule {

@@ -29,17 +29,6 @@ class SynthesizedCombinedAttributeProductionRule(val synthesisRules : List<Synth
         return Pair(true, cons)
     }
 
-    /**
-     *
-     */
-    override fun makeChildrenForAttributes(
-        attrs: NodeAttributes,
-        nodesThatFit: List<GenericGrammarNode>
-    ): List<GenericGrammarNode> {
-        val children = otherRule.makeChildrenForAttributes(attrs, nodesThatFit)
-        return children;
-    }
-
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         var attrs = NodeAttributes()
         for(rule in rules) {

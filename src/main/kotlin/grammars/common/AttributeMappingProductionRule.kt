@@ -37,17 +37,10 @@ class AttributeMappingProductionRule(pr: ProductionRule, val attributeMapping : 
 
     override fun canMakeProgramWithAttributes(attrs: NodeAttributes): Pair<Boolean, List<List<RuleConstraint>>> {
         val neededAttrsSparse = attrs.toList().flatMap {
-            inverseMap[it] ?: listOf()
+            inverseMap[it] ?: noConstraints
         }
         //TODO: This
         return super.canMakeProgramWithAttributes(attrs)
     }
 
-    override fun makeChildrenForAttributes(
-        attrs: NodeAttributes,
-        nodesThatFit: List<GenericGrammarNode>
-    ): List<GenericGrammarNode> {
-        //TODO: This
-        return super.makeChildrenForAttributes(attrs, nodesThatFit)
-    }
 }

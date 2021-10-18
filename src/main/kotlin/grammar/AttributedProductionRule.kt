@@ -5,6 +5,15 @@ import grammars.common.TerminalAPR
 import grammars.common.UnexpandedAPR
 
 open class AttributedProductionRule(val rule: ProductionRule) {
+
+    val noConstraints by lazy {
+        this.rule.rhs.map {
+            listOf<RuleConstraint>()
+        }
+    }
+    val cantMakeProgramReturn by lazy {
+        Pair(false, noConstraints)
+    }
     // Given a set of node attributes for each node on the RHS and my inherited attrs, return a set of new NodeAttributes.
     open fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         return NodeAttributes()
@@ -20,20 +29,13 @@ open class AttributedProductionRule(val rule: ProductionRule) {
     /**
      * Given a constraint, can we generate a program with that attribute?
      * Returns a boolean saying if we can do it or not,
-     * and if needed, a list of additional constraints we'll need to fill in the true case.
+     * and if needed, a list of additional constraints we'll need to fill in the true case, where the ith list corresponds to constraints
+     *  for the ith child that are needed.
      * This list is empty if we don't need to fill any more constraints.
      * MUST be deterministic
      */
     open fun canMakeProgramWithAttributes(attrs: NodeAttributes) : Pair<Boolean, List<List<RuleConstraint>>> {
-        return Pair(false, listOf())
-    }
-
-    /**
-     * Assume someone's nodeThatFits has the rules needed. Then, we'll return a RHS
-     * that would satisfy the attribute given, unexpanded.
-     */
-    open fun makeChildrenForAttributes(attrs: NodeAttributes, nodesThatFit : List<GenericGrammarNode> = listOf()) : List<GenericGrammarNode> {
-        return listOf()
+        return cantMakeProgramReturn
     }
 
     fun makeChildren() : List<GenericGrammarNode> {
@@ -49,9 +51,7 @@ open class AttributedProductionRule(val rule: ProductionRule) {
 
     fun makeRootProgramWithAttributes(attrs: NodeAttributes, nodesThatFit: List<GenericGrammarNode> = listOf()) : RootGrammarNode {
         val node = RootGrammarNode(this)
-        node.withChildren(makeChildrenForAttributes(attrs, nodesThatFit).mapIndexed { index, child ->
-            child.withParent(node, index)
-        })
+        node.withChildren(nodesThatFit)
         return node
     }
 

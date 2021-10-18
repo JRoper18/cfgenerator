@@ -3,10 +3,15 @@ package grammars.common
 import grammar.NodeAttribute
 import grammar.NodeAttributes
 import grammar.StringsetSymbol
+import grammar.constraints.RuleConstraint
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class StringsetSymbolRuleTest {
+
+    internal fun areNoConstraints(childConsLists : List<List<RuleConstraint>>) : Boolean {
+        return childConsLists.flatten().isEmpty()
+    }
 
     @Test
     fun testBasicStringSetRuleGenerations() {
@@ -22,7 +27,7 @@ class StringsetSymbolRuleTest {
             assertEquals(it.rule.rhs.size, 1)
             val canMakeData = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("chosenSymbol", it.rule.rhs[0].name))))
             assert(canMakeData.first)
-            assert(canMakeData.second.isEmpty())
+            assert(areNoConstraints(canMakeData.second))
         }
     }
 
@@ -40,7 +45,7 @@ class StringsetSymbolRuleTest {
             assertEquals(it.rule.rhs.size, 1)
             val canMakeData = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("attrName", it.rule.rhs[0].name))))
             assert(canMakeData.first)
-            assert(canMakeData.second.isEmpty())
+            assert(areNoConstraints(canMakeData.second))
         }
     }
 
@@ -58,13 +63,13 @@ class StringsetSymbolRuleTest {
             assertEquals(it.rule.rhs.size, 1)
             val canMakeData = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("attrName", it.rule.rhs[0].name))))
             assert(canMakeData.first)
-            assert(canMakeData.second.isEmpty())
+            assert(areNoConstraints(canMakeData.second))
             val canMakeData2 = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("in", idx.toString()))))
             assert(canMakeData2.first)
-            assert(canMakeData2.second.isEmpty())
+            assert(areNoConstraints(canMakeData.second))
             val canMakeData3 = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("in", (idx + 1).toString()))))
             assert(!canMakeData3.first)
-            assert(canMakeData3.second.isEmpty())
+            assert(areNoConstraints(canMakeData.second))
         }
     }
 }

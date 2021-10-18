@@ -36,11 +36,13 @@ internal class ProgramGeneratorTest {
         ), start = listSym, constraints = mapOf())
         val generator = ProgramGenerator(grammar)
 
-        val cons = listOf(BasicRuleConstraint(NodeAttribute("length", "1")))
-        val program = generator.generate(cons)
-        print(program)
-        program.verify() // Will throw exception if the program is wrong.
-        println(ProgramStringifier().stringify(program))
+        repeat(5) {
+            val cons1 = listOf(BasicRuleConstraint(NodeAttribute("length", it.toString())))
+            val program1 = generator.generate(cons1)
+            program1.verify() // Will throw exception if the program is wrong.
+            assertEquals(it.toString(), program1.attributes().getStringAttribute("length"))
+
+        }
     }
 
     @Test

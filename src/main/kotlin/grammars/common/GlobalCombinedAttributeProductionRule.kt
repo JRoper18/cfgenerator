@@ -43,11 +43,4 @@ class GlobalCombinedAttributeProductionRule(val attrKeyRegexes : Set<Regex>, val
         return combinedWith.canMakeProgramWithAttributes(attrs)
     }
 
-    override fun makeChildrenForAttributes(
-        attrs: NodeAttributes,
-        nodesThatFit: List<GenericGrammarNode>
-    ): List<GenericGrammarNode> {
-        return combinedWith.makeChildrenForAttributes(attrs, nodesThatFit)
-    }
-
 }

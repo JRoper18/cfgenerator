@@ -15,13 +15,13 @@ class StringsetSymbolRule(val stringSetSymbol : StringsetSymbol, val stringSymbo
         for(attr in attrs.toList()){
             if(attr.first == stringSetSymbol.attributeName) {
                 if(attr.second != stringSymbol.name) {
-                    return Pair(false, listOf())
+                    return cantMakeProgramReturn
                 }
             }
             else if(!generatedAttrs.contains(attr)) {
-                return Pair(false, listOf())
+                return cantMakeProgramReturn
             }
         }
-        return Pair(true, listOf())
+        return Pair(true, noConstraints)
     }
 }

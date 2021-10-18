@@ -21,9 +21,13 @@ class ProgramGenerator(val ag: AttributeGrammar,
      * Given a list of our current attributes, APRs, and a list of attributes we want to make,
      * return a map from APRs in that list to new constraints we could substitute them out for.
      */
-    fun getConstraintSubstitutions(nodeAttributes: NodeAttributes, expansions: List<AttributedProductionRule>, additionalConstraints: List<RuleConstraint>): Map<AttributedProductionRule, List<List<RuleConstraint>>> {
-        val agExpansionConstraints = expansions.map {
-            Pair(it,ag.constraints[it.rule]?.generate(attrs = nodeAttributes, random = this.random) ?: listOf())
+    fun getConstraintSubstitutions(nodeToSubstitute: GenericGrammarNode, expansions: List<AttributedProductionRule>, additionalConstraints: List<RuleConstraint>): Map<AttributedProductionRule, List<List<RuleConstraint>>> {
+        val agExpansionConstraints = expansions.map { apr ->
+            var pair : Pair<APR, List<RuleConstraint>> = Pair(apr, listOf())
+            val nodeWithExp = nodeToSubstitute.withExpansionTemporary(apr, apr.makeChildren(), { newNode ->
+                pair = Pair(apr,ag.constraints[apr.rule]?.generate(attrs = newNode.attributes(), random = this.random) ?: listOf())
+            })
+            pair
         }
         return agExpansionConstraints.map { entry ->
             val apr = entry.first
@@ -31,7 +35,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
             var canMakeProgramTrade : Pair<Boolean, List<List<RuleConstraint>>>
             if(constraints.isEmpty()) {
                 // No constraints!
-                canMakeProgramTrade = Pair(true, listOf())
+                canMakeProgramTrade = Pair(true, apr.noConstraints)
             }
             else {
                 val fittingAttributes = constraints.map {
@@ -87,59 +91,21 @@ class ProgramGenerator(val ag: AttributeGrammar,
         while (!foundSatisfying && (tryCount < numRandomTries || numRandomTries == -1)) {
             tryCount += 1
 
-            val substitutedConstraints = this.getConstraintSubstitutions(attributes, expansions, additionalConstraints)
+            val substitutedConstraints = this.getConstraintSubstitutions(node, expansions, additionalConstraints)
             // For each rule + constraints, see if we can expand every node there.
             for(ruleEntry in substitutedConstraints.toList().shuffled(random)) {
                 val expansion = ruleEntry.first
                 val allNewConstraints = ruleEntry.second
-                //For our new set of constraints, generate a new set of satisfying attributes.
-                val allNewFittingAttributes = allNewConstraints.map { consList ->
-                    consList.map {
-                        it.makeSatisfyingAttribute(random)
-                    }
-                }
-                var newChildren : List<GenericGrammarNode>
                 var expansionIsGood = true
-                if(allNewConstraints.isEmpty()){
-                    //We have no constraints. Generate anything we want.
-                    newChildren = expansion.makeChildren()
-                }
-                else {
-                    val satisfyingSubprograms = mutableListOf<GenericGrammarNode>()
-                    for(i in 0..allNewFittingAttributes.size-1) {
-                        val fittingAttributesForThisChild = allNewFittingAttributes[i]
-                        val allNewConstraintsForThisChild = allNewConstraints[i]
-                        var satisfyingSubprogram : RootGrammarNode? = null
-                        var foundSatisfyingSubprogram = false
-                        // For each symbol in our grammar, find one that gives us a satisfying subprogram.
-                        val symbol = expansion.rule.rhs[i]
-                        if(symbol.terminal) {
-                            // Can't go farther down from here.
-                        }
-                        else {
-                            satisfyingSubprogram = RootGrammarNode(UnexpandedAPR(symbol))
-                            foundSatisfyingSubprogram = expandNode(satisfyingSubprogram, allNewConstraintsForThisChild, depth + 1) //Make a satisfying subprogram for the make...() call.
-                            if(foundSatisfyingSubprogram) {
-                                satisfyingSubprograms.add(satisfyingSubprogram)
-                            }
-                            else {
-                                break;
-                            }
-
-                        }
-                    }
-                    if(satisfyingSubprograms.size != allNewFittingAttributes.size) {
-                        // We couldn't create satisfying subprograms.
-                        continue
-                    }
-                    newChildren = expansion.makeChildrenForAttributes(NodeAttributes.fromList(allNewFittingAttributes.flatten()), nodesThatFit = satisfyingSubprograms)
-                }
+                //Make a set of unexpanded/terminal children
+                val newChildren : List<GenericGrammarNode> = expansion.makeChildren()
                 //Now, just expand the children trees.
                 node.withExpansionTemporary(expansion, newChildren, {
-                    for(child in it.rhs){
-                        val allUnexpanded = child.getUnexpandedNodes()
-                        for(unexpanded in allUnexpanded) {
-                            val canExpand = expandNode(unexpanded, listOf())
+                    for(i in it.rhs.indices){
+                        val child = it.rhs[i]
+                        //Expand each unexpanded child with all it's new constraints.
+                        if(child.isUnexpanded()) {
+                            val canExpand = expandNode(child, allNewConstraints[i], depth + 1)
                             if(!canExpand){
                                 expansionIsGood = false
                                 break

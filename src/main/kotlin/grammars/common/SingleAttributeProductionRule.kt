@@ -11,13 +11,6 @@ abstract class SingleAttributeProductionRule(rule : ProductionRule) : Attributed
         return canMakeProgramWithAttribute(attrs.toList()[0])
     }
 
-    override fun makeChildrenForAttributes(
-        attrs: NodeAttributes,
-        nodesThatFit: List<GenericGrammarNode>
-    ): List<GenericGrammarNode> {
-        return makeChildrenForAttribute(attrs.toList()[0], nodesThatFit)
-    }
-
     abstract fun makeChildrenForAttribute(
         attr: NodeAttribute,
         nodesThatFit: List<GenericGrammarNode>
