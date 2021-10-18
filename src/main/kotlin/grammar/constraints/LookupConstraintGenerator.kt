@@ -10,12 +10,9 @@ import kotlin.random.Random
  * An example is function name and argument length:
  * If lookupKey functionName == "add", and compareToKey "argLength" == "2",
  * Then we return true if table["add"] == "2"
-// */
+ */
 class LookupConstraintGenerator(val lookupKey : String, val compareToKey : String, val lookupTable: Map<String, String>) : ConstraintGenerator {
-    //    override fun generate(at){
-//        val attrs = attributes()
-//
-//    }
+
     override fun generate(attrs: NodeAttributes, random: Random): List<RuleConstraint> {
         val lookupVal = attrs.getStringAttribute(lookupKey)
         if(lookupVal == null) {

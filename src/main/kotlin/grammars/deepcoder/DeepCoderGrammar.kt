@@ -50,7 +50,7 @@ internal val STMT_RULE = SynthesizeAttributeProductionRule(mapOf(varAttrName to 
 internal val VARDECL_RULE_BASE = VariableDeclarationRule(VARNAME, StringsetSymbol(lowercaseASCII, displayName = "lowercaseASCII", attributeName = varAttrName), varAttrName)
 internal val VARDECL_RULE = SynthesizeAttributeProductionRule(mapOf(varAttrName to 0), VARDECL_RULE_BASE.rule).withOtherRule(VARDECL_RULE_BASE)
 internal val TYPES = StringsetSymbol(setOf("[int]", "int"), attributeName = typeNameAttr)
-internal val FUNCTION_CALL_RULE = SynthesizeAttributeProductionRule(mapOf(functionNameAttr to 0, "length" to 1, typeNameAttr to 0),
+internal val FUNCTION_CALL_RULE = SynthesizeAttributeProductionRule(mapOf(functionNameAttr to 0, "length" to 2, typeNameAttr to 0),
     PR(VARDEF, listOf(FUNCTION_NAME, StringSymbol(" "), FUNCTION_ARGS)))
 internal val TYPEVAR_RULE = SynthesizeAttributeProductionRule(mapOf(typeNameAttr to 0),
     PR(VARDEF, listOf(TYPES)))

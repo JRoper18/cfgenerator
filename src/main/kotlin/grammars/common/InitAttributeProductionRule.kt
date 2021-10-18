@@ -10,7 +10,7 @@ class InitAttributeProductionRule(rule: ProductionRule, val initialKey : String,
         return ret
     }
     override fun canMakeProgramWithAttribute(attr: NodeAttribute) : Pair<Boolean, List<List<RuleConstraint>>> {
-        return Pair(attr.first == initialKey && attr.second == initialVal, listOf())
+        return Pair(attr.first == initialKey && attr.second == initialVal, noConstraints)
     }
 
     /**
