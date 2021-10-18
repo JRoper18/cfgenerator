@@ -30,5 +30,8 @@ pyvenv.cfg
 .venv
 pip-selfcheck.json
 
+*__pycache__*
+
+
 # End of https://www.toptal.com/developers/gitignore/api/jupyternotebooks,virtualenv
 *results*
