@@ -49,9 +49,9 @@ open class AttributedProductionRule(val rule: ProductionRule) {
 
     fun makeRootProgramWithAttributes(attrs: NodeAttributes, nodesThatFit: List<GenericGrammarNode> = listOf()) : RootGrammarNode {
         val node = RootGrammarNode(this)
-        node.rhs = makeChildrenForAttributes(attrs, nodesThatFit).mapIndexed { index, child ->
+        node.withChildren(makeChildrenForAttributes(attrs, nodesThatFit).mapIndexed { index, child ->
             child.withParent(node, index)
-        }
+        })
         return node
     }
 

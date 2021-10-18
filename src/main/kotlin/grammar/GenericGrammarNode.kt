@@ -6,6 +6,7 @@ import grammars.common.UnexpandedAPR
 
 sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
     var rhs: List<GrammarNode> = listOf()
+        private set // People shouldn't set this field because they may forget to set parent pointers.
     fun lhsSymbol() : Symbol {
         return productionRule.rule.lhs
     }
@@ -25,7 +26,7 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
 
     fun withParent(parent: GenericGrammarNode, index : Int) : GrammarNode {
         val node = GrammarNode(productionRule, parent, index)
-        node.rhs = this.rhs
+        node.withChildren(this.rhs)
         return node
     }
 
@@ -111,7 +112,7 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         }
 
         this.rhs.forEach {
-            check(it.parent == this) {
+            check(it.parent === this) {
                 "Child pointers to parent must be the parent. \nExpected parent: \n${this}\nActual:\n${it.parent}it"
             }
         }
