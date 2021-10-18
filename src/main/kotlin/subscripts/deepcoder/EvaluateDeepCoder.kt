@@ -18,31 +18,11 @@ suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
         ArgType.String,
         fullName = "input",
         shortName = "i",
-        description = "Input file name"
-    )
-    val numToEval by parser.option(
-        ArgType.Int,
-        fullName = "num",
-        shortName = "n",
-        description = "Number of examples to generate, if not using an input file. " +
-                "Cannot be used in conjunction with input files. "
+        description = "Input file name of GPT-generated programs"
     )
     parser.parse(args)
-    require(numToEval != null || inputFileName != null)
-    require(!(numToEval != null && inputFileName != null))
     var evalExamples : List<String> = listOf()
-    if(inputFileName != null) {
-        evalExamples = File(inputFileName).readText().split("<|splitter|>")
-    }
-    else {
-        val generator = ProgramGenerator(deepCoderGrammar, random = Random(842L))
-        // Generate stuff to eval on.
-        evalExamples = generateDeepcoderPrograms(makeUseful = true, numToMake = numToEval!!, canSaveToReturnMemory = {
-            isDeepcoderProgramUseful(it.program, it.examples.size)
-        }).map {
-            generationResultToString(it)
-        }
-    }
+    evalExamples = File(inputFileName!!).readText().split("<|splitter|>")
     val numRunnableExamples = AtomicInteger(0)
     val numCorrectExamples = AtomicInteger(0)
     val numCorrectPrograms = AtomicInteger(0)

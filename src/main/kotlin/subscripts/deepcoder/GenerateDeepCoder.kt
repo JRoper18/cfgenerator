@@ -86,7 +86,7 @@ suspend fun generateDeepcoderPrograms(
                                 // So we're not waiting a while, anyways.
                             }
                             mutex.withLock {
-                                logOutputStream.println("Found a useful!")
+                                logOutputStream.println("Found useful ${usefulNow}!")
                                 // Lock the file writing.
                                 outF.println("<|splitter|>")
                                 outF.print(generationResultToString(generationResult))
