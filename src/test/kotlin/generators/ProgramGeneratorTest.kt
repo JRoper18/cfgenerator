@@ -54,6 +54,7 @@ internal class ProgramGeneratorTest {
         val attrs = program.attributes()
         println(attrs)
         println(program.toString(printAPR = true))
+
         assertNotNull(attrs.getStringAttribute(setSymbol.attributeName))
     }
 

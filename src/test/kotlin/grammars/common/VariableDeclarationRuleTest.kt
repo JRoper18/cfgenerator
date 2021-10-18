@@ -34,6 +34,7 @@ internal class VariableDeclarationRuleTest {
 
     @Test
     fun testMakeChildrenForAttributes() {
-
+        val canMake1 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr(hasAttr))
+        println(canMake1)
     }
 }

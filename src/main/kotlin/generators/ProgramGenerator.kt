@@ -135,22 +135,24 @@ class ProgramGenerator(val ag: AttributeGrammar,
                     newChildren = expansion.makeChildrenForAttributes(NodeAttributes.fromList(allNewFittingAttributes.flatten()), nodesThatFit = satisfyingSubprograms)
                 }
                 //Now, just expand the children trees.
-                for(child in newChildren){
-                    val allUnexpanded = child.getUnexpandedNodes()
-                    for(unexpanded in allUnexpanded) {
-                        val canExpand = expandNode(unexpanded, listOf())
-                        if(!canExpand){
-                            expansionIsGood = false
+                node.withExpansionTemporary(expansion, newChildren, {
+                    for(child in it.rhs){
+                        val allUnexpanded = child.getUnexpandedNodes()
+                        for(unexpanded in allUnexpanded) {
+                            val canExpand = expandNode(unexpanded, listOf())
+                            if(!canExpand){
+                                expansionIsGood = false
+                                break
+                            }
+                        }
+                        if(!expansionIsGood) {
                             break
                         }
                     }
-                    if(!expansionIsGood) {
-                        break
-                    }
-                }
+                }, {
+                    expansionIsGood
+                })
                 if(expansionIsGood) {
-                    node.withChildren(newChildren)
-                    node.productionRule = expansion
                     return true
                 }
             }

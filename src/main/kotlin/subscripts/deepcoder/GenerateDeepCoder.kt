@@ -69,6 +69,9 @@ suspend fun generateDeepcoderPrograms(
                             }
                             val program = generationResult.program
                             val examples = generationResult.examples
+                            val progStr = strfier.stringify(program).trim()
+                            logOutputStream.println(progStr)
+
                             // Okay, now we have a good program. Is it useful?
                             val useful = isDeepcoderProgramUseful(program, examples.size)
                             if(!useful) {
@@ -80,7 +83,6 @@ suspend fun generateDeepcoderPrograms(
                                 // That's fine, because that only happens if they're all generated at the same-ish time
                                 // So we're not waiting a while, anyways.
                             }
-                            val progStr = strfier.stringify(program).trim()
                             mutex.withLock {
                                 logOutputStream.println("Found a useful!")
                                 // Lock the file writing.

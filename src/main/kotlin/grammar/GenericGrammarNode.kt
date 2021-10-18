@@ -43,6 +43,17 @@ sealed class GenericGrammarNode(var productionRule: AttributedProductionRule){
         return this
     }
 
+    fun withExpansionTemporary(rule: APR, children : List<GenericGrammarNode>, f : (GenericGrammarNode) -> Unit, keep : () -> Boolean = {
+        false
+    }) {
+        this.withChildren(children)
+        this.productionRule = rule
+        f(this)
+        if(!keep()){
+            this.productionRule = UnexpandedAPR(this.lhsSymbol())
+            this.withChildren(listOf())
+        }
+    }
 
     override fun toString(): String {
         return this.toString(printAttrs = true, printAPR = false)

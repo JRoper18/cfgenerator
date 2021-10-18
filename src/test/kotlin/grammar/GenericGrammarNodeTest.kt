@@ -1,6 +1,7 @@
 package grammar
 
 import grammars.common.TerminalAPR
+import grammars.common.UnexpandedAPR
 import org.junit.jupiter.api.Assertions.*
 import kotlin.test.Test
 
@@ -28,5 +29,17 @@ internal class GenericGrammarNodeTest {
         terminalProg.withChildren(listOf(GrammarNode(TerminalAPR(tsym), prog, 0)))
         val totalProg = prog.withChildren(listOf(terminalProg))
         totalProg.verify()
+    }
+
+    @Test
+    fun testTemporaryChildren() {
+        val prog = RootGrammarNode(APR(PR(ntsym, listOf(ntsym2))))
+        val expan = APR(PR(ntsym2, listOf(tsym)))
+        val terminalProg = RootGrammarNode(UnexpandedAPR(ntsym2))
+        terminalProg.withExpansionTemporary(expan, listOf(GrammarNode(TerminalAPR(tsym), prog, 0)), {
+            assertEquals(it.rhs[0].parent, terminalProg)
+            it.verify()
+        })
+        assert(terminalProg.rhs.isEmpty())
     }
 }

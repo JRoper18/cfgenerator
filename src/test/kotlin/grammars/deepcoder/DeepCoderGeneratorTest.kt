@@ -8,9 +8,11 @@ import grammar.RootGrammarNode
 import grammar.Symbol
 import grammar.constraints.BasicRuleConstraint
 import grammars.common.UnexpandedAPR
+import grammars.common.VariableDeclarationRule
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import kotlin.random.Random
 import kotlin.test.assertContains
 
 internal fun makeProgramFromSymbol(generator: ProgramGenerator, symbol: Symbol) : RootGrammarNode{
@@ -28,17 +30,20 @@ internal fun makeStmt(generator: ProgramGenerator) : RootGrammarNode {
 internal class DeepCoderGeneratorTest {
 
     @Test
-    fun generate() {
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
-        val program = RootGrammarNode(UnexpandedAPR(STMT_LIST))
-        val success = generator.expandNode(program, listOf(BasicRuleConstraint(NodeAttribute("length", "3"))))
-        println(program)
-        assert(success)
-        program.verify()
-        println(program)
-        val progStr = (ProgramStringifier().stringify(program))
-        println(progStr)
-        assert(program.attributes().getStringAttribute("length")!!.toInt() > 0)
+    fun testGenerate() {
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1, random = Random(19L))
+
+        repeat(1){
+            val program = RootGrammarNode(UnexpandedAPR(STMT_LIST))
+            val success = generator.expandNode(program, listOf(BasicRuleConstraint(NodeAttribute("length", "3"))))
+            assert(success)
+            program.verify()
+            val progStr = (ProgramStringifier().stringify(program))
+            println(progStr)
+            println(program)
+            assert(program.attributes().getStringAttribute("length")!!.toInt() > 0)
+
+        }
     }
 
     @Test
@@ -82,6 +87,18 @@ internal class DeepCoderGeneratorTest {
     fun testGenerateVarDecl() {
         val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
         val program = makeProgramFromSymbol(generator, VARNAME)
-        println(program.toString(true))
+        val attrs = program.attributes()
+        val varname = attrs.getStringAttribute(varAttrName)!!
+        val varAttr = attrs.getStringAttribute(VariableDeclarationRule.makeAttrFromVarname(varname).first)
+        assertNotNull(varAttr)
+        assertEquals(VariableDeclarationRule.makeAttrFromVarname(varname).second, varAttr)
+    }
+
+    @Test
+    fun testGenerateFunction() {
+        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val program = makeProgramFromSymbol(generator, VARDEF)
+        println(program)
+
     }
 }

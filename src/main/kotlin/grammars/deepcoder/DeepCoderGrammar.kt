@@ -1,9 +1,8 @@
 package grammars.deepcoder
 
 import grammar.*
-import grammar.constraints.BasicConstraintGenerator
-import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.LookupConstraintGenerator
+import grammar.constraints.VariableConstraintGenerator
 import grammars.common.*
 
 internal val STMT = NtSym("Stmt")
@@ -57,7 +56,7 @@ internal val TYPEVAR_RULE = SynthesizeAttributeProductionRule(mapOf(typeNameAttr
     PR(VARDEF, listOf(TYPES)))
 internal val STMT_LIST_RULE = SizedListAttributeProductionRule(STMT_LIST, STMT, "\n")
 internal val FUNCTION_LIST_RULE = SizedListAttributeProductionRule(FUNCTION_ARGS, FUNCTION_ARG, " ")
-internal val LIST_INIT_RULE = InitAttributeProductionRule(ProductionRule(STMT_LIST, listOf()), "length", "1")
+internal val LIST_INIT_RULE = InitAttributeProductionRule(ProductionRule(STMT_LIST, listOf()), "length", "0")
 internal val INIT_FUNCTION_ARGS_RULE = InitAttributeProductionRule(ProductionRule(FUNCTION_ARGS, listOf(FUNCTION_ARG)), "length", "1")
 internal val FUNCARG_VARIABLE = SynthesizeAttributeProductionRule(mapOf(varAttrName to 0), ProductionRule(FUNCTION_ARG, listOf(StringsetSymbol(lowercaseASCII, displayName = "lowercaseASCII", attributeName = varAttrName))))
 internal val FUNCARG_LAMBDA = SynthesizeAttributeProductionRule(mapOf(lambdaAttrName to 0), ProductionRule(FUNCTION_ARG, listOf(LAMBDA_FUNC))) // A lambda symbol
@@ -92,6 +91,7 @@ val deepCoderGrammar = AttributeGrammar(listOf(
         "ZipWith" to "3",
         "ScanL1" to "2",
     )),
+    FUNCARG_VARIABLE.rule to VariableConstraintGenerator(varAttrName)
 ))
 
 
