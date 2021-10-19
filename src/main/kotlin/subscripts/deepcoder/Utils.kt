@@ -24,7 +24,7 @@ suspend fun <A> Iterable<A>.pforall(f: suspend (A) -> Unit) = coroutineScope {
     }.awaitAll()
 }
 
-const val MAX_COROUTINES = 20;
+const val MAX_COROUTINES = 100;
 
 fun isDeepcoderProgramUseful(program: RootGrammarNode, numWorkingExamples : Int) : Boolean {
     return program.symbolCount(FUNCTION_NAME) >= 3 && numWorkingExamples > 0;
