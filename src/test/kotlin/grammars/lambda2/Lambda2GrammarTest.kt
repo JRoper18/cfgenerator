@@ -11,13 +11,14 @@ internal class Lambda2GrammarTest {
     fun testGenerate() {
         val generator = ProgramGenerator(Lambda2Grammar.grammar)
         val strfier = ProgramStringifier(tokenSeperator = " ")
+        val interp = Lambda2Interpreter()
         repeat(5){
             val prog = generator.generate()
-//            println(prog)
             val progStr = strfier.stringify(prog)
             println(progStr)
-            println(Lambda2Interpreter().interp(progStr))
-
+            println(interp.makeExamples(progStr, 10).map {
+                it.first + "\t" + it.second
+            }.joinToString ("\n"))
         }
     }
 }

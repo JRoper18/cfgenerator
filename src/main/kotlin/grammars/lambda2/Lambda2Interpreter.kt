@@ -1,126 +1,117 @@
 package grammars.lambda2
 
-class Lambda2Interpreter{
-    internal class ParseError : IllegalArgumentException()
+import java.io.BufferedReader
+import java.io.File
+import java.io.InputStreamReader
+import kotlin.random.Random
+import kotlin.random.nextInt
 
-    fun interp(program: String, args : List<Any>) : String {
-        val tr = (toTree(tokenize(program)))
-        require(tr.data == "lambda") {
-            "Root of a program must be a lambda"
+
+class Lambda2Interpreter(val random : Random = Random(100L),
+                         val maxFailedExamples : Int = 20,
+                         val generatedIntRange : IntRange = IntRange(-20, 20),
+                         val generatedListSizeRange : IntRange = IntRange(0, 4)
+){
+    internal class InterpretError(serr : String) : IllegalArgumentException(serr)
+    internal enum class InputType {
+        INTLISTLIST,
+        INTLIST,
+        INT,
+    }
+    internal fun runPyScript(script : String) : String {
+        val output = StringBuilder()
+        val rt = Runtime.getRuntime()
+        val commands = arrayOf("python3", "-c", script)
+        val proc = rt.exec(commands)
+
+        val stdInput = BufferedReader(InputStreamReader(proc.inputStream))
+
+        val stdError = BufferedReader(InputStreamReader(proc.errorStream))
+
+        // Read the output from the command
+        var s: String? = null
+        while (stdInput.readLine().also { s = it } != null) {
+            output.append(s)
         }
-        val argList = tr.children[0].children.map {
-            it.data
+        // Read any errors from the attempted command
+        val errStr = StringBuilder()
+        while (stdError.readLine().also { s = it } != null) {
+            errStr.append(s)
         }
-        require(argList.size == args.size) {
-            "Number of args into the program must match the number of args in the input sig"
+        if(errStr.isNotEmpty()) {
+            throw InterpretError(errStr.toString())
         }
-        val argMap = args.mapIndexed { index, any ->
-            Pair(argList[index], any)
-        }.toMap()
-        val func = tr.children[1]
-        return eval(func, argMap)
+        return output.toString()
     }
 
-    fun tokenize(string: String) : List<String> {
-        return string.split(Regex("\\s")).filter {
-            it.isNotBlank()
-        }
+    fun getNumberOfInputs(program: String) : Int {
+        val script = File("./src/main/kotlin/grammars/lambda2/lambda2.py").readText() + "\nfunc = $program\nprint(func.__code__.co_argcount)"
+        return runPyScript(script).toInt()
     }
 
-    internal fun eval(tree: Tree, vars : Map<String, Any> = mapOf()) : String {
-        if(tree.children.isEmpty()) {
-            return tree.data // A constant
-        }
-        val op = tree.data
-        when(op) {
-            "*" -> {
-                return (eval(tree.children[0]).toInt() * eval(tree.children[1]).toInt()).toString()
+    internal fun makeInput(inputType: InputType) : Any {
+        // Yeah, yeah, I could make this recursive but it's... fine. For now.
+        when(inputType) {
+            InputType.INT -> return this.generatedIntRange.random(this.random)
+            InputType.INTLIST -> return IntRange(0, this.generatedListSizeRange.random(this.random)).map {
+                makeInput(InputType.INT)
             }
-            "+" -> {
-                return (eval(tree.children[0]).toInt() + eval(tree.children[1]).toInt()).toString()
-            }
-            "-" -> {
-                return (eval(tree.children[0]).toInt() - eval(tree.children[1]).toInt()).toString()
-            }
-            ">" -> {
-                return (eval(tree.children[0]).toInt() > eval(tree.children[1]).toInt()).toString()
-            }
-            "<" -> {
-                return (eval(tree.children[0]).toInt() < eval(tree.children[1]).toInt()).toString()
-            }
-            "=" -> {
-                return (eval(tree.children[0]).toInt() == eval(tree.children[1]).toInt()).toString()
-            }
-            "||" -> {
-                return (eval(tree.children[0]).toBooleanStrict() || eval(tree.children[1]).toBooleanStrict()).toString()
-            }
-            "&&" -> {
-                return (eval(tree.children[0]).toBooleanStrict() || eval(tree.children[1]).toBooleanStrict()).toString()
-            }
-            "lambda" -> {
-                // Just a declaration, nothing to do here.
-            }
-            "foldt" -> {
-
+            InputType.INTLISTLIST -> return IntRange(0, this.generatedListSizeRange.random(this.random)).map {
+                makeInput(InputType.INTLIST)
             }
         }
-        return "TODO"
     }
-
-
-    internal data class Tree(var data : String = "",
-                             var children : MutableList<Tree> = mutableListOf()) {
-    }
-
-
-    internal fun toTree(tokens: List<String>) : Tree {
-        return toTreeParse(tokens).first
-    }
-    // Returns a tree and the last token parsed.
-    internal fun toTreeParse(tokens : List<String>) : Pair<Tree, Int>{
-        if(tokens.size == 1 || tokens[0] != "(") {
-            val t = Tree()
-            t.data = tokens[0]
-            return Pair(t, 0)
+    fun makeExamples(program : String, num : Int) : List<Pair<String, String>> {
+        var numInputs = 0
+        try {
+            numInputs = getNumberOfInputs(program)
+        } catch (ex: InterpretError) {
+            return emptyList()
         }
-        else if(tokens.subList(0, 2) == listOf("(", ")")){
-            return Pair(Tree(), 1)
+        var inputTypes = Array<InputType?>(numInputs) {
+            null
         }
-        else if(tokens.size == 3){
-            // It's a LP, constant, RP
-            val t = Tree()
-            t.data = tokens[1]
-            return Pair(t, 2)
-        }
-        else {
-            val op = tokens[1]
-            val t = Tree()
-            t.data = op
-            // Make the children.
-            var i = 2
-            while(i < tokens.size) {
-                val token = tokens[i]
-                if(token == "(") {
-                    // Parse the subtree.
-                    val subtokens = tokens.subList(i, tokens.size)
-                    val subtreeRes = toTreeParse(subtokens)
-                    i += subtreeRes.second + 1
-                    t.children.add(subtreeRes.first)
+        var numFails = 0
+        val goodExamples = mutableListOf<Pair<String, String>>()
+        for(i in 0 until num + maxFailedExamples) {
+            val inputs = Array<Any>(numInputs) {
+                it
+            }
+            val typesThisRun = inputTypes.copyOf()
+            for(j in 0 until numInputs) {
+                val inType = inputTypes[j] ?: InputType.values().random(this.random)
+                inputs[j] = makeInput(inType)
+                typesThisRun[j] = inType
+            }
+            var output : String? = null
+            try {
+                output = interp(program, args = inputs)
+            } catch (ex: InterpretError) {
+                // Crap. Try again.
+                numFails += 1
+                if(numFails > maxFailedExamples) {
+                    return goodExamples
                 }
-                else if(token == ")"){
-                    // End the parse.
-                    return Pair(t, i)
-                }
-                else {
-                    // Not-parened constant or something.
-                    val child = Tree()
-                    child.data = tokens[i]
-                    t.children.add(child)
-                    i += 1
-                }
+                continue // Don't hit the next part, where we solidify types and keep going.
             }
-            return Pair(t, i)
+            // If we're here the input worked.
+            goodExamples.add(Pair(argsToStr(inputs), output))
+            inputTypes = typesThisRun
         }
+        return goodExamples
+    }
+
+    private fun argsToStr(args: Array<Any>) : String {
+        return args.joinToString(",")
+    }
+
+    fun interp(program: String, args2str: String) : String {
+        val script = File("./src/main/kotlin/grammars/lambda2/lambda2.py").readText() + "\nfunc = $program\nprint(expand_iters(func($args2str)))"
+        return runPyScript(script)
+    }
+    fun interp(program: String, args : Array<Any> = arrayOf()) : String {
+        val args2str = argsToStr(args)
+        return interp(program, args2str)
     }
 
 }
