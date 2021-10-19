@@ -1,5 +1,7 @@
 package grammars.deepcoder
 
+import grammars.deepcoder.DeepCoderGrammar.intType
+import grammars.deepcoder.DeepCoderGrammar.listType
 import kotlin.random.Random
 
 data class DeepCoderVariables(val intVars: MutableMap<String, Int> = mutableMapOf(), val listVars: MutableMap<String, List<Int>> = mutableMapOf()) {

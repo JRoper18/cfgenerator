@@ -9,6 +9,13 @@ import grammar.Symbol
 import grammar.constraints.BasicRuleConstraint
 import grammars.common.UnexpandedAPR
 import grammars.common.VariableDeclarationRule
+import grammars.deepcoder.DeepCoderGrammar.FUNCTION_NAME
+import grammars.deepcoder.DeepCoderGrammar.STMT
+import grammars.deepcoder.DeepCoderGrammar.STMT_LIST
+import grammars.deepcoder.DeepCoderGrammar.VARDEF
+import grammars.deepcoder.DeepCoderGrammar.VARNAME
+import grammars.deepcoder.DeepCoderGrammar.functionNameAttr
+import grammars.deepcoder.DeepCoderGrammar.varAttrName
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -31,7 +38,7 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerate() {
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1, random = Random(100L))
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1, random = Random(100L))
 
         repeat(10){
             val program = RootGrammarNode(UnexpandedAPR(STMT_LIST))
@@ -48,7 +55,7 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerateFunctionNameWithConstraint() {
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val cons = listOf(BasicRuleConstraint(NodeAttribute(functionNameAttr, "Head")))
         val program = RootGrammarNode(UnexpandedAPR(FUNCTION_NAME))
         val success = generator.expandNode(program, cons)
@@ -62,7 +69,7 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerateFunctionNameWithoutConstraint() {
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val program = RootGrammarNode(UnexpandedAPR(FUNCTION_NAME))
         generator.expandNode(program)
         assertNotNull(program)
@@ -73,7 +80,7 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerateStatement() {
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val program = makeStmt(generator)
         val attrs = program.attributes()
         println(program)
@@ -85,7 +92,7 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerateVarDecl() {
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val program = makeProgramFromSymbol(generator, VARNAME)
         val attrs = program.attributes()
         val varname = attrs.getStringAttribute(varAttrName)!!
@@ -96,7 +103,7 @@ internal class DeepCoderGeneratorTest {
 
     @Test
     fun testGenerateFunction() {
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 1)
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val program = makeProgramFromSymbol(generator, VARDEF)
         println(program)
 

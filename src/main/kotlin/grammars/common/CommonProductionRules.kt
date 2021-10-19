@@ -7,6 +7,9 @@ import grammar.constraints.RuleConstraint
 
 val TERMINAL = StringSymbol("")
 val UNEXPANDED = StringSymbol("UNEXPANDED")
+val SPACE = StringSymbol(" ")
+val LP = StringSymbol("(")
+val RP = StringSymbol(")")
 fun TerminalProductionRule(lhs: Symbol) : ProductionRule{
     return ProductionRule(lhs, listOf())
 }
@@ -25,3 +28,10 @@ val lowercaseASCII = "qwertyuiopasdfghjklzxcvbnm".split("").filter {
     it.isNotBlank()
 }.toSet()
 val LowercaseASCIISymbol = StringsetSymbol(lowercaseASCII, displayName = "lowercaseASCII")
+fun intSymbols(from : Int, to : Int) : Set<String> {
+    return (from until to).map {
+        it.toString()
+    }.filter {
+        it.isNotBlank()
+    }.toSet()
+}

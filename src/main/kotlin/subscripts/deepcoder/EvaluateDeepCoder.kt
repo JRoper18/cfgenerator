@@ -35,7 +35,7 @@ suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
         evalExamples = File(inputFileName).readText().split("<|splitter|>")
     }
     else {
-        val generator = ProgramGenerator(deepCoderGrammar, random = Random(842L))
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, random = Random(842L))
         // Generate stuff to eval on.
         evalExamples = generateDeepcoderPrograms(makeUseful = true, numToMake = numToEval!!, canSaveToReturnMemory = {
             isDeepcoderProgramUseful(it.program, it.examples.size)

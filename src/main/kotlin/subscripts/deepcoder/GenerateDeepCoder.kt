@@ -5,7 +5,7 @@ import generators.ProgramGenerationResult.PROGRAM_STATUS
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.GenericGrammarNode
-import grammars.deepcoder.deepCoderGrammar
+import grammars.deepcoder.DeepCoderGrammar
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -48,7 +48,7 @@ suspend fun generateDeepcoderPrograms(
     var doneFlag = false // Set to true if we're creating only useful programs and we've reached all the useful programs.
     val time = measureTimeMillis {
         val mutex = Mutex()
-        val generator = ProgramGenerator(deepCoderGrammar, numRandomTries = 5, random = Random(12234))
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 5, random = Random(12234))
         File(outputFileName).printWriter().use { outF ->
             coroutineScope {
                 repeat(numCoroutines) {
@@ -70,9 +70,9 @@ suspend fun generateDeepcoderPrograms(
                             } else {
                                 numExceptioned.incrementAndGet()
                             }
-                            
-//                            val progStr = strfier.stringify(program).trim()
-//                            logOutputStream.println(progStr)
+
+                            val progStr = strfier.stringify(program).trim()
+                            logOutputStream.println(progStr)
 
                             // Okay, now we have a good program. Is it useful?
                             val useful = isDeepcoderProgramUseful(program, examples.size)
@@ -86,7 +86,7 @@ suspend fun generateDeepcoderPrograms(
                                 // So we're not waiting a while, anyways.
                             }
                             mutex.withLock {
-                                logOutputStream.println("Found a useful!")
+                                logOutputStream.println("Found useful #$usefulNow!")
                                 // Lock the file writing.
                                 outF.println("<|splitter|>")
                                 outF.print(generationResultToString(generationResult))

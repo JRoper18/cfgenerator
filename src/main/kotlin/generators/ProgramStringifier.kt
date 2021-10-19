@@ -3,7 +3,7 @@ package generators
 import grammar.GenericGrammarNode
 import grammar.RootGrammarNode
 
-class ProgramStringifier {
+class ProgramStringifier(val tokenSeperator : String = "") {
     fun stringify(program: GenericGrammarNode) : String{
         // Just left-explore the tree
         val build = StringBuilder()
@@ -13,6 +13,7 @@ class ProgramStringifier {
         }
         program.rhs.forEach {
             build.append(stringify(it))
+            build.append(tokenSeperator)
         }
         return build.toString()
     }

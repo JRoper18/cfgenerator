@@ -7,9 +7,9 @@ import grammar.GenericGrammarNode
 import grammar.NodeAttribute
 import grammar.RootGrammarNode
 import grammar.constraints.BasicRuleConstraint
+import grammars.deepcoder.DeepCoderGrammar.FUNCTION_NAME
 import grammars.deepcoder.DeepCoderInterpreter
 import grammars.deepcoder.DeepCoderVariables
-import grammars.deepcoder.FUNCTION_NAME
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -27,14 +27,14 @@ suspend fun <A> Iterable<A>.pforall(f: suspend (A) -> Unit) = coroutineScope {
 const val MAX_COROUTINES = 20;
 
 fun isDeepcoderProgramUseful(program: RootGrammarNode, numWorkingExamples : Int) : Boolean {
-    return program.symbolCount(FUNCTION_NAME) >= 2 && numWorkingExamples > 0;
+    return program.symbolCount(FUNCTION_NAME) >= 3 && numWorkingExamples > 0;
 }
 fun generateDeepcoderProgramAndExamples(generator: ProgramGenerator,
                                         generationExceptions: MutableMap<String, MutableList<Pair<Exception, GenericGrammarNode>>> = mutableMapOf(),
                                         numExamples : Int = 10,
 
                                         ) : ProgramGenerationResult {
-    val program = generator.generate(listOf(BasicRuleConstraint(NodeAttribute("length", "4"))))
+    val program = generator.generate(listOf(BasicRuleConstraint(NodeAttribute("length", "5"))))
     val inputVars = DeepCoderInterpreter.getInputs(program)
     val ioExamples = mutableListOf<Pair<String, String>>()
     try {

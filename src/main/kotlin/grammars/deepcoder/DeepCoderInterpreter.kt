@@ -4,6 +4,17 @@ import grammar.GenericGrammarNode
 import grammar.RootGrammarNode
 import grammars.common.ListProductionRule
 import grammars.common.SizedListAttributeProductionRule
+import grammars.deepcoder.DeepCoderGrammar.FUNCARG_VARIABLE
+import grammars.deepcoder.DeepCoderGrammar.FUNCTION_CALL_RULE
+import grammars.deepcoder.DeepCoderGrammar.INIT_FUNCTION_ARGS_RULE
+import grammars.deepcoder.DeepCoderGrammar.STMT
+import grammars.deepcoder.DeepCoderGrammar.STMT_LIST
+import grammars.deepcoder.DeepCoderGrammar.TYPEVAR_RULE
+import grammars.deepcoder.DeepCoderGrammar.functionNameAttr
+import grammars.deepcoder.DeepCoderGrammar.intType
+import grammars.deepcoder.DeepCoderGrammar.listType
+import grammars.deepcoder.DeepCoderGrammar.typeNameAttr
+import grammars.deepcoder.DeepCoderGrammar.varAttrName
 import java.lang.Exception
 
 class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariables()) {
@@ -120,6 +131,9 @@ class DeepCoderInterpreter(val variables : DeepCoderVariables = DeepCoderVariabl
             if(funcArgsRule is ListProductionRule) {
                 funcVarInputs = (funcArgsNode.productionRule.rule as ListProductionRule).unroll(funcArgsNode).map {
                     it.rhs[0].rhs[0].lhsSymbol().name
+                }
+                check(funcVarInputs.size == numFuncArgs.toInt()) {
+                    "asd"
                 }
             }
             else if(funcArgsRule == INIT_FUNCTION_ARGS_RULE.rule){
