@@ -13,8 +13,10 @@ internal class Lambda2GrammarTest {
         val strfier = ProgramStringifier(tokenSeperator = " ")
         repeat(5){
             val prog = generator.generate()
-            println(prog)
-            println(strfier.stringify(prog))
+//            println(prog)
+            val progStr = strfier.stringify(prog)
+            println(progStr)
+            println(Lambda2Interpreter().interp(progStr))
 
         }
     }
