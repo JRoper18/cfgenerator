@@ -96,6 +96,9 @@ class Lambda2Interpreter(val random : Random = Random(100L),
             }
             // If we're here the input worked.
             goodExamples.add(Pair(argsToStr(inputs), output))
+            if(goodExamples.size >= num){
+                return goodExamples;
+            }
             inputTypes = typesThisRun
         }
         return goodExamples

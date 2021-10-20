@@ -1,7 +1,7 @@
 import subprocess
 import argparse
-from src.main.notebooks.train import train_gpt
-from src.main.notebooks.generate import generate_gpt
+from src.main.python.train import train_gpt
+from src.main.python.generate import generate_gpt
 
 def main():
     parser = argparse.ArgumentParser(description='Run the entire generate-train-generate-eval pipeline')
@@ -26,8 +26,8 @@ def main():
     language = args.language
     modelname = args.modelname
     evalname = args.evalname
-    cfg_generated_train_path = './output/generated-{}.txt'.format(modelname)
-    cfg_generated_eval_path = './output/generated-{}.txt'.format(evalname)
+    cfg_generated_train_path = './output/cfg-generated-{}.txt'.format(modelname)
+    cfg_generated_eval_path = './output/cfg-generated-{}.txt'.format(evalname)
     if(args.do_cfgs):
         cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(args.num_train, cfg_generated_train_path, language)
         print(cmd)
