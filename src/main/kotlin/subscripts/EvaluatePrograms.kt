@@ -48,7 +48,6 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
                 numTotalExamples.incrementAndGet()
                 val ioSplit = it.split("Output:")
                 val input = ioSplit[0].trim()
-                val interpreter = DeepCoderInterpreter(input)
                 val actualOutput = language.runProgramWithExample(programStr, input)
                 numRunnableExamples.incrementAndGet()
                 val expectedOutput = ioSplit[1].trim()

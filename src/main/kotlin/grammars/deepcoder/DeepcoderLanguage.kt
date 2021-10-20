@@ -50,4 +50,8 @@ class DeepcoderLanguage(val progLength : Int = 5) : Language {
         return strfier.stringify(program)
     }
 
+    override fun runProgramWithExample(program: String, input: String): String {
+        return DeepCoderInterpreter(DeepCoderVariables(input)).interp(program)
+    }
+
 }

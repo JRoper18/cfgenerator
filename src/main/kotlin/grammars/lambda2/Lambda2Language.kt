@@ -46,4 +46,8 @@ class Lambda2Language : Language {
     override fun programToString(program: RootGrammarNode): String {
         return strfier.stringify(program)
     }
+
+    override fun runProgramWithExample(program: String, input: String): String {
+        return interp.interp(program, input)
+    }
 }
