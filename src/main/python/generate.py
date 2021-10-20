@@ -3,13 +3,13 @@ from transformers import GPTNeoForCausalLM, GPT2Tokenizer
 from .utils import ProgramDataset, make_max_length
 
 
-def generate_gpt(param_size = "125M",
-    eval_run_name = "5len2",
-    model_run_name = "3len"
+def generate_gpt(eval_generated_fname,
+    eval_output_generated_fname,
+    model_run_name,
+    param_size = "125M",
+     
 ):
-    pretrained_name = "EleutherAI/gpt-neo-%s" % param_size
-    model_dir = "./results-%s-%s" % (param_size, model_run_name)
-    output_dir = "./results-%s-%s" % (param_size, eval_run_name)
+    model_dir = "./output/gpt-results-%s-%s" % (param_size, model_run_name)
 
 
     # Now, make the outputs for us to evaluate:
@@ -21,7 +21,7 @@ def generate_gpt(param_size = "125M",
     )
 
     dataset_strs = []
-    with open('./output/cfg-generated-%s.txt' % eval_run_name, 'r') as data:
+    with open(eval_generated_fname, 'r') as data:
         split_ds = data.read().split("<|splitter|>")
         dataset_strs = [text for text in split_ds]
     token_lengths = [len(fine_tokenizer.encode(ds_str)) for ds_str in dataset_strs]
@@ -30,7 +30,7 @@ def generate_gpt(param_size = "125M",
     print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
     dataset = ProgramDataset(dataset_strs, fine_tokenizer, make_max_length(max_length, fine_tokenizer))
 
-    with open('./output/gpt-eval-%s.txt' % eval_run_name, 'w') as file:
+    with open(eval_output_generated_fname, 'w') as file:
         for eval_ex in dataset:
             eval_input_ids = eval_ex[0]
             chopped_str = fine_tokenizer.decode(eval_input_ids).split("Program:")
@@ -49,6 +49,7 @@ def generate_gpt(param_size = "125M",
                 # early_stopping=False
             )
             total_output = fine_tokenizer.decode(outputs[0])
-            total_output = total_output.replace("<|startoftext|>", "<|splitter|>")
+            total_output = total_output.replace("Examples:", "<|splitter|>\nExamples:")
+            total_output = total_output.replace("<|startoftext|>", "")
             total_output = total_output.replace("<|endoftext|>", "")
             file.write(total_output)
