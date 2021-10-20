@@ -1,6 +1,6 @@
 import torch
 from transformers import GPTNeoForCausalLM, GPT2Tokenizer
-from .utils import ProgramDataset
+from .utils import ProgramDataset, make_max_length
 
 
 def generate_gpt(param_size = "125M",
@@ -26,9 +26,9 @@ def generate_gpt(param_size = "125M",
         dataset_strs = [text for text in split_ds]
     token_lengths = [len(fine_tokenizer.encode(ds_str)) for ds_str in dataset_strs]
     max_length = max(token_lengths)
-    avg_length = sum(token_lengths) / len(token_lengths)
+    avg_length = int(sum(token_lengths) / len(token_lengths))
     print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
-    dataset = ProgramDataset(dataset_strs, fine_tokenizer, max_length)
+    dataset = ProgramDataset(dataset_strs, fine_tokenizer, make_max_length(max_length, fine_tokenizer))
 
     with open('./output/gpt-eval-%s.txt' % eval_run_name, 'w') as file:
         for eval_ex in dataset:

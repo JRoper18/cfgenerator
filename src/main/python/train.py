@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-from .utils import ProgramDataset
+from .utils import ProgramDataset, make_max_length
 from torch.utils.data import random_split
 from transformers import Trainer, TrainingArguments
 import torch
@@ -38,16 +38,16 @@ def train_gpt(run_name, generated_path):
     print("Getting largest token lengths from %d examples" % len(dataset_strs))
     token_lengths = [len(tokenizer.encode(ds_str)) for ds_str in dataset_strs]
     max_length = max(token_lengths)
-    avg_length = sum(token_lengths) / len(token_lengths)
+    avg_length = int(sum(token_lengths) / len(token_lengths))
     print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
 
     # Now, tokenize the datasets.
     print("Str dataset size: %d" % len(dataset_strs))
     # Sometimes our model has a max length
-    ds_max_length = min(max_length, tokenizer.model_max_length, avg_length) # Avg length SHOULD be low enough to fit on GPU...
-    if(ds_max_length != max_length):
-        print("WARNING!!! WE MUST TRUNCATE SENTENCES TO %d!!!" % ds_max_length)
-        print("WE MIGHT LOSE A LOT OF EXAMPLES!")
+    ds_max_length = make_max_length(max_length, tokenizer)
+    # if(ds_max_length != max_length):
+    #     print("WARNING!!! WE MUST TRUNCATE SENTENCES TO %d!!!" % ds_max_length)
+    #     print("WE MIGHT LOSE A LOT OF EXAMPLES!")
     dataset = ProgramDataset(dataset_strs, tokenizer, ds_max_length)
     train_size = int(0.9 * len(dataset))
     train_ds, eval_ds = random_split(dataset, [train_size, len(dataset) - train_size], generator=torch.Generator().manual_seed(42))

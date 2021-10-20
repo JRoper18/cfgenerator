@@ -8,6 +8,9 @@ def find_nth(haystack, needle, n):
         n -= 1
     return start
 
+def make_max_length(max_in, tokenizer):
+    return min(max_in, tokenizer.model_max_length, 1200) # 1200 is highest # tokens can fit on 1 Shiva GPU. 
+
 class ProgramDataset(Dataset):
     def __init__(self, txt_list, tokenizer, max_length):
         self.input_ids = []
