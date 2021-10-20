@@ -1,28 +1,34 @@
 package subscripts
 
 import generators.ProgramGenerator
+import grammars.Language
 import grammars.deepcoder.*
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
+import kotlinx.cli.required
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
-suspend fun evaluateDeepcoderPrograms(args: Array<String>) {
+suspend fun evaluateProgramsCmd(args: Array<String>) {
     // Given a program, see if it satisfies the input/output example.
-    val parser = ArgParser("generate")
+    val parser = ArgParser("evaluate")
     println(args.joinToString(" "))
     val inputFileName by parser.option(
         ArgType.String,
         fullName = "input",
         shortName = "i",
         description = "Input file name of GPT-generated programs"
-    )
+    ).required()
+    val lanChoice by parser.option(ArgType.Choice<LanguageRef>(), shortName = "l", description = "Input language to generate").required()
+
     parser.parse(args)
-    var evalExamples : List<String> = listOf()
-    evalExamples = File(inputFileName!!).readText().split("<|splitter|>")
+    evaluatePrograms(argsToLanguage(lanChoice), File(inputFileName).readText().split("<|splitter|>"))
+
+}
+suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
     val numRunnableExamples = AtomicInteger(0)
     val numCorrectExamples = AtomicInteger(0)
     val numCorrectPrograms = AtomicInteger(0)

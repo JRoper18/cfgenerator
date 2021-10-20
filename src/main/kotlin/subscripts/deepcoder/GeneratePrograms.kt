@@ -5,10 +5,13 @@ import generators.ProgramGenerationResult.PROGRAM_STATUS
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.GenericGrammarNode
+import grammars.Language
 import grammars.deepcoder.DeepCoderGrammar
+import grammars.deepcoder.DeepcoderLanguage
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
+import kotlinx.cli.required
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -29,7 +32,8 @@ import kotlin.system.measureTimeMillis
  * logOutputStream is where to put the log statements.
  * Returns a list of generated programs, filtered by your canSave function.
  */
-suspend fun generateDeepcoderPrograms(
+suspend fun generatePrograms(
+    language : Language,
     makeUseful : Boolean,
     numToMake : Int,
     outputFileName: String = "/dev/null",
@@ -41,14 +45,11 @@ suspend fun generateDeepcoderPrograms(
     val numRunnable = AtomicInteger(0)
     val numUseful = AtomicInteger(0)
     val numExceptioned = AtomicInteger(0)
-    val nonUniformExceptions = mutableMapOf<String, MutableList<Pair<Exception, GenericGrammarNode>>>()
     val numPerCoroutine = Math.ceil(numToMake.toDouble() / MAX_COROUTINES.toDouble()).toInt()
     val numCoroutines = if(makeUseful) MAX_COROUTINES else minOf(MAX_COROUTINES, numToMake)
-    val strfier = ProgramStringifier()
     var doneFlag = false // Set to true if we're creating only useful programs and we've reached all the useful programs.
     val time = measureTimeMillis {
         val mutex = Mutex()
-        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 5, random = Random(12234))
         File(outputFileName).printWriter().use { outF ->
             coroutineScope {
                 repeat(numCoroutines) {
@@ -56,9 +57,7 @@ suspend fun generateDeepcoderPrograms(
                         var num = 0
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
-                            val generationResult = generateDeepcoderProgramAndExamples(generator = generator, nonUniformExceptions)
-                            val program = generationResult.program
-                            val examples = generationResult.examples
+                            val generationResult = language.generateProgramAndExamples(10)
 
                             if(canSaveToReturnMemory(generationResult)) {
                                 savedResults.add(generationResult)
@@ -71,11 +70,8 @@ suspend fun generateDeepcoderPrograms(
                                 numExceptioned.incrementAndGet()
                             }
 
-                            val progStr = strfier.stringify(program).trim()
-                            logOutputStream.println(progStr)
-
                             // Okay, now we have a good program. Is it useful?
-                            val useful = isDeepcoderProgramUseful(program, examples.size)
+                            val useful = language.isProgramUseful(generationResult)
                             if(!useful) {
                                 continue
                             }
@@ -89,7 +85,7 @@ suspend fun generateDeepcoderPrograms(
                                 logOutputStream.println("Found useful ${usefulNow}!")
                                 // Lock the file writing.
                                 outF.println("<|splitter|>")
-                                outF.print(generationResultToString(generationResult))
+                                outF.print(generationResultToString(language, generationResult))
                             }
                         }
                     }
@@ -102,25 +98,17 @@ suspend fun generateDeepcoderPrograms(
     logOutputStream.println("NUM BAD: ${numBad}")
     logOutputStream.println("NUM RUNNABLE: ${numRunnable}")
     logOutputStream.println("NUM EXCEPTIONED: ${numExceptioned}")
-    if(nonUniformExceptions.isNotEmpty()) {
-        logOutputStream.println("NUM WEIRD: ${nonUniformExceptions.values.reduce { acc, mutableList ->
-            (acc + mutableList).toMutableList()
-        }.size}")
-    }
-    logOutputStream.println(nonUniformExceptions.values.map {
-        it.map {
-            it.first.stackTraceToString() + "\n" + strfier.stringify(it.second) + "\n" + it
-        }
-    })
     return savedResults.toList()
 }
-suspend fun generateDeepcoderProgramsCmd(args: Array<String>) {
+
+suspend fun generateProgramsCmd(args: Array<String>) {
     val parser = ArgParser("generate")
     println(args.joinToString(" "))
+    val lanChoice by parser.option(ArgType.Choice<LanguageRef>(), shortName = "l", description = "Input language to generate").required()
     val outputFileName by parser.option(ArgType.String, fullName = "output", shortName = "o", description = "Output file name").default("/dev/null")
     val numToMake by parser.option(ArgType.Int, shortName = "n", description = "Number of examples to make").default(1)
     val makeUseful by parser.option(ArgType.Boolean, fullName = "useful", description = "If true, we'll only count useful problems in the total count.").default(false)
     parser.parse(args)
-    generateDeepcoderPrograms(outputFileName = outputFileName, makeUseful = makeUseful, numToMake = numToMake)
+    generatePrograms(argsToLanguage(lanChoice), outputFileName = outputFileName, makeUseful = makeUseful, numToMake = numToMake)
 
 }
