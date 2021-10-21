@@ -1,4 +1,5 @@
 from collections.abc import Iterable, Iterator
+from functools import reduce
 def canBeList(x):
     return isinstance(x, Iterable)
 
@@ -18,8 +19,8 @@ def cons(a, b):
     bl = expand_iters(b) if blist else [b]
     return al + bl
 
-foldl = lambda func, acc, xs: functools.reduce(func, xs, acc)
-foldr = lambda func, acc, xs: functools.reduce(lambda x, y: func(y, x), xs[::-1], acc)
+foldl = lambda f, acc, xs: reduce(f, xs, acc)
+foldr = lambda f, acc, xs: reduce(lambda x, y: f(y, x), xs[::-1], acc)
 def recl(f, e, x):
     if(len(x) == 0):
         return e

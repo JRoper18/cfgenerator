@@ -3,6 +3,7 @@ package grammars.lambda2
 import generators.ProgramGenerationResult
 import generators.ProgramGenerator
 import generators.ProgramStringifier
+import grammar.AttributeGrammar
 import grammar.RootGrammarNode
 import grammars.Language
 import kotlin.random.Random
@@ -49,5 +50,9 @@ class Lambda2Language : Language {
 
     override fun runProgramWithExample(program: String, input: String): String {
         return interp.interp(program, input)
+    }
+
+    override fun grammar(): AttributeGrammar {
+        return Lambda2Grammar.grammar
     }
 }

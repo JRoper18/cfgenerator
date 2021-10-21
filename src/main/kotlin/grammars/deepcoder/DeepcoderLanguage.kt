@@ -3,6 +3,7 @@ package grammars.deepcoder
 import generators.ProgramGenerationResult
 import generators.ProgramGenerator
 import generators.ProgramStringifier
+import grammar.AttributeGrammar
 import grammar.GenericGrammarNode
 import grammar.NodeAttribute
 import grammar.RootGrammarNode
@@ -52,6 +53,10 @@ class DeepcoderLanguage(val progLength : Int = 5) : Language {
 
     override fun runProgramWithExample(program: String, input: String): String {
         return DeepCoderInterpreter(DeepCoderVariables(input)).interp(program)
+    }
+
+    override fun grammar(): AttributeGrammar {
+        return DeepCoderGrammar.grammar
     }
 
 }

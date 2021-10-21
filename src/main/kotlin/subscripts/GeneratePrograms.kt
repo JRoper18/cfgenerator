@@ -57,17 +57,21 @@ suspend fun generatePrograms(
                         var num = 0
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
-                            val generationResult = language.generateProgramAndExamples(10)
+                            val generationResult = language.generateProgramAndExamples(7)
 
                             if(canSaveToReturnMemory(generationResult)) {
                                 savedResults.add(generationResult)
                             }
-                            if(generationResult.status == PROGRAM_STATUS.BAD) {
-                                numBad.incrementAndGet()
-                            } else if(generationResult.status == PROGRAM_STATUS.RUNNABLE) {
-                                numRunnable.incrementAndGet()
-                            } else {
-                                numExceptioned.incrementAndGet()
+                            when (generationResult.status) {
+                                PROGRAM_STATUS.BAD -> {
+                                    numBad.incrementAndGet()
+                                }
+                                PROGRAM_STATUS.RUNNABLE -> {
+                                    numRunnable.incrementAndGet()
+                                }
+                                else -> {
+                                    numExceptioned.incrementAndGet()
+                                }
                             }
 
                             // Okay, now we have a good program. Is it useful?

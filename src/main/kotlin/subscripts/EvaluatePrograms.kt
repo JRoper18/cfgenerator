@@ -28,6 +28,17 @@ suspend fun evaluateProgramsCmd(args: Array<String>) {
     evaluatePrograms(argsToLanguage(lanChoice), File(inputFileName).readText().split("<|splitter|>"))
 
 }
+
+fun analyzeSymbolFrequency(program : String, language : Language, frequencies: MutableMap<String, Int>) {
+    val stringsToFind = language.grammar().symbols.map {
+        it.name
+    }
+    stringsToFind.forEach { toFind ->
+        val numOccurances = (program.length - (program.replace(toFind, "")).length) / toFind.length
+        frequencies[toFind] = (frequencies[toFind] ?: 0) + numOccurances
+    }
+}
+
 suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
     val numRunnableExamples = AtomicInteger(0)
     val numCorrectExamples = AtomicInteger(0)
@@ -35,7 +46,8 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
     val numTotalExamples = AtomicInteger(0)
     val weirdMutex = Mutex()
     val weirdMap = mutableMapOf<String, MutableList<Pair<Exception, String>>>()
-
+    val badFreqs = mutableMapOf<String, Int>()
+    val goodFreqs = mutableMapOf<String, Int>()
     evalExamples.pforall { example ->
         try {
             val splitExample = example.split("Program:")
@@ -60,6 +72,10 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
             }
             if(hitsAllExamples) {
                 numCorrectPrograms.incrementAndGet()
+                analyzeSymbolFrequency(programStr, language, goodFreqs)
+            }
+            else {
+                analyzeSymbolFrequency(programStr, language, badFreqs)
             }
         } catch (ex: Exception) {
             // Ripe for race conditions
@@ -70,10 +86,15 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
             }
         }
     }
+    println("NUM PROGRAMS: ${evalExamples.size}")
     println("NUM TOTAL EXAMPLES: ${numTotalExamples.get()}")
     println("NUM RUNNABLE: ${numRunnableExamples.get()}")
     println("NUM CORRECT EXAMPLES: ${numCorrectExamples.get()}")
     println("NUM FULLY CORRECT PROGRAMS: ${numCorrectPrograms.get()}")
     println("Exception map keys: ${weirdMap.keys}")
+    println("Good frequencies: ")
+    println(goodFreqs)
+    println("Bad frequencies: ")
+    println(badFreqs)
 //    println("Exception map values: ${weirdMap.values.first()[0].first.stackTraceToString()}")
 }
