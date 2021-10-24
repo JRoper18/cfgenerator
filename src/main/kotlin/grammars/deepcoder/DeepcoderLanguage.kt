@@ -1,15 +1,13 @@
 package grammars.deepcoder
 
-import generators.ProgramGenerationResult
+import grammars.ProgramGenerationResult
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.AttributeGrammar
-import grammar.GenericGrammarNode
 import grammar.NodeAttribute
 import grammar.RootGrammarNode
 import grammar.constraints.BasicRuleConstraint
 import grammars.Language
-import grammars.lambda2.Lambda2Grammar
 import kotlin.random.Random
 
 class DeepcoderLanguage(val progLength : Int = 5) : Language {

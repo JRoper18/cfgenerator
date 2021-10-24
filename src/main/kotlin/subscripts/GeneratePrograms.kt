@@ -1,13 +1,8 @@
 package subscripts
 
-import generators.ProgramGenerationResult
-import generators.ProgramGenerationResult.PROGRAM_STATUS
-import generators.ProgramGenerator
-import generators.ProgramStringifier
-import grammar.GenericGrammarNode
+import grammars.ProgramGenerationResult
+import grammars.ProgramGenerationResult.PROGRAM_STATUS
 import grammars.Language
-import grammars.deepcoder.DeepCoderGrammar
-import grammars.deepcoder.DeepcoderLanguage
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -16,10 +11,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.random.Random
 import java.io.File
-import java.io.OutputStream
-import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis

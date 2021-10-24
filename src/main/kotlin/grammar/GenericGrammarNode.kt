@@ -93,15 +93,18 @@ sealed class GenericGrammarNode(
     }
 
     override fun toString(): String {
-        return this.toString(printAttrs = true, printAPR = false)
+        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false)
     }
-    fun toString(printAttrs: Boolean = true, printAPR : Boolean = true): String {
+    fun toString(printAttrs: Boolean = true, printAPR : Boolean = true, splitAttrs : Boolean = false): String {
         val buffer = StringBuilder(50)
         print(buffer, "", "", printAttrs, printAPR)
         return buffer.toString()
     }
 
-    protected fun print(buffer: StringBuilder, prefix: String, childrenPrefix: String, printAttrs : Boolean = true, printAPR: Boolean = false) {
+    protected fun print(buffer: StringBuilder, prefix: String, childrenPrefix: String,
+                        printAttrs : Boolean = true,
+                        printAPR: Boolean = false,
+                        splitAttrs : Boolean = false) {
         buffer.append(prefix)
         if(printAPR) {
             buffer.append(this.productionRule.toString())
@@ -111,9 +114,13 @@ sealed class GenericGrammarNode(
         }
         if(printAttrs){
             buffer.append(' ')
-            val attrs = this.synthesizedAttributes()
-            buffer.append(attrs)
-            buffer.append(" I ${this.inheritedAttributes()}")
+            if(splitAttrs) {
+                buffer.append(this.synthesizedAttributes())
+                buffer.append(" I ${this.inheritedAttributes()}")
+            }
+            else {
+                buffer.append(this.attributes())
+            }
         }
         buffer.append('\n')
         val it = rhs.iterator()

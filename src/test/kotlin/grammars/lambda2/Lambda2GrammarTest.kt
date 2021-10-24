@@ -15,10 +15,11 @@ internal class Lambda2GrammarTest {
         repeat(5){
             val prog = generator.generate()
             val progStr = strfier.stringify(prog)
+            println(prog)
             println(progStr)
-            println(interp.makeExamples(progStr, 10).map {
-                it.first + "\t" + it.second
-            }.joinToString ("\n"))
+//            println(interp.makeExamples(progStr, 10).map {
+//                it.first + "\t" + it.second
+//            }.joinToString ("\n"))
         }
     }
 }

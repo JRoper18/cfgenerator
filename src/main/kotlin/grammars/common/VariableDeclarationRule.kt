@@ -8,7 +8,7 @@ import grammar.constraints.RuleConstraint
  * Given a LHS symbol, a subrule that creates an attribute where the key is the name of the variable, and the name of that attribute,
  * Create a rule that creates variable declaration attributes.
  */
-class VariableDeclarationRule(val lhs : Symbol, val rhs : Symbol, val subruleVarnameAttributeKey : String) :
+open class VariableDeclarationRule(lhs : Symbol, val rhs : Symbol, val subruleVarnameAttributeKey : String) :
     AttributedProductionRule(ProductionRule(lhs, listOf(rhs))) {
     companion object {
         const val DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX = "_is_declared_var"

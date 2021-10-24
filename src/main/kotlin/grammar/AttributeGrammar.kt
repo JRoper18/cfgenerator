@@ -72,6 +72,9 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
     // Rulemap maps from antlr ruleNames to a list of APRs.
     data class AntlrResult(val grammarStr: String, val ruleMap: Map<String, List<APR>>)
 
+    /**
+     * DEPRECATED
+     */
     fun toAntlr(name : String) : AntlrResult {
         val build = StringBuilder()
         build.append("grammar $name;\n")
@@ -119,6 +122,9 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         return AntlrResult(build.toString(), ruleMap.toMap())
     }
 
+    /**
+     * DEPRECATED
+     */
     fun fromAntlrParsetree(grammar: Grammar, ctx: RuleContext, antlrToAPRS: Map<String, List<APR>>) : GenericGrammarNode {
         val rule = grammar.getRule(ctx.ruleIndex)
         val alts = antlrToAPRS[rule.name]!!

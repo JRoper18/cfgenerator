@@ -1,16 +1,7 @@
 package subscripts
 
-import generators.ProgramGenerationResult
-import generators.ProgramGenerator
-import generators.ProgramStringifier
-import grammar.GenericGrammarNode
-import grammar.NodeAttribute
-import grammar.RootGrammarNode
-import grammar.constraints.BasicRuleConstraint
+import grammars.ProgramGenerationResult
 import grammars.Language
-import grammars.deepcoder.DeepCoderGrammar.FUNCTION_NAME
-import grammars.deepcoder.DeepCoderInterpreter
-import grammars.deepcoder.DeepCoderVariables
 import grammars.deepcoder.DeepcoderLanguage
 import grammars.lambda2.Lambda2Language
 import kotlinx.coroutines.async

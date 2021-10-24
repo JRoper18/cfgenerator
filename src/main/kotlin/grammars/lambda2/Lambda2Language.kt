@@ -1,6 +1,6 @@
 package grammars.lambda2
 
-import generators.ProgramGenerationResult
+import grammars.ProgramGenerationResult
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.AttributeGrammar

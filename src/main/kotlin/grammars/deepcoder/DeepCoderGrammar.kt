@@ -4,7 +4,6 @@ import grammar.*
 import grammar.constraints.LookupConstraintGenerator
 import grammar.constraints.VariableConstraintGenerator
 import grammars.common.*
-import kotlin.streams.toList
 
 object DeepCoderGrammar {
     val STMT = NtSym("Stmt")

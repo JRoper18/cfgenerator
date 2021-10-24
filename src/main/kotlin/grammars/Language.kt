@@ -1,6 +1,5 @@
 package grammars
 
-import generators.ProgramGenerationResult
 import grammar.AttributeGrammar
 import grammar.RootGrammarNode
 

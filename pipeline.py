@@ -12,11 +12,16 @@ def main():
 
     parser.add_argument('--language', type=str,
                         help='Name of the language to eval on (deepcoder or lambda2)')
-    parser.add_argument('--do_cfgs', action='store_true')
-    parser.add_argument('--do_train', action='store_true')
-    parser.add_argument('--do_eval_cfgs', action='store_true')
-    parser.add_argument('--do_gpt_gen', action='store_true')
-    parser.add_argument('--do_eval', action='store_true')
+    parser.add_argument('--do_cfgs', action='store_true',
+                        help = 'Generate training examples from our CFG generator to train GPT on. ')
+    parser.add_argument('--do_train', action='store_true',
+                        help = 'Train GPT on CFG-generated programs')
+    parser.add_argument('--do_eval_cfgs', action='store_true',
+                        help = 'Generate evaluation examples from our CFG generator to evaluate GPT on. ')
+    parser.add_argument('--do_gpt_gen', action='store_true',
+                        help = 'Generate programs using a trained GPT model')
+    parser.add_argument('--do_eval', action='store_true',
+                        help = 'Evaluate examples created by GPT. ')
     parser.add_argument('--num_train', type=int, default=10000, 
                         help='number of examples to make for GPT to train on')
     parser.add_argument('--num_eval', type=int, default=1000, 

@@ -1,6 +1,5 @@
-package generators
+package grammars
 
-import grammar.GenericGrammarNode
 import grammar.RootGrammarNode
 
 data class ProgramGenerationResult(val program: RootGrammarNode,
