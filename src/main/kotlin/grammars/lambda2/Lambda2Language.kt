@@ -8,7 +8,7 @@ import grammar.RootGrammarNode
 import grammars.Language
 import kotlin.random.Random
 
-class Lambda2Language : Language {
+open class Lambda2Language : Language {
     val interp = Lambda2Interpreter()
     val generator = ProgramGenerator(Lambda2Grammar.grammar)
     val strfier = ProgramStringifier(" ")

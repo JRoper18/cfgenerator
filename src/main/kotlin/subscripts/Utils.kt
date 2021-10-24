@@ -3,6 +3,7 @@ package subscripts
 import grammars.ProgramGenerationResult
 import grammars.Language
 import grammars.deepcoder.DeepcoderLanguage
+import grammars.lambda2.Lambda2CfgLanguage
 import grammars.lambda2.Lambda2Language
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -24,12 +25,14 @@ const val MAX_COROUTINES = 100;
 enum class LanguageRef {
     DEEPCODER,
     LAMBDA2,
+    LAMBDA2CFG,
 }
 
 fun argsToLanguage(lan : LanguageRef) : Language {
     when(lan){
         LanguageRef.DEEPCODER -> return DeepcoderLanguage()
         LanguageRef.LAMBDA2 -> return Lambda2Language()
+        LanguageRef.LAMBDA2CFG -> return Lambda2CfgLanguage()
     }
 }
 fun generationResultToString(language : Language, result: ProgramGenerationResult) : String {
