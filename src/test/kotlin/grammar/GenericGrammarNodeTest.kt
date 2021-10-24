@@ -1,7 +1,9 @@
 package grammar
 
+import generators.ProgramGenerator
 import grammars.common.TerminalAPR
 import grammars.common.UnexpandedAPR
+import grammars.lambda2.Lambda2Grammar
 import org.junit.jupiter.api.Assertions.*
 import kotlin.test.Test
 
@@ -45,6 +47,14 @@ internal class GenericGrammarNodeTest {
 
     @Test
     fun testEncodeDecode() {
+        val gen = ProgramGenerator(Lambda2Grammar.grammar)
+        repeat(10) {
+            val orig = gen.generate(listOf())
+            val encoded = orig.encode()
+            val remade = Lambda2Grammar.grammar.decode(encoded)[0]
+            remade.verify()
+            assertEquals(orig.toString(), remade.toString())
 
+        }
     }
 }

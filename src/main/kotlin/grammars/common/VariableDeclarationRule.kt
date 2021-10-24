@@ -11,7 +11,7 @@ import grammar.constraints.RuleConstraint
 open class VariableDeclarationRule(lhs : Symbol, val rhs : Symbol, val subruleVarnameAttributeKey : String) :
     AttributedProductionRule(ProductionRule(lhs, listOf(rhs))) {
     companion object {
-        const val DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX = "_is_declared_var"
+        const val DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX = "_is_decl"
         const val DECLARED_VAR_ATTRIBUTE_KEY_REGEX_STR = "(\\w)$DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX"
         val DECLARED_VAR_ATTRIBUTE_KEY_REGEX = Regex(DECLARED_VAR_ATTRIBUTE_KEY_REGEX_STR)
         fun makeAttrFromVarname(varname : String) : NodeAttribute {

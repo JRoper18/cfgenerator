@@ -92,6 +92,10 @@ sealed class GenericGrammarNode(
         }
     }
 
+    fun encode() : String {
+        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false, prettyLines = false)
+    }
+
     override fun toString(): String {
         return this.toString(printAttrs = true, printAPR = false, splitAttrs = false, prettyLines = true)
     }
@@ -114,7 +118,7 @@ sealed class GenericGrammarNode(
             buffer.append(productionRule.rule.toString())
         }
         if(printAttrs){
-            buffer.append(' ')
+            buffer.append(" ATTRS: ")
             if(splitAttrs) {
                 buffer.append(this.synthesizedAttributes())
                 buffer.append(" I ${this.inheritedAttributes()}")

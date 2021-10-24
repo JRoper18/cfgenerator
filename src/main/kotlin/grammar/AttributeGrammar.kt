@@ -48,6 +48,12 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         GlobalCombinedAttributeProductionRule(this.globalAttributeRegexes, apr)
     }
 
+    val strsToRules by lazy {
+        rules.map {
+            Pair(it.rule.toString(), it)
+        }.toMap()
+    }
+
     init {
         // Validate the grammar. Every non-terminal symbol should have an expansion.
         symbols.forEach {
@@ -69,6 +75,60 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         return this.expansions.getOrDefault(lhs, listOf())
     }
 
+    fun decode(str : String) : List<GenericGrammarNode> {
+        val lines = str.lines().filter {
+            it.isNotBlank()
+        }
+        val res = decodeLines(lines, 0)
+        check(lines.size == res.second) {
+            "Only managed to decode up to line ${res.second}/${lines.size}"
+        }
+        return res.first
+    }
+    private fun decodeLines(lines : List<String>, depth : Int) : Pair<List<GenericGrammarNode>, Int> {
+        val nodes = mutableListOf<GenericGrammarNode>()
+        var currentNode : GenericGrammarNode? = null
+        var lineIdx = 0
+        while(lineIdx < lines.size){
+            val line = lines[lineIdx]
+            for(i in 0 until depth) {
+                if(line[i] != '\t') {
+                    // This depth is over.
+                    return Pair(nodes, lineIdx)
+                }
+            }
+            val untabbedLine = line.substring(depth, line.length)
+            if(untabbedLine[0] == '\t') {
+                // Go down another level.
+                val restOfStr = lines.subList(lineIdx, lines.size)
+                val decodeRes = decodeLines(restOfStr, depth + 1)
+                currentNode = currentNode!!.withChildren(decodeRes.first)
+                nodes.add(currentNode)
+                lineIdx += decodeRes.second
+            }
+            else {
+                // TODO: Find some way to escape this string when it appears naturally in a CFG
+                val beforeAttrs = untabbedLine.substringBefore("ATTRS").trim()
+                val rhsStr = beforeAttrs.substringAfter("->").trim()
+                if(rhsStr.isBlank() && beforeAttrs.isNotBlank()) {
+                    // It's a terminal.
+                    val lhsStr = beforeAttrs.substringBefore("->").trim()
+                    currentNode = RootGrammarNode(TerminalAPR(StringSymbol.fromPrintedString(lhsStr)))
+                    nodes.add(currentNode)
+                }
+                else {
+                    val apr = strsToRules[beforeAttrs]!!
+                    currentNode = RootGrammarNode(apr)
+                }
+                lineIdx += 1
+            }
+        }
+        return Pair(nodes.toList(), lineIdx)
+    }
+
+    /**
+     * DEPRECATED
+     */
     // Rulemap maps from antlr ruleNames to a list of APRs.
     data class AntlrResult(val grammarStr: String, val ruleMap: Map<String, List<APR>>)
 
@@ -145,7 +205,6 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         }
         return node.withChildren(childNodes)
         // Docs: https://www.antlr.org/api/Java/org/antlr/v4/runtime/tree/ParseTree.html
-
     }
     // Until I get antlr working this is gone. 
     // fun parse(progStr: String, start : Symbol = this.start) : GenericGrammarNode {

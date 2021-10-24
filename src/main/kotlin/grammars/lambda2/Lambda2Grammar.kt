@@ -7,6 +7,10 @@ import grammars.common.*
 object Lambda2Grammar {
 
     const val retTypeAttrName = "retType"
+    const val intType = "int"
+    const val boolType = "bool"
+    const val intListType = "[int]"
+    const val intListListType = "[[int]]"
 
     val maps = StringSymbol("map")
     val mapt = StringSymbol("mapt")
@@ -35,10 +39,37 @@ object Lambda2Grammar {
     val intConstant = StringsetSymbol(intSymbols(-100, 100), displayName = "Int")
     val intOp = StringsetSymbol(setOf("+", "-", "/", "*"), displayName = "IntOP")
 
-    val varName = StringsetSymbol(lowercaseASCII, displayName = "lowercaseAscii")
+    //Here's a trick: We'll force variables to have names that represent their type.
+    val varName = StringsetSymbol(mapOf(
+        // Int variables
+        "i" to setOf(NodeAttribute(retTypeAttrName, intType)),
+        "j" to setOf(NodeAttribute(retTypeAttrName, intType)),
+        "k" to setOf(NodeAttribute(retTypeAttrName, intType)),
+        "l" to setOf(NodeAttribute(retTypeAttrName, intType)),
+        "m" to setOf(NodeAttribute(retTypeAttrName, intType)),
+        "n" to setOf(NodeAttribute(retTypeAttrName, intType)),
+        // Bool variables
+        "o" to setOf(NodeAttribute(retTypeAttrName, boolType)),
+        "p" to setOf(NodeAttribute(retTypeAttrName, boolType)),
+        "q" to setOf(NodeAttribute(retTypeAttrName, boolType)),
+        "r" to setOf(NodeAttribute(retTypeAttrName, boolType)),
+        // Int list lists
+        "x" to setOf(NodeAttribute(retTypeAttrName, intListListType)),
+        "y" to setOf(NodeAttribute(retTypeAttrName, intListListType)),
+        "z" to setOf(NodeAttribute(retTypeAttrName, intListListType)),
+        "a" to setOf(NodeAttribute(retTypeAttrName, intListListType)),
+        "b" to setOf(NodeAttribute(retTypeAttrName, intListListType)),
+        "c" to setOf(NodeAttribute(retTypeAttrName, intListListType)),
+        // Int lists
+        "s" to setOf(NodeAttribute(retTypeAttrName, intListType)),
+        "t" to setOf(NodeAttribute(retTypeAttrName, intListType)),
+        "u" to setOf(NodeAttribute(retTypeAttrName, intListType)),
+        "v" to setOf(NodeAttribute(retTypeAttrName, intListType)),
+        "w" to setOf(NodeAttribute(retTypeAttrName, intListType)),
+        ), displayName = "lowercaseAscii")
     val varInit = NtSym("varInit")
 
-    val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0), (PR(declared, listOf(varName))))
+    val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0, retTypeAttrName to 0), (PR(declared, listOf(varName))))
 
     val grammar = AttributeGrammar(listOf(
         // Constants
@@ -52,7 +83,7 @@ object Lambda2Grammar {
                 retTypeAttrName to 0
             ), PR(basicFunc, listOf(constant))),
         InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intOp, LP, basicFunc, RP)), retTypeAttrName, "int"),
-        InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intOp, LP, basicFunc, RP)), retTypeAttrName, "bool"),
+        InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, boolOp, LP, basicFunc, RP)), retTypeAttrName, "bool"),
         // Variable declaration
         VariableDeclarationRule(varInit, varName, varName.attributeName),
         // declareds are just variables with the constraint that they're inited/delcared already.
