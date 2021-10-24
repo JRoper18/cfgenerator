@@ -2,7 +2,7 @@ package grammars.common
 
 import grammar.*
 
-data class ListProductionRule(val listName: NtSym, val unitName: Symbol, val separator: String = "") :
+class ListProductionRule(val listName: NtSym, val unitName: Symbol, val separator: String = "") :
     ProductionRule(listName, listOf(listName, StringSymbol(separator), unitName)) {
     fun unroll(listNode: GenericGrammarNode) : List<GenericGrammarNode> {
         require(listNode.productionRule.rule == this)

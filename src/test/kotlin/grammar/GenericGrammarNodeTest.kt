@@ -42,4 +42,9 @@ internal class GenericGrammarNodeTest {
         })
         assert(terminalProg.rhs.isEmpty())
     }
+
+    @Test
+    fun testEncodeDecode() {
+
+    }
 }

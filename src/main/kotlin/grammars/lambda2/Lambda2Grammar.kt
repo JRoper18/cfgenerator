@@ -25,6 +25,9 @@ object Lambda2Grammar {
     val constant = NtSym("constant")
     val declared = NtSym("declared") // Only used when forcing them to use a var that's already declared.
 
+
+    val emptyList = StringSymbol("[]")
+
     val boolConstant = StringsetSymbol(setOf("True", "False"), displayName = "Bool")
     val boolOp = StringsetSymbol(setOf("or", "and", "<", ">", "="), displayName = "BoolOP")
     // It's a boolOp because it RETURNS a bool. It's arguments can be ints.
@@ -41,7 +44,7 @@ object Lambda2Grammar {
         // Constants
         InitAttributeProductionRule(PR(constant, listOf(intConstant)), retTypeAttrName, "int"),
         InitAttributeProductionRule(PR(constant, listOf(boolConstant)), retTypeAttrName, "bool"),
-
+        InitAttributeProductionRule(PR(constant, listOf(emptyList)), retTypeAttrName, "[int]"),
         // Basic function definitions. We're using prefix notation to make interpretation easier.
         APR(PR(basicFunc, listOf(declared))),
         SynthesizeAttributeProductionRule(
@@ -70,7 +73,10 @@ object Lambda2Grammar {
             mapOf(
                 retTypeAttrName to 0
             ), PR(stmtSym, listOf(basicFunc))),
-        APR(PR(stmtSym, listOf(cons, LP, declared, COMMA, declared, RP))),
+        SynthesizeAttributeProductionRule(
+            mapOf(
+                retTypeAttrName to 4 // Assuming the second arg is a list already.
+            ), PR(stmtSym, listOf(cons, LP, declared, COMMA, declared, RP))),
         HigherOrderSynthesizedRule(
             retTypeAttrName, 2,
             PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP))),

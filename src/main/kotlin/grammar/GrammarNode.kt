@@ -14,14 +14,6 @@ class GrammarNode(
             siblingAttrs.add(parent.rhs[i].synthesizedAttributes())
         }
         val parentAttrs = parent.inheritedAttributes()
-        if(this.productionRule.rule.lhs.name == "VarName") {
-//            println("Node")
-//            println(parentAttrs)
-//            println("Sibling")
-//            println(siblingAttrs)
-//            println("synth")
-//            println(this.synthesizedAttributes())
-        }
         return productionRule.makeInheritedAttributes(idx, parentAttrs, siblingAttrs)
     }
 

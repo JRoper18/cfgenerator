@@ -93,18 +93,19 @@ sealed class GenericGrammarNode(
     }
 
     override fun toString(): String {
-        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false)
+        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false, prettyLines = true)
     }
-    fun toString(printAttrs: Boolean = true, printAPR : Boolean = true, splitAttrs : Boolean = false): String {
+    fun toString(printAttrs: Boolean = true, printAPR : Boolean = false, splitAttrs : Boolean = false, prettyLines : Boolean = true): String {
         val buffer = StringBuilder(50)
-        print(buffer, "", "", printAttrs, printAPR)
+        print(buffer, "", "", printAttrs, printAPR, splitAttrs, prettyLines)
         return buffer.toString()
     }
 
     protected fun print(buffer: StringBuilder, prefix: String, childrenPrefix: String,
                         printAttrs : Boolean = true,
                         printAPR: Boolean = false,
-                        splitAttrs : Boolean = false) {
+                        splitAttrs : Boolean = false,
+                        prettyLines : Boolean = true) {
         buffer.append(prefix)
         if(printAPR) {
             buffer.append(this.productionRule.toString())
@@ -127,9 +128,24 @@ sealed class GenericGrammarNode(
         while (it.hasNext()) {
             val next = it.next()
             if (it.hasNext()) {
-                next.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ", printAttrs = printAttrs, printAPR = printAPR)
+                if(prettyLines) {
+                    next.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ",
+                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines)
+                }
+                else {
+                    next.print(buffer, "$childrenPrefix\t", "$childrenPrefix\t",
+                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines)
+                }
             } else {
-                next.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ", printAttrs = printAttrs, printAPR = printAPR)
+                if(prettyLines) {
+                    next.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ", printAttrs = printAttrs, printAPR = printAPR,
+                        splitAttrs, prettyLines)
+                }
+                else {
+                    next.print(buffer, "$childrenPrefix\t", "$childrenPrefix\t", printAttrs = printAttrs, printAPR = printAPR,
+                        splitAttrs, prettyLines)
+
+                }
             }
         }
     }

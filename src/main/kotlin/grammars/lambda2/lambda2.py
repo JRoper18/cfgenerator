@@ -14,9 +14,12 @@ def mapt(f, x):
     return x
 def cons(a, b):
     blist = canBeList(b)
+    if not blist:
+        # Can't cons something to a not-list
+        return None
     alist = canBeList(a)
     al = expand_iters(a) if alist else [a]
-    bl = expand_iters(b) if blist else [b]
+    bl = expand_iters(b) if blist else b
     return al + bl
 
 foldl = lambda f, acc, xs: reduce(f, xs, acc)
