@@ -13,7 +13,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
                        val numRandomTries : Int = 3,
                        val timeoutMs : Long = 10000L,
                        val maxProgramDepth : Int = 10,
-                       val random: Random = Random(42L)
+                       val random: Random = Random
 ) {
 
 

@@ -10,7 +10,7 @@ import kotlin.random.Random
 
 class Lambda2Language : Language {
     val interp = Lambda2Interpreter()
-    val generator = ProgramGenerator(Lambda2Grammar.grammar, random = Random(System.currentTimeMillis()))
+    val generator = ProgramGenerator(Lambda2Grammar.grammar)
     val strfier = ProgramStringifier(" ")
     override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult {
         val prog = generator.generate()

@@ -11,6 +11,7 @@ import grammars.deepcoder.DeepCoderGrammar
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
+import kotlin.random.Random
 
 internal class ProgramGeneratorTest {
 
@@ -63,12 +64,22 @@ internal class ProgramGeneratorTest {
     @Test
     fun testDeterminism() {
         // Just use deepcoder, it's simple but not so simple that it's inherently deterministic.
+        val gen1 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1, random = Random(100))
+        val gen2 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1, random = Random(100))
+        val stringifier = ProgramStringifier()
+        repeat(3) {
+            assertEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
+        }
+    }
+
+    @Test
+    fun testRandomness() {
         val gen1 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val gen2 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val stringifier = ProgramStringifier()
-        assertEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
-        assertEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
-        assertEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
+        repeat(3) {
+            assertNotEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
+        }
 
     }
 }
