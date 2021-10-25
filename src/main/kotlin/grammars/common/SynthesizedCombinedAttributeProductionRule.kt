@@ -30,6 +30,7 @@ class SynthesizedCombinedAttributeProductionRule(synthesisRules : List<Synthesiz
         synthesisRule = SynthesizeAttributeProductionRule(synthMap, rule)
     }
 
+    //TODO: Test this
     override fun canMakeProgramWithAttributes(attrs: NodeAttributes): Pair<Boolean, List<List<RuleConstraint>>> {
         val cons : MutableList<MutableList<RuleConstraint>> = mutableListOf();
         this.rule.rhs.forEach {

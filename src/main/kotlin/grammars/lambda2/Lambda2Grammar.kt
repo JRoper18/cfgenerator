@@ -2,10 +2,7 @@ package grammars.lambda2
 
 import OrderedSynthesizedAttributeRule
 import grammar.*
-import grammar.constraints.BasicConstraintGenerator
-import grammar.constraints.BasicRuleConstraint
-import grammar.constraints.EqualAttributeValueConstraintGenerator
-import grammar.constraints.VariableConstraintGenerator
+import grammar.constraints.*
 import grammars.common.*
 
 object Lambda2Grammar {
@@ -13,6 +10,7 @@ object Lambda2Grammar {
     const val retTypeAttrName = "retType"
     const val intType = "int"
     const val boolType = "bool"
+    const val boolListType = "[bool]"
     const val intListType = "[int]"
     const val intListListType = "[[int]]"
 
@@ -104,11 +102,19 @@ object Lambda2Grammar {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
     }
 
+    val consRule = SynthesizeAttributeProductionRule(
+        mapOf(
+            retTypeAttrName to 4 // Assuming the second arg is a list already.
+        ), PR(stmtSym, listOf(cons, LP, declared, COMMA, declared, RP)))
+
+
 
     val grammar = AttributeGrammar(listOf(
         // Constants
         InitAttributeProductionRule(PR(constant, listOf(intConstant)), retTypeAttrName, "int"),
         InitAttributeProductionRule(PR(constant, listOf(boolConstant)), retTypeAttrName, "bool"),
+
+        // Let's just say empty lists are int lists, for now.
         InitAttributeProductionRule(PR(constant, listOf(emptyList)), retTypeAttrName, "[int]"),
         // Basic function definitions. We're using prefix notation to make interpretation easier.
         APR(PR(basicFunc, listOf(declared))),
@@ -138,10 +144,7 @@ object Lambda2Grammar {
             mapOf(
                 retTypeAttrName to 0
             ), PR(stmtSym, listOf(basicFunc))),
-        SynthesizeAttributeProductionRule(
-            mapOf(
-                retTypeAttrName to 4 // Assuming the second arg is a list already.
-            ), PR(stmtSym, listOf(cons, LP, declared, COMMA, declared, RP))),
+        consRule,
         HigherOrderSynthesizedRule(
             retTypeAttrName, 2,
             PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP))),
@@ -167,6 +170,11 @@ object Lambda2Grammar {
         foldlRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
         foldrRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
         reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
+
+        // Cons needs a list as a return value.
+        consRule.rule to BasicConstraintGenerator(listOf(OrRuleConstraint(listOf(boolListType, intListListType, intListType).map{
+            BasicRuleConstraint(NodeAttribute(retTypeAttrName, it))
+        }))),
     ))
 
 
