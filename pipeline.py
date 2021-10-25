@@ -49,6 +49,7 @@ def main():
         ret = subprocess.call(cmd, shell=True)
         if (ret != 0):
             return
+
     if(args.do_gpt_gen):
         generate_gpt(model_run_name = modelname, eval_output_generated_fname=gpt_generated_eval_path, eval_generated_fname=cfg_generated_eval_path)
 

@@ -11,21 +11,21 @@ def find_nth(haystack, needle, n):
 def make_max_length(max_in, tokenizer):
     return min(max_in, tokenizer.model_max_length, 1200) # 1200 is highest # tokens can fit on 1 Shiva GPU. 
 
+def wrap_str(in_str):
+    return "<|startoftext|>" + in_str + "<|endoftext|>"
+
 class ProgramDataset(Dataset):
-    def __init__(self, txt_list, tokenizer, max_length):
+    def __init__(self, txt_list, tokenizer, max_length, padding):
         self.input_ids = []
         self.attn_masks = []
         self.labels = []
         for txt in txt_list:
             # Encode the descriptions using the GPT-Neo tokenizer
             built_txt = txt
-            program_too_long = False
-            encodings_dict = tokenizer("<|startoftext|>" 
-                                        + built_txt +    
-                                        "<|endoftext|>",
+            encodings_dict = tokenizer(wrap_str(txt),
                                         truncation=False,
                                         max_length=max_length, 
-                                        padding="max_length")
+                                        padding = padding)
             input_ids = encodings_dict["input_ids"]
             # Do the truncation ourselves so that truncation truncates from the head
             trunc_ids = input_ids[len(input_ids)-max_length + 1:]
