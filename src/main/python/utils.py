@@ -28,8 +28,8 @@ class ProgramDataset(Dataset):
                                         padding = padding)
             input_ids = encodings_dict["input_ids"]
             # Do the truncation ourselves so that truncation truncates from the head
-            trunc_ids = input_ids[len(input_ids)-max_length + 1:]
-            trunc_attn = encodings_dict["attention_mask"][len(input_ids)-max_length + 1:]
+            trunc_ids = input_ids[-max_length + 1:]
+            trunc_attn = encodings_dict["attention_mask"][-max_length + 1:]
             self.input_ids.append(torch.tensor(trunc_ids))
             mask = torch.tensor(trunc_attn)
             self.attn_masks.append(mask)

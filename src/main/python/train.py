@@ -48,8 +48,8 @@ def train_gpt(run_name, generated_path):
     # if(ds_max_length != max_length):
     #     print("WARNING!!! WE MUST TRUNCATE SENTENCES TO %d!!!" % ds_max_length)
     #     print("WE MIGHT LOSE A LOT OF EXAMPLES!")
-    dataset = ProgramDataset(dataset_strs, tokenizer, ds_max_length)
-    train_size = int(0.9 * len(dataset))
+    dataset = ProgramDataset(dataset_strs, tokenizer, ds_max_length, padding="max_length")
+    train_size = int(0.95 * len(dataset))
     train_ds, eval_ds = random_split(dataset, [train_size, len(dataset) - train_size], generator=torch.Generator().manual_seed(42))
     print("Training size: %d" % train_size)
 

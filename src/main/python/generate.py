@@ -1,6 +1,6 @@
 import torch
 from transformers import GPTNeoForCausalLM, GPT2Tokenizer
-from .utils import make_max_length, wrap_str
+from .utils import ProgramDataset, make_max_length
 
 
 def generate_gpt(eval_generated_fname,
@@ -24,37 +24,33 @@ def generate_gpt(eval_generated_fname,
         split_ds = data.read().split("<|splitter|>")
         for text in split_ds:
             if not text:
-                # If it's blank
+                # If it's blank, skippit. 
                 continue
             chopped_str = text.split("Program:")
             dataset_strs.append("%s\nProgram:" % chopped_str[0]) # Before the program, aka only examples. 
-    max_length = make_max_length(2048, fine_tokenizer)
+    token_lengths = [len(fine_tokenizer.encode(ds_str)) for ds_str in dataset_strs]
+    max_length = max(token_lengths)
+    avg_length = int(sum(token_lengths) / len(token_lengths))
+    print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
+    dataset = ProgramDataset(dataset_strs, fine_tokenizer, 1200, padding=False)
     with open(eval_output_generated_fname, 'w') as file:
-        for idx, eval_ex in enumerate(dataset_strs):
-            wrapped = wrap_str(eval_ex)
-            input_tensor = fine_tokenizer.encode(wrapped, return_tensors="pt")[:, -max_length:].cuda()
+        for idx, eval_ex in enumerate(dataset):
+            input_tensor = eval_ex[0]
             outputs = fine_model.generate(
                 input_tensor, 
                 max_length=2048,  
                 # num_return_sequences=3,
                 # no_repeat_ngram_size=2,
                 # repetition_penalty=1.5,
-                top_p=0.95,
+                top_p=0.99,
                 temperature=.25,
                 do_sample=True,
                 top_k=50,
-                # early_stopping=True
+                early_stopping=True
             )
             total_output = "<|splitter|>\n%s" % fine_tokenizer.decode(outputs[0])
             total_output = total_output.replace("<|startoftext|>", "")
             total_output = total_output.replace("<|endoftext|>", "")
-            pad_idx = total_output.find("<|pad|>")
-            if(pad_idx != -1):
-                print(total_output)
-                print("and input:")
-                print(dataset_strs[idx])
-                print("at index %d" % idx)
-                break
             file.write(total_output)
             if idx % 10 == 0:
                 print("GPT Generated %d/%d" % (idx, len(dataset_strs)))
