@@ -38,14 +38,14 @@ def generate_gpt(eval_generated_fname,
             input_tensor = fine_tokenizer.encode(input_str, return_tensors="pt").cuda()
             outputs = fine_model.generate(
                 input_tensor, 
-                max_length=1200,  
-                # num_return_sequences=5,
+                max_length=2048,  
+                num_return_sequences=1,
                 # no_repeat_ngram_size=2,
                 # repetition_penalty=1.5,
-                top_p=0.95,
-                temperature=.55,
+                top_p=1.0,
+                temperature=.25,
                 do_sample=True,
-                top_k=50,
+                # top_k=50,
                 # early_stopping=False
             )
             total_output = fine_tokenizer.decode(outputs[0])

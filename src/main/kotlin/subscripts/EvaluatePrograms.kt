@@ -93,8 +93,8 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
     println("NUM FULLY CORRECT PROGRAMS: ${numCorrectPrograms.get()}")
     println("Exception map keys: ${weirdMap.keys}")
     println("Good frequencies: ")
-    println(goodFreqs)
+    println(FrequencyCounter(goodFreqs))
     println("Bad frequencies: ")
-    println(badFreqs)
+    println(FrequencyCounter(badFreqs))
 //    println("Exception map values: ${weirdMap.values.first()[0].first.stackTraceToString()}")
 }

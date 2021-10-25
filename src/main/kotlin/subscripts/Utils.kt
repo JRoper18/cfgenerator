@@ -48,3 +48,32 @@ fun generationResultToString(language : Language, result: ProgramGenerationResul
     build.append(language.programToString(result.program) + "\n")
     return build.toString()
 }
+
+class FrequencyCounter(val counts : Map<String, Int>, val include : Set<String> = setOf("cons", "foldl", "foldr", "map", "recl", "filter")
+) {
+    var total : Int = 0
+    init {
+        counts.forEach {
+            total += it.value
+        }
+    }
+
+    override fun toString() : String {
+        val build = StringBuilder()
+        val pairs = counts.toList().map {
+            Pair(it.first, (it.second.toFloat() / total))
+        }.sortedBy {
+            -it.second //Negate to make it high-to-low
+        }.filter {
+            it.first in include
+        }
+        pairs.forEach {
+            build.append(it.first)
+            build.append('=')
+            build.append("%.4f".format(it.second))
+            build.append(" ")
+        }
+        return build.toString()
+    }
+
+}
