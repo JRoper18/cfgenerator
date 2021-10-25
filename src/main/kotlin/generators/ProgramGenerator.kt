@@ -128,9 +128,10 @@ class ProgramGenerator(val ag: AttributeGrammar,
 
     fun generate(rootConstraints: List<RuleConstraint> = listOf()): RootGrammarNode = runBlocking {
         var program = RootGrammarNode(UnexpandedAPR(ag.start))
+        var success: Boolean
         try {
             withTimeout(timeMillis = timeoutMs) {
-                expandNode(program, rootConstraints)
+                success = expandNode(program, rootConstraints)
             }
         } catch (ex: TimeoutException) {
             // We ran out of time.
@@ -138,6 +139,9 @@ class ProgramGenerator(val ag: AttributeGrammar,
             println(program)
             println(ProgramStringifier().stringify(program))
             throw ex
+        }
+        if(!success) {
+            program = RootGrammarNode(UnexpandedAPR(ag.start))
         }
         program
     }

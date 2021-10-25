@@ -48,7 +48,7 @@ internal class DeepCoderGeneratorTest {
             val progStr = (ProgramStringifier().stringify(program))
             println(progStr)
 //            println(program)
-            assert(program.attributes().getStringAttribute("length")!!.toInt() > 0)
+            assert(program.attributes().getStringAttribute("length")!!.toInt() == 4)
 
         }
     }

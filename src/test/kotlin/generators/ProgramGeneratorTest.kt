@@ -2,6 +2,7 @@ package generators
 
 
 import grammar.*
+import grammar.constraints.BasicConstraintGenerator
 import grammar.constraints.BasicRuleConstraint
 import grammars.common.InitAttributeProductionRule
 import grammars.common.SizedListAttributeProductionRule
@@ -81,5 +82,23 @@ internal class ProgramGeneratorTest {
             assertNotEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
         }
 
+    }
+
+    @Test
+    fun testExpandWithConstraint() {
+        val r1 = InitAttributeProductionRule(PR(NtSym("start"), listOf(StringSymbol("a"))), "attr", "a")
+        val r2 = InitAttributeProductionRule(PR(NtSym("start"), listOf(StringSymbol("b"))), "attr", "b")
+        val gram1 = AttributeGrammar(listOf(
+            r1, r2
+        ), start=NtSym("start"), constraints = mapOf(
+            r1.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("attr", "b")))) //Impossible
+        ))
+
+        val gen = ProgramGenerator(gram1, numRandomTries = 1)
+
+        repeat(20) {
+            val prog = gen.generate()
+            assertEquals("b", prog.attributes().getStringAttribute("attr"))
+        }
     }
 }

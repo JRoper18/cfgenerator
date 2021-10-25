@@ -69,6 +69,14 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
                 "Rule ${it.key} is not present in the grammar but has a constraint."
             }
         }
+
+        val prs = rules.map {
+            it.rule
+        }
+        val prDups = prs - prs.distinct().toSet()
+        check(prDups.isEmpty()) {
+            "Duplicate production rules in grammar: $prDups"
+        }
     }
 
     fun getPossibleExpansions(lhs: Symbol): List<AttributedProductionRule>{

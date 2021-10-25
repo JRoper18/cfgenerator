@@ -1,6 +1,10 @@
 package grammars.lambda2
 
+import OrderedSynthesizedAttributeRule
 import grammar.*
+import grammar.constraints.BasicConstraintGenerator
+import grammar.constraints.BasicRuleConstraint
+import grammar.constraints.EqualAttributeValueConstraintGenerator
 import grammar.constraints.VariableConstraintGenerator
 import grammars.common.*
 
@@ -71,6 +75,36 @@ object Lambda2Grammar {
 
     val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0, retTypeAttrName to 0), (PR(declared, listOf(varName))))
 
+    val filterRule = SynthesizeAttributeProductionRule(
+        mapOf(
+            retTypeAttrName to 4
+        ),
+        PR(stmtSym, listOf(filter, LP, programSym, COMMA, declared, RP))).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
+    }
+
+    val foldlRule = SynthesizeAttributeProductionRule(
+        mapOf(
+            retTypeAttrName to 2
+        ), PR(stmtSym, listOf(foldl, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
+    }
+
+    val foldrRule = SynthesizeAttributeProductionRule(
+        mapOf(
+            retTypeAttrName to 2
+        ), PR(stmtSym, listOf(foldr, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
+    }
+
+    val reclRule = SynthesizeAttributeProductionRule(
+        mapOf(
+            retTypeAttrName to 2
+        ), PR(stmtSym, listOf(recl, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
+    }
+
+
     val grammar = AttributeGrammar(listOf(
         // Constants
         InitAttributeProductionRule(PR(constant, listOf(intConstant)), retTypeAttrName, "int"),
@@ -111,23 +145,10 @@ object Lambda2Grammar {
         HigherOrderSynthesizedRule(
             retTypeAttrName, 2,
             PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP))),
-        SynthesizeAttributeProductionRule(
-            mapOf(
-                retTypeAttrName to 4
-            ),
-            PR(stmtSym, listOf(filter, LP, programSym, COMMA, declared, RP))),
-        SynthesizeAttributeProductionRule(
-            mapOf(
-                retTypeAttrName to 2
-            ), PR(stmtSym, listOf(foldl, LP, programSym, COMMA, constant, COMMA, declared, RP))),
-        SynthesizeAttributeProductionRule(
-            mapOf(
-                retTypeAttrName to 2
-            ), PR(stmtSym, listOf(foldr, LP, programSym, COMMA, constant, COMMA, declared, RP))),
-        SynthesizeAttributeProductionRule(
-            mapOf(
-                retTypeAttrName to 2
-            ), PR(stmtSym, listOf(recl, LP, programSym, COMMA, constant, COMMA, declared, RP))),
+        filterRule,
+        foldlRule,
+        foldrRule,
+        reclRule,
         //Let's ignore trees for now
 //        APR(PR(stmtSym, listOf(foldt, LP, programSym, COMMA, constant, COMMA, declared, RP))),
 //        APR(PR(stmtSym, listOf(mapt, LP, programSym, COMMA, declared, RP))),
@@ -136,7 +157,17 @@ object Lambda2Grammar {
             PR(programSym, listOf(lambda, lambdaArgs, COLON, stmtSym))
         ),
     ), start = programSym, constraints = mapOf(
-        declaredRule.rule to VariableConstraintGenerator(varName.attributeName)
+        // Make sure variables are declared before we use them.
+        declaredRule.rule to VariableConstraintGenerator(varName.attributeName),
+
+        // Filters need functions that return bools
+        filterRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", boolType)))),
+
+        // Folds and recls should have 2nd children (input functions) that return the same stuff they function returns.
+        foldlRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
+        foldrRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
+        reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
     ))
+
 
 }

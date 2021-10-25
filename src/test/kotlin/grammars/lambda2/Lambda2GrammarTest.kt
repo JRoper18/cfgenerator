@@ -14,6 +14,7 @@ internal class Lambda2GrammarTest {
         val interp = Lambda2Interpreter()
         repeat(5){
             val prog = generator.generate()
+
             val progStr = strfier.stringify(prog)
             println(prog)
             println(progStr)

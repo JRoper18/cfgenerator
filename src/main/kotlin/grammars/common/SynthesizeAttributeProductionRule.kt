@@ -49,4 +49,8 @@ class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule
     fun withOtherRule(otherRule: AttributedProductionRule) : SynthesizedCombinedAttributeProductionRule {
         return SynthesizedCombinedAttributeProductionRule(synthesisRule = this, otherRule = otherRule)
     }
+
+    fun withOtherRule(makeOtherRule : (pr : ProductionRule) -> AttributedProductionRule) : SynthesizedCombinedAttributeProductionRule {
+        return SynthesizedCombinedAttributeProductionRule(synthesisRule = this, otherRule = makeOtherRule(this.rule))
+    }
 }

@@ -40,6 +40,7 @@ class GlobalCombinedAttributeProductionRule(val attrKeyRegexes : Set<Regex>, val
     }
 
     override fun canMakeProgramWithAttributes(attrs: NodeAttributes): Pair<Boolean, List<List<RuleConstraint>>> {
+        // TODO: Return true if this can make attributes with the global var stuff, too, instead of just delegating.
         return combinedWith.canMakeProgramWithAttributes(attrs)
     }
 
