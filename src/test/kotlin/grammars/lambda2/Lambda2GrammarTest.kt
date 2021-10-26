@@ -16,8 +16,8 @@ internal class Lambda2GrammarTest {
             val prog = generator.generate()
 
             val progStr = strfier.stringify(prog)
-            println(prog)
-            println(progStr)
+//            println(prog)
+//            println(progStr)
 //            println(interp.makeExamples(progStr, 10).map {
 //                it.first + "\t" + it.second
 //            }.joinToString ("\n"))

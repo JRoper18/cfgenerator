@@ -9,6 +9,7 @@ import grammars.common.SizedListAttributeProductionRule
 import grammars.common.SynthesizeAttributeProductionRule
 import grammars.common.TerminalProductionRule
 import grammars.deepcoder.DeepCoderGrammar
+import grammars.lambda2.Lambda2Grammar
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -75,8 +76,8 @@ internal class ProgramGeneratorTest {
 
     @Test
     fun testRandomness() {
-        val gen1 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
-        val gen2 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
+        val gen1 = ProgramGenerator(Lambda2Grammar.grammar, numRandomTries = 1)
+        val gen2 = ProgramGenerator(Lambda2Grammar.grammar, numRandomTries = 1)
         val stringifier = ProgramStringifier()
         repeat(3) {
             assertNotEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))

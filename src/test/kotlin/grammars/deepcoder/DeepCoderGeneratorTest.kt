@@ -46,7 +46,7 @@ internal class DeepCoderGeneratorTest {
             assert(success)
             program.verify()
             val progStr = (ProgramStringifier().stringify(program))
-            println(progStr)
+//            println(progStr)
 //            println(program)
             assert(program.attributes().getStringAttribute("length")!!.toInt() == 4)
 
@@ -74,7 +74,6 @@ internal class DeepCoderGeneratorTest {
         generator.expandNode(program)
         assertNotNull(program)
         val progStr = (ProgramStringifier().stringify(program))
-        println(progStr)
         program.verify()
     }
 
@@ -83,7 +82,7 @@ internal class DeepCoderGeneratorTest {
         val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val program = makeStmt(generator)
         val attrs = program.attributes()
-        println(program)
+//        println(program)
         assertNotNull(attrs.getStringAttribute("varName"))
         val progStr = (ProgramStringifier().stringify(program))
         assertContains(progStr, ":=")
@@ -105,7 +104,7 @@ internal class DeepCoderGeneratorTest {
     fun testGenerateFunction() {
         val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1)
         val program = makeProgramFromSymbol(generator, VARDEF)
-        println(program)
+        assert(!program.isUnexpanded())
 
     }
 }

@@ -1,5 +1,7 @@
 package grammar
 
+import generators.ProgramGenerator
+import grammars.lambda2.Lambda2Grammar
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -15,4 +17,18 @@ internal class AttributeGrammarTest {
 //            lIdx += 1
 //        }
     }
+
+
+    @Test
+    fun testEncodeDecode() {
+        val gen = ProgramGenerator(Lambda2Grammar.grammar)
+        repeat(100) {
+            val orig = gen.generate(listOf())
+            val encoded = Lambda2Grammar.grammar.encode(orig, Regex("retType"))
+            val remade = Lambda2Grammar.grammar.decode(encoded)[0]
+            remade.verify()
+            assertEquals(orig.toString(), remade.toString())
+        }
+    }
+
 }

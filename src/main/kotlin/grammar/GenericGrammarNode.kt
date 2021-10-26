@@ -92,16 +92,12 @@ sealed class GenericGrammarNode(
         }
     }
 
-    fun encode() : String {
-        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false, prettyLines = false)
-    }
-
     override fun toString(): String {
-        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false, prettyLines = true)
+        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false, prettyLines = true, onlyPrintAttrs = Regex(".*?"))
     }
-    fun toString(printAttrs: Boolean = true, printAPR : Boolean = false, splitAttrs : Boolean = false, prettyLines : Boolean = true): String {
+    fun toString(printAttrs: Boolean = true, printAPR : Boolean = false, splitAttrs : Boolean = false, prettyLines : Boolean = true, onlyPrintAttrs : Regex = Regex(".*?")): String {
         val buffer = StringBuilder(50)
-        print(buffer, "", "", printAttrs, printAPR, splitAttrs, prettyLines)
+        print(buffer, "", "", printAttrs, printAPR, splitAttrs, prettyLines, onlyPrintAttrs)
         return buffer.toString()
     }
 
@@ -109,7 +105,8 @@ sealed class GenericGrammarNode(
                         printAttrs : Boolean = true,
                         printAPR: Boolean = false,
                         splitAttrs : Boolean = false,
-                        prettyLines : Boolean = true) {
+                        prettyLines : Boolean = true,
+    onlyPrintAttrs : Regex = Regex(".*?")) {
         buffer.append(prefix)
         if(printAPR) {
             buffer.append(this.productionRule.toString())
@@ -120,11 +117,11 @@ sealed class GenericGrammarNode(
         if(printAttrs){
             buffer.append(" ATTRS: ")
             if(splitAttrs) {
-                buffer.append(this.synthesizedAttributes())
-                buffer.append(" I ${this.inheritedAttributes()}")
+                buffer.append(this.synthesizedAttributes().filterRegex(onlyPrintAttrs))
+                buffer.append(" I ${this.inheritedAttributes().filterRegex(onlyPrintAttrs)}")
             }
             else {
-                buffer.append(this.attributes())
+                buffer.append(this.attributes().filterRegex(onlyPrintAttrs))
             }
         }
         buffer.append('\n')
@@ -134,20 +131,20 @@ sealed class GenericGrammarNode(
             if (it.hasNext()) {
                 if(prettyLines) {
                     next.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ",
-                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines)
+                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs)
                 }
                 else {
                     next.print(buffer, "$childrenPrefix\t", "$childrenPrefix\t",
-                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines)
+                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs)
                 }
             } else {
                 if(prettyLines) {
                     next.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ", printAttrs = printAttrs, printAPR = printAPR,
-                        splitAttrs, prettyLines)
+                        splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs)
                 }
                 else {
                     next.print(buffer, "$childrenPrefix\t", "$childrenPrefix\t", printAttrs = printAttrs, printAPR = printAPR,
-                        splitAttrs, prettyLines)
+                        splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs)
 
                 }
             }

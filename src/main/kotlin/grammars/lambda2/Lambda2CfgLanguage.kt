@@ -18,7 +18,7 @@ class Lambda2CfgLanguage : Lambda2Language() {
     }
 
     override fun programToString(program: RootGrammarNode): String {
-        return (program.encode())
+        return grammar().encode(program, Regex("retType"))
     }
 
     override fun runProgramWithExample(program: String, input: String): String {

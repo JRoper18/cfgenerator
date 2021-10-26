@@ -47,7 +47,6 @@ internal class SizedListAttributeProductionRuleTest {
         val children = rule.makeChildren().toMutableList()
         children[0] = satisfyingProgram
         val res1 = rule.makeRootProgramWithAttributes(NodeAttributes.fromAttr(NodeAttribute("length", "1")), children)
-        println(res1)
         assertNotNull(res1)
         val attrs = res1.attributes()
         res1.verify()

@@ -44,17 +44,4 @@ internal class GenericGrammarNodeTest {
         })
         assert(terminalProg.rhs.isEmpty())
     }
-
-    @Test
-    fun testEncodeDecode() {
-        val gen = ProgramGenerator(Lambda2Grammar.grammar)
-        repeat(100) {
-            val orig = gen.generate(listOf())
-            val encoded = orig.encode()
-            val remade = Lambda2Grammar.grammar.decode(encoded)[0]
-            remade.verify()
-            assertEquals(orig.toString(), remade.toString())
-
-        }
-    }
 }

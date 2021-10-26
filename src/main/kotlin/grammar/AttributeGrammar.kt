@@ -30,7 +30,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         it.rule.rhs + it.rule.lhs
     }.toSet()
 
-    val rules : Collection<AttributedProductionRule> = (givenRules + symbols.flatMap { symbol ->
+    val rules : List<AttributedProductionRule> = (givenRules + symbols.flatMap { symbol ->
         var ret = listOf<AttributedProductionRule>()
         when(symbol) {
             is StringsetSymbol -> {
@@ -46,13 +46,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         ret
     }.toSet()).map { apr ->
         GlobalCombinedAttributeProductionRule(this.globalAttributeRegexes, apr)
-    }
-
-    val strsToRules by lazy {
-        rules.map {
-            Pair(it.rule.toString(), it)
-        }.toMap()
-    }
+    }.toList()
 
     init {
         // Validate the grammar. Every non-terminal symbol should have an expansion.
@@ -81,6 +75,15 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
 
     fun getPossibleExpansions(lhs: Symbol): List<AttributedProductionRule>{
         return this.expansions.getOrDefault(lhs, listOf())
+    }
+
+    fun encode(prog : GenericGrammarNode, attrRegex : Regex = Regex(".*?")) : String {
+        var progStr = prog.toString(printAttrs = true, printAPR = false, prettyLines = false, splitAttrs = false,
+        onlyPrintAttrs = attrRegex)
+        rules.forEachIndexed { index, apr ->
+            progStr = progStr.replace(apr.rule.toString(), index.toString())
+        }
+        return progStr
     }
 
     fun decode(str : String) : List<GenericGrammarNode> {
@@ -117,16 +120,20 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
             else {
                 // TODO: Find some way to escape this string when it appears naturally in a CFG
                 val beforeAttrs = untabbedLine.substringBefore("ATTRS").trim()
-                val rhsStr = beforeAttrs.substringAfter("->").trim()
-                if(rhsStr.isBlank() && beforeAttrs.isNotBlank()) {
-                    // It's a terminal.
-                    val lhsStr = beforeAttrs.substringBefore("->").trim()
-                    currentNode = RootGrammarNode(TerminalAPR(StringSymbol.fromPrintedString(lhsStr)))
-                    nodes.add(currentNode)
+                val aprIdx = beforeAttrs.toIntOrNull()
+                val apr : AttributedProductionRule
+                if(aprIdx == null) {
+                    // Must not have a rule, which makes it a terminal.
+                    val lhs = StringSymbol.fromPrintedString(beforeAttrs.substringBefore("->").trim())
+                    apr = TerminalAPR(lhs)
                 }
                 else {
-                    val apr = strsToRules[beforeAttrs]!!
-                    currentNode = RootGrammarNode(apr)
+                    apr = rules[aprIdx]
+                }
+                currentNode = RootGrammarNode(apr)
+                if(aprIdx == null) {
+                    nodes.add(currentNode)
+                    currentNode = null
                 }
                 lineIdx += 1
             }
