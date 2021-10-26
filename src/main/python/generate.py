@@ -32,10 +32,15 @@ def generate_gpt(eval_generated_fname,
     max_length = max(token_lengths)
     avg_length = int(sum(token_lengths) / len(token_lengths))
     print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
-    dataset = ProgramDataset(dataset_strs, fine_tokenizer, 1200, padding=False)
     with open(eval_output_generated_fname, 'w') as file:
-        for idx, eval_ex in enumerate(dataset):
-            input_tensor = eval_ex[0]
+        for idx, eval_ex in enumerate(dataset_strs):
+            tokens = fine_tokenizer(eval_ex, return_tensors="pt").input_ids.cuda()
+            curr_len = (tokens.shape[1])
+            new_len = min(1200, curr_len)
+            cutpoint = 0
+            if new_len < curr_len :
+                cutpoint = curr_len - new_len
+            input_tensor = tokens[:, cutpoint:]
             outputs = fine_model.generate(
                 input_tensor, 
                 max_length=2048,  

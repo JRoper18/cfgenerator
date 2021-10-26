@@ -27,9 +27,12 @@ class ProgramDataset(Dataset):
                                         max_length=max_length, 
                                         padding = padding)
             input_ids = encodings_dict["input_ids"]
+            attn_mask = encodings_dict["attention_mask"]
+            assert len(input_ids) == len(attn_mask)
             # Do the truncation ourselves so that truncation truncates from the head
             trunc_ids = input_ids[-max_length + 1:]
-            trunc_attn = encodings_dict["attention_mask"][-max_length + 1:]
+            trunc_attn = attn_mask[-max_length + 1:]
+            assert len(trunc_ids) == len(trunc_attn)
             self.input_ids.append(torch.tensor(trunc_ids))
             mask = torch.tensor(trunc_attn)
             self.attn_masks.append(mask)
