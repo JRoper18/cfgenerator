@@ -83,6 +83,8 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         rules.forEachIndexed { index, apr ->
             progStr = progStr.replace(apr.rule.toString(), index.toString())
         }
+        progStr = progStr.replace("ATTRS: ", "")
+        progStr = progStr.replace("->", "")
         return progStr
     }
 
@@ -119,12 +121,12 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
             }
             else {
                 // TODO: Find some way to escape this string when it appears naturally in a CFG
-                val beforeAttrs = untabbedLine.substringBefore("ATTRS").trim()
+                val beforeAttrs = untabbedLine.substringBefore("{").trim()
                 val aprIdx = beforeAttrs.toIntOrNull()
                 val apr : AttributedProductionRule
                 if(aprIdx == null) {
                     // Must not have a rule, which makes it a terminal.
-                    val lhs = StringSymbol.fromPrintedString(beforeAttrs.substringBefore("->").trim())
+                    val lhs = StringSymbol.fromPrintedString(beforeAttrs.trim())
                     apr = TerminalAPR(lhs)
                 }
                 else {
