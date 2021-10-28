@@ -35,7 +35,7 @@ object Lambda2Grammar {
     val emptyList = StringSymbol("[]")
 
     val boolConstant = StringsetSymbol(setOf("True", "False"), displayName = "Bool")
-    val boolOp = StringsetSymbol(setOf("or", "and", "<", ">", "="), displayName = "BoolOP")
+    val boolOp = StringsetSymbol(setOf("or", "and", "<", ">", "=="), displayName = "BoolOP")
     // It's a boolOp because it RETURNS a bool. It's arguments can be ints.
 
     val intConstant = StringsetSymbol(intSymbols(-100, 100), displayName = "Int")

@@ -49,7 +49,9 @@ fun generationResultToString(language : Language, result: ProgramGenerationResul
     return build.toString()
 }
 
-class FrequencyCounter(val counts : Map<String, Int>, val include : Set<String> = setOf("cons", "foldl", "foldr", "map", "recl", "filter")
+class FrequencyCounter(val counts : Map<String, Int>, 
+    val include : Set<String>? = null,
+    val topK : Int? = null
 ) {
     var total : Int = 0
     init {
@@ -58,14 +60,41 @@ class FrequencyCounter(val counts : Map<String, Int>, val include : Set<String> 
         }
     }
 
+    fun freqDiff(other : FrequencyCounter) : FrequencyCounter {
+        val otherFreqs = other.freqs()
+        val newCounts : Map<String, Int> = freqs().map {
+            val itemDiff = (it.value - (otherFreqs[it.key] ?: 0.0f))
+            val scaledDiff : Int = (itemDiff * 100000f).toInt()!!
+            if(scaledDiff < 0) {
+                Pair(it.key, 0)
+            }
+            else {
+                Pair(it.key, scaledDiff)
+            }
+        }.toMap<String, Int>()
+        return FrequencyCounter(newCounts, include, topK)
+    }
+
+    fun freqs() : Map<String, Float> {
+        return counts.toList().map {
+            Pair(it.first, (it.second.toFloat() / total))
+        }.toMap()
+    }
+
     override fun toString() : String {
         val build = StringBuilder()
-        val pairs = counts.toList().map {
-            Pair(it.first, (it.second.toFloat() / total))
-        }.sortedBy {
+        var pairs = freqs().toList().sortedBy {
             -it.second //Negate to make it high-to-low
         }.filter {
-            it.first in include
+            if(include == null){
+                true
+            }
+            else {
+                it.first.trim() in include
+            }
+        }
+        if(topK != null) {
+            pairs = pairs.subList(0, topK)
         }
         pairs.forEach {
             build.append(it.first)
