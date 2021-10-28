@@ -35,11 +35,12 @@ object Lambda2Grammar {
     val emptyList = StringSymbol("[]")
 
     val boolConstant = StringsetSymbol(setOf("True", "False"), displayName = "Bool")
-    val boolOp = StringsetSymbol(setOf("or", "and", "<", ">", "=="), displayName = "BoolOP")
+    val boolToBoolOp = StringsetSymbol(setOf("or", "and", "=="), displayName = "Bool2BoolOp")
+    val intToBoolOp = StringsetSymbol(setOf("<", ">", "=="), displayName = "Int2BoolOp")
     // It's a boolOp because it RETURNS a bool. It's arguments can be ints.
 
-    val intConstant = StringsetSymbol(intSymbols(-100, 100), displayName = "Int")
-    val intOp = StringsetSymbol(setOf("+", "-", "/", "*"), displayName = "IntOP")
+    val intConstant = StringsetSymbol(intSymbols(-20, 20), displayName = "Int")
+    val intToIntOp = StringsetSymbol(setOf("+", "-", "/", "*"), displayName = "Int2IntOp")
 
     //Here's a trick: We'll force variables to have names that represent their type.
     val varName = StringsetSymbol(mapOf(
@@ -107,7 +108,9 @@ object Lambda2Grammar {
             retTypeAttrName to 4 // Assuming the second arg is a list already.
         ), PR(stmtSym, listOf(cons, LP, declared, COMMA, declared, RP)))
 
-
+    val int2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
+    val int2IntRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToIntOp, LP, basicFunc, RP)), retTypeAttrName, "int")
+    val bool2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, boolToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
 
     val grammar = AttributeGrammar(listOf(
         // Constants
@@ -116,14 +119,16 @@ object Lambda2Grammar {
 
         // Let's just say empty lists are int lists, for now.
         InitAttributeProductionRule(PR(constant, listOf(emptyList)), retTypeAttrName, "[int]"),
-        // Basic function definitions. We're using prefix notation to make interpretation easier.
+        // Basic function definitions.
         APR(PR(basicFunc, listOf(declared))),
         SynthesizeAttributeProductionRule(
             mapOf(
                 retTypeAttrName to 0
             ), PR(basicFunc, listOf(constant))),
-        InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intOp, LP, basicFunc, RP)), retTypeAttrName, "int"),
-        InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, boolOp, LP, basicFunc, RP)), retTypeAttrName, "bool"),
+        int2BoolRule,
+        int2IntRule,
+        bool2BoolRule,
+
         // Variable declaration
         VariableDeclarationRule(varInit, varName, varName.attributeName),
         // declareds are just variables with the constraint that they're inited/delcared already.

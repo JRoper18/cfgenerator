@@ -40,18 +40,19 @@ def generate_gpt(eval_generated_fname,
             cutpoint = 0
             if new_len < curr_len :
                 cutpoint = curr_len - new_len
-            input_tensor = tokens[:, cutpoint:]
+            # input_tensor = tokens[:, cutpoint:]
+            input_tensor = tokens
             outputs = fine_model.generate(
                 input_tensor, 
                 max_length=2048,  
                 # num_return_sequences=3,
                 # no_repeat_ngram_size=2,
                 # repetition_penalty=1.5,
-                top_p=0.99,
-                temperature=.25,
+                top_p=0.95,
+                temperature=.55,
                 do_sample=True,
                 top_k=50,
-                early_stopping=True
+                # early_stopping=True
             )
             total_output = "<|splitter|>\n%s" % fine_tokenizer.decode(outputs[0])
             total_output = total_output.replace("<|startoftext|>", "")
