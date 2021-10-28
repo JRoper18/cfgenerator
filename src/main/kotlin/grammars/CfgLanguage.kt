@@ -38,7 +38,7 @@ class CfgLanguage(val language: Language, val attrReg : Regex = Regex("retType")
         } catch (ex : Exception) {
             return ProgramRunResult.VERIFYERROR
         }
-        return runProgramAgainstExample(language.programToString(progTree), input, output)
+        return language.runProgramAgainstExample(language.programToString(progTree), input, output)
     }
 
     override fun grammar(): AttributeGrammar {
