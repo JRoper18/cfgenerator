@@ -5,6 +5,7 @@ import generators.ProgramStringifier
 import grammars.Language
 import grammars.deepcoder.*
 import grammar.ProductionRule
+import grammars.ProgramRunResult
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
@@ -54,15 +55,11 @@ fun analyzeSymbolFrequency(program : String, language : Language, frequencies: M
 
 suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
     val numProgramsWithExamples = AtomicInteger(0)
-    val numRunnableExamples = AtomicInteger(0)
-    val numRunnablePrograms = AtomicInteger(0)
-    val numCorrectExamples = AtomicInteger(0)
-    val numCorrectPrograms = AtomicInteger(0)
+    val numFullyCorrectPrograms = AtomicInteger(0)
     val numTotalExamples = AtomicInteger(0)
-    val numNonDecodeable = AtomicInteger(0)
-    val numNonvalidCFG = AtomicInteger(0)
-    val weirdMutex = Mutex()
-    val weirdMap = mutableMapOf<String, MutableList<Pair<Exception, String>>>()
+    val runResultCounts = ProgramRunResult.values().map {
+        Pair(it, AtomicInteger(0))
+    }.toMap()
     val badSymFreqs = mutableMapOf<String, Int>()
     val goodSymFreqs = mutableMapOf<String, Int>()
     val goodRuleFreqs = mutableMapOf<String, Int>()
@@ -78,35 +75,20 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
         var gotOneRun = false
         var hitsAllExamples = true
         numTotalExamples.addAndGet(inputOutputExamples.size)
-        if(inputOutputExamples.size > 0) {
+        if(inputOutputExamples.isNotEmpty()) {
             numProgramsWithExamples.incrementAndGet()
             inputOutputExamples.subList(1, inputOutputExamples.size).forEach {
                 val ioSplit = it.split("Output:")
                 val input = ioSplit[0].trim()
                 val expectedOutput = ioSplit[1].trim()
-                try {
-                    val actualOutput = language.runProgramWithExample(programStr, input)
-                    gotOneRun = true
-                    numRunnableExamples.incrementAndGet()
-                    if(expectedOutput.trim() == actualOutput.trim()) {
-                        numCorrectExamples.incrementAndGet()
-                    }
-                    else {
-                        hitsAllExamples = false;
-                    }
-                } catch (ex: Exception) {
-                    val key = ex.javaClass.name
-                    weirdMutex.withLock {
-                        weirdMap.putIfAbsent(key, mutableListOf())
-                        weirdMap[key]!!.add(Pair(ex, example))
-                    }
-                }
-                
+                val runResult = language.runProgramAgainstExample(programStr, input, expectedOutput)
+                gotOneRun = gotOneRun || runResult.finishedRun()
+                hitsAllExamples = hitsAllExamples && runResult.isGood()
+                runResultCounts[runResult]!!.incrementAndGet()
             }
             if(gotOneRun) {
-                numRunnablePrograms.incrementAndGet()
                 if(hitsAllExamples) {
-                    numCorrectPrograms.incrementAndGet()
+                    numFullyCorrectPrograms.incrementAndGet()
                     analyzeSymbolFrequency(programStr, language, goodSymFreqs)
                     analyzeRuleFrequency(programStr, language, goodRuleFreqs)
                 }
@@ -115,30 +97,11 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
                     analyzeRuleFrequency(programStr, language, badRuleFreqs)
                 }
             }
-            else {
-                try {
-                    val decoded = (language.grammar().decode(programStr))
-                    decoded[0].verify()
-                } catch (ise : IllegalStateException) {
-                    // Verify failed. 
-                    numNonvalidCFG.incrementAndGet()
-                } catch (ex : Exception) {
-                    numNonDecodeable.incrementAndGet()
-                }
-            }
         }
     }
     println("NUM PROGRAMS: ${evalExamples.size}")
-    println("NUM RUNNABLE PROGRAMS (ran for at least 1 example): ${numRunnablePrograms.get()}")
-    println("NUM TOTAL EXAMPLES: ${numTotalExamples.get()}")
-    println("NUM RUNNABLE EXAMPLES: ${numRunnableExamples.get()}")
-    println("NUM CORRECT EXAMPLES: ${numCorrectExamples.get()}")
-    println("NUM FULLY CORRECT PROGRAMS: ${numCorrectPrograms.get()}")
-    println("NUM NON-DECODABLE PROGRAMS: ${numNonDecodeable.get()}")
-    println("NUM NON-VALID PROGRAMS BY CFG: ${numNonvalidCFG.get()}")
-    println("Exception map keys and counts ${weirdMap.map{
-        "${it.key} = ${it.value.size}"
-    }}")
+    println("NUM FULLY CORRECT PROGRAMS: ${numFullyCorrectPrograms.get()}")
+    println(runResultCounts)
     println("Good frequencies: ")
     val search4Symbols = setOf("cons", "foldl", "foldr", "map", "recl", "filter", "+", "-", "*", "/", ">", "<", "or", "and")
     val finalGoodRules = FrequencyCounter(goodRuleFreqs, topK = 20)

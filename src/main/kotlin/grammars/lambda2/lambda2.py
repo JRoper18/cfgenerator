@@ -2,7 +2,13 @@ from collections.abc import Iterable, Iterator
 from functools import reduce
 def canBeList(x):
     return isinstance(x, Iterable)
-
+def hasSyntaxErr(progStr):
+    try:
+        ast.parse(progStr)
+    except SyntaxError:
+        print("true")
+        return
+    print("false")
 def expand_iters(e):
     if(canBeList(e)): # Expand it out.
         return [expand_iters(ele) for ele in e]

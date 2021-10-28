@@ -12,6 +12,9 @@ class Lambda2Interpreter(val random : Random = Random(100L),
                          val generatedIntRange : IntRange = IntRange(-20, 20),
                          val generatedListSizeRange : IntRange = IntRange(0, 4)
 ){
+    companion object {
+        val libStr = File("./src/main/kotlin/grammars/lambda2/lambda2.py").readText() + "\n"
+    }
     internal class InterpretError(serr : String) : IllegalArgumentException(serr)
     internal enum class InputType {
         INTLISTLIST,
@@ -44,8 +47,13 @@ class Lambda2Interpreter(val random : Random = Random(100L),
         return output.toString()
     }
 
+    fun hasSyntaxErr(program : String) : Boolean {
+        val script = libStr + "\nhasSyntaxErr($program)"
+        return runPyScript(script).toBooleanStrict()
+    }
+
     fun getNumberOfInputs(program: String) : Int {
-        val script = File("./src/main/kotlin/grammars/lambda2/lambda2.py").readText() + "\nfunc = $program\nprint(func.__code__.co_argcount)"
+        val script = libStr + "func = $program\nprint(func.__code__.co_argcount)"
         return runPyScript(script).toInt()
     }
 

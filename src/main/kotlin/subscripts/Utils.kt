@@ -1,9 +1,9 @@
 package subscripts
 
+import grammars.CfgLanguage
 import grammars.ProgramGenerationResult
 import grammars.Language
 import grammars.deepcoder.DeepcoderLanguage
-import grammars.lambda2.Lambda2CfgLanguage
 import grammars.lambda2.Lambda2Language
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -32,7 +32,7 @@ fun argsToLanguage(lan : LanguageRef) : Language {
     when(lan){
         LanguageRef.DEEPCODER -> return DeepcoderLanguage()
         LanguageRef.LAMBDA2 -> return Lambda2Language()
-        LanguageRef.LAMBDA2CFG -> return Lambda2CfgLanguage()
+        LanguageRef.LAMBDA2CFG -> return CfgLanguage(Lambda2Language())
     }
 }
 fun generationResultToString(language : Language, result: ProgramGenerationResult) : String {

@@ -6,6 +6,7 @@ import generators.ProgramStringifier
 import grammar.AttributeGrammar
 import grammar.RootGrammarNode
 import grammars.Language
+import grammars.ProgramRunResult
 import kotlin.random.Random
 
 open class Lambda2Language : Language {
@@ -50,6 +51,17 @@ open class Lambda2Language : Language {
 
     override fun runProgramWithExample(program: String, input: String): String {
         return interp.interp(program, input)
+    }
+
+    override fun runProgramAgainstExample(program: String, input: String, output: String): ProgramRunResult {
+        if(interp.hasSyntaxErr(program)) {
+            return ProgramRunResult.PARSEERROR
+        }
+        try {
+            return ProgramRunResult.fromBool(runProgramWithExample(program, input).trim() == output.trim())
+        } catch (iex : Lambda2Interpreter.InterpretError) {
+            return ProgramRunResult.RUNTIMEERROR
+        }
     }
 
     override fun grammar(): AttributeGrammar {

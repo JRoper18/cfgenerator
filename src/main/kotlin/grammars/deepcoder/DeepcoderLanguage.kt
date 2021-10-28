@@ -8,6 +8,7 @@ import grammar.NodeAttribute
 import grammar.RootGrammarNode
 import grammar.constraints.BasicRuleConstraint
 import grammars.Language
+import grammars.ProgramRunResult
 import kotlin.random.Random
 
 class DeepcoderLanguage(val progLength : Int = 5) : Language {
@@ -51,6 +52,14 @@ class DeepcoderLanguage(val progLength : Int = 5) : Language {
 
     override fun runProgramWithExample(program: String, input: String): String {
         return DeepCoderInterpreter(DeepCoderVariables(input)).interp(program)
+    }
+
+    override fun runProgramAgainstExample(program: String, input: String, output: String): ProgramRunResult {
+        try {
+            return ProgramRunResult.fromBool(runProgramWithExample(program, input).trim() == output.trim())
+        } catch (ex : Exception) {
+            return ProgramRunResult.RUNTIMEERROR
+        }
     }
 
     override fun grammar(): AttributeGrammar {

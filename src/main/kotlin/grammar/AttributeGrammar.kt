@@ -92,7 +92,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         return progStr
     }
 
-    fun decode(str : String) : List<GenericGrammarNode> {
+    fun decode(str : String) : List<RootGrammarNode> {
         val lines = str.lines().filter {
             it.isNotBlank()
         }
@@ -102,9 +102,9 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         }
         return res.first
     }
-    private fun decodeLines(lines : List<String>, depth : Int) : Pair<List<GenericGrammarNode>, Int> {
-        val nodes = mutableListOf<GenericGrammarNode>()
-        var currentNode : GenericGrammarNode? = null
+    private fun decodeLines(lines : List<String>, depth : Int) : Pair<List<RootGrammarNode>, Int> {
+        val nodes = mutableListOf<RootGrammarNode>()
+        var currentNode : RootGrammarNode? = null
         var lineIdx = 0
         while(lineIdx < lines.size){
             val line = lines[lineIdx]
@@ -119,7 +119,7 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
                 // Go down another level.
                 val restOfStr = lines.subList(lineIdx, lines.size)
                 val decodeRes = decodeLines(restOfStr, depth + 1)
-                currentNode = currentNode!!.withChildren(decodeRes.first)
+                currentNode = currentNode!!.withChildren(decodeRes.first) as RootGrammarNode
                 nodes.add(currentNode)
                 lineIdx += decodeRes.second
             }
