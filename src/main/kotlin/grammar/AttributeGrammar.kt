@@ -26,11 +26,11 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         }
     }
 
-    val symbols: Collection<Symbol> = givenRules.flatMap {
+    val givenSymbols: List<Symbol> = givenRules.flatMap {
         it.rule.rhs + it.rule.lhs
-    }.toSet()
+    }.distinct()
 
-    val rules : List<AttributedProductionRule> = (givenRules + symbols.flatMap { symbol ->
+    val rules : List<AttributedProductionRule> = (givenRules + givenSymbols.flatMap { symbol ->
         var ret = listOf<AttributedProductionRule>()
         when(symbol) {
             is StringsetSymbol -> {
@@ -44,9 +44,13 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
             }
         }
         ret
-    }.toSet()).map { apr ->
+    }).distinct().map { apr ->
         GlobalCombinedAttributeProductionRule(this.globalAttributeRegexes, apr)
-    }.toList()
+    }
+
+    val symbols : List<Symbol> = rules.flatMap {
+        it.rule.rhs + it.rule.lhs
+    }.distinct()
 
     init {
         // Validate the grammar. Every non-terminal symbol should have an expansion.
