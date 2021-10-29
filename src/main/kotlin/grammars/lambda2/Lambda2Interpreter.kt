@@ -21,7 +21,7 @@ class Lambda2Interpreter(val random : Random = Random(100L),
         INTLIST,
         INT,
     }
-    internal fun runPyScript(script : String) : String {
+    internal fun runPyScript(script : String, ignoreErr : Boolean = false) : String {
         val output = StringBuilder()
         val rt = Runtime.getRuntime()
         val commands = arrayOf("python3", "-c", script)
@@ -41,15 +41,16 @@ class Lambda2Interpreter(val random : Random = Random(100L),
         while (stdError.readLine().also { s = it } != null) {
             errStr.append(s)
         }
-        if(errStr.isNotEmpty()) {
+        if(errStr.isNotEmpty() && !ignoreErr) {
             throw InterpretError(errStr.toString())
         }
         return output.toString()
     }
 
     fun hasSyntaxErr(program : String) : Boolean {
-        val script = libStr + "\nhasSyntaxErr($program)"
-        return runPyScript(script).toBooleanStrict()
+        val script = libStr + "\nhasSyntaxErr(\"func = \" + \"$program\")"
+        val strout = runPyScript(script, true)
+        return strout.toBooleanStrict()
     }
 
     fun getNumberOfInputs(program: String) : Int {
