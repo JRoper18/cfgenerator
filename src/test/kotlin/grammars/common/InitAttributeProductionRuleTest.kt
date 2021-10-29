@@ -14,14 +14,14 @@ internal class InitAttributeProductionRuleTest {
 
     @Test
     fun testCanMakeProgramWithAttribute() {
-        val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("attr", "0"))
+        val res1 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr(NodeAttribute("attr", "0")))
         assert(res1.first)
         assert(res1.second.isEmpty())
     }
 
     @Test
     fun testCannotMakeProgramWithAttribute() {
-        val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("attr", "1"))
+        val res1 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr((NodeAttribute("attr", "1"))))
         assert(!res1.first)
         assert(res1.second.isEmpty())
     }

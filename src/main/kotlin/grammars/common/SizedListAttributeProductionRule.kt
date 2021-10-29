@@ -6,9 +6,9 @@ import grammar.constraints.RuleConstraint
 
 class SizedListAttributeProductionRule(listName: NtSym,
                                        val unit: Symbol,
-                                       separator: String = "") : SingleAttributeProductionRule(
+                                       separator: String = "") : KeyedAttributesProductionRule(
 
-
+    listOf("length"),
     ListProductionRule(listName, unit, separator)) {
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         val listAttrs = childAttributes[0]
@@ -21,7 +21,14 @@ class SizedListAttributeProductionRule(listName: NtSym,
         return ret
     }
 
-    override fun canMakeProgramWithAttribute(attr: NodeAttribute): Pair<Boolean, List<List<RuleConstraint>>> {
+    override fun canMakeProgramWithAttributes(attrs: NodeAttributes): Pair<Boolean, List<List<RuleConstraint>>> {
+        if(attrs.size() > 1) {
+            return cantMakeProgramReturn
+        }
+        if(attrs.size() == 0){
+            return Pair(true, noConstraints)
+        }
+        val attr = attrs.toList()[0]
         val size = attr.second.toIntOrNull()
         val canMake = attr.first == "length" && (size != null) && size > 0
         if(!canMake) {
@@ -34,18 +41,4 @@ class SizedListAttributeProductionRule(listName: NtSym,
         )
         return Pair(canMake, constraints)
     }
-
-    override fun makeChildrenForAttribute(
-        attr: NodeAttribute,
-        nodesThatFit: List<GenericGrammarNode>
-    ): List<GenericGrammarNode> {
-        val unitRule = if(this.unit.terminal) TerminalAPR(this.rule.rhs[2]) else UnexpandedAPR(this.rule.rhs[2])
-        return listOf(
-            nodesThatFit[0],
-            RootGrammarNode(TerminalAPR(this.rule.rhs[1])),
-            RootGrammarNode(unitRule),
-        )
-    }
-
-
 }

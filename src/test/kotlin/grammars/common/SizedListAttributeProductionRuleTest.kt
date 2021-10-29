@@ -14,21 +14,21 @@ internal class SizedListAttributeProductionRuleTest {
 
     @Test
     fun testCanMakeProgramWithAttribute() {
-        val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("length", "2"))
+        val res1 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr((NodeAttribute("length", "2"))))
         assert(res1.first)
         assertEquals(res1.second, listOf(listOf(BasicRuleConstraint(Pair("length", "1"))), listOf(), listOf()))
     }
 
     @Test
     fun testCannotMakeNegativeLengthList() {
-        val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("length", "-1"))
+        val res1 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr((NodeAttribute("length", "-1"))))
         assert(!res1.first)
         assertEquals(rule.noConstraints, res1.second)
     }
 
     @Test
     fun testCannotMakeZeroLengthList() {
-        val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("length", "0"))
+        val res1 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr((NodeAttribute("length", "0"))))
         assert(!res1.first)
         assertEquals(rule.noConstraints, res1.second)
     }
@@ -36,7 +36,7 @@ internal class SizedListAttributeProductionRuleTest {
 
     @Test
     fun testCannotMakeNonLengthAttribute() {
-        val res1 = rule.canMakeProgramWithAttribute(NodeAttribute("lenasdhas", "2"))
+        val res1 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr((NodeAttribute("lenasdhas", "2"))))
         assert(!res1.first)
         assertEquals(rule.noConstraints, res1.second)
     }

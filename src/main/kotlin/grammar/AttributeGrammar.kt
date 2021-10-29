@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl
 import org.antlr.v4.tool.Grammar
 import org.antlr.v4.tool.GrammarInterpreterRuleContext
 import org.antlr.v4.tool.Rule
+import utils.duplicates
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.lang.IllegalStateException
@@ -71,8 +72,8 @@ class AttributeGrammar(givenRules: List<AttributedProductionRule>,
         val prs = rules.map {
             it.rule
         }
-        val prDups = prs - prs.distinct().toSet()
-        check(prDups.isEmpty()) {
+        val prDups = prs.duplicates()
+        require(prDups.isEmpty()) {
             "Duplicate production rules in grammar: $prDups"
         }
     }
