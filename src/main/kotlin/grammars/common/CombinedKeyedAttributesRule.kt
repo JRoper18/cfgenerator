@@ -51,4 +51,15 @@ class CombinedKeyedAttributesRule(val rules : List<KeyedAttributesProductionRule
         }
         return attrs;
     }
+
+    fun flatRules() : List<AttributedProductionRule> {
+        return rules.flatMap {
+            if(it is CombinedKeyedAttributesRule) {
+                it.flatRules()
+            }
+            else {
+                listOf(it)
+            }
+        }
+    }
 }

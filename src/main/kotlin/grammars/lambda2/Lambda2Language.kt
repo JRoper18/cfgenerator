@@ -12,11 +12,9 @@ import kotlin.random.Random
 open class Lambda2Language : Language {
     val interp = Lambda2Interpreter()
     val generator = ProgramGenerator(Lambda2Grammar.grammar)
-    val strfier = ProgramStringifier(" ")
     override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult {
         val prog = generator.generate()
-        val progStr = programToString(prog)
-        val examples = interp.makeExamples(progStr, numExamples)
+        val examples = interp.makeExamples(prog, numExamples)
         val status = if(examples.isEmpty()) ProgramGenerationResult.PROGRAM_STATUS.BAD else ProgramGenerationResult.PROGRAM_STATUS.RUNNABLE
         return ProgramGenerationResult(prog, examples, status)
     }
@@ -46,7 +44,7 @@ open class Lambda2Language : Language {
     }
 
     override fun programToString(program: RootGrammarNode): String {
-        return strfier.stringify(program)
+        return interp.programToString(program)
     }
 
     override fun runProgramWithExample(program: String, input: String): String {

@@ -73,7 +73,11 @@ object Lambda2Grammar {
     val varInit = NtSym("varInit")
 
     val newVarRule = VariableDeclarationRule(varInit, varName, varName.attributeName)
+    val typedNewVarRule = VariableChildValueRule(varInit, varName, newVarRule.subruleVarnameAttributeKey, "_type", retTypeAttrName)
     val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0, retTypeAttrName to 0), (PR(declared, listOf(varName))))
+
+    val lambdaArgsRule = SizedListAttributeProductionRule(listName = lambdaArgs, unit = varInit, separator = ",")
+    val lambdaArgsInitRule = InitAttributeProductionRule(PR(lambdaArgs, listOf(varInit)), "length", "1")
 
     val filterRule = SynthesizeAttributeProductionRule(
         mapOf(
@@ -82,6 +86,10 @@ object Lambda2Grammar {
         PR(stmtSym, listOf(filter, LP, programSym, COMMA, declared, RP))).withOtherRule {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
     }
+
+    val mapRule = HigherOrderSynthesizedRule(
+        retTypeAttrName, 2,
+        PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP)))
 
     val foldlRule = SynthesizeAttributeProductionRule(
         mapOf(
@@ -113,6 +121,7 @@ object Lambda2Grammar {
     val int2IntRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToIntOp, LP, basicFunc, RP)), retTypeAttrName, "int")
     val bool2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, boolToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
 
+
     val grammar = AttributeGrammar(listOf(
         // Constants
         InitAttributeProductionRule(PR(constant, listOf(intConstant)), retTypeAttrName, "int"),
@@ -131,12 +140,12 @@ object Lambda2Grammar {
 //        bool2BoolRule,
 
         // Variable declaration
-        newVarRule,
+        newVarRule.withOtherRule(typedNewVarRule),
         // declareds are just variables with the constraint that they're inited/delcared already.
         declaredRule,
         // Lambda initialization.
-        SizedListAttributeProductionRule(listName = lambdaArgs, unit = varInit, separator = ","),
-        InitAttributeProductionRule(PR(lambdaArgs, listOf(varInit)), "length", "1"),
+        lambdaArgsRule,
+        lambdaArgsInitRule,
         // Statement definitions
         SynthesizeAttributeProductionRule(
             mapOf(
@@ -151,9 +160,7 @@ object Lambda2Grammar {
 //                retTypeAttrName to 0
 //            ), PR(stmtSym, listOf(basicFunc))),
         consRule,
-        HigherOrderSynthesizedRule(
-            retTypeAttrName, 2,
-            PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP))),
+        mapRule,
         filterRule,
         foldlRule,
         foldrRule,
