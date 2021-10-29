@@ -4,11 +4,12 @@ import grammar.NodeAttributes
 import grammar.ProductionRule
 import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.RuleConstraint
-import grammars.common.SynthesizedCombinedAttributeProductionRule
+import grammars.common.KeyedAttributesProductionRule
 import java.text.ParseException
 
-class OrderedSynthesizedAttributeRule(val toSynthesize: Set<Pair<String, Int>>, rule: ProductionRule) : AttributedProductionRule(rule) {
-
+class OrderedSynthesizedAttributeRule(val toSynthesize: Set<Pair<String, Int>>, rule: ProductionRule) : KeyedAttributesProductionRule(toSynthesize.map {
+   makeAttrKey(it.first, it.second)
+}, rule) {
     val synthesizedKeys : Map<String, List<Int>> by lazy {
         val mmap = mutableMapOf<String, MutableList<Int>>()
         toSynthesize.forEach {

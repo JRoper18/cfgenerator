@@ -7,7 +7,7 @@ import grammar.constraints.RuleConstraint
 /**
  * Given a mapping from strings to uplift to which children to uplift them from, copy attributes from children.
  */
-class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule: ProductionRule) : AttributedProductionRule(rule) {
+class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule: ProductionRule) : KeyedAttributesProductionRule(toSynthesize.keys.toList(), rule) {
 
     val synthesizedKeys : Set<String> by lazy {
         toSynthesize.keys
@@ -46,11 +46,4 @@ class SynthesizeAttributeProductionRule(val toSynthesize: Map<String, Int>, rule
         }.toList())
     }
 
-    fun withOtherRule(otherRule: AttributedProductionRule) : SynthesizedCombinedAttributeProductionRule {
-        return SynthesizedCombinedAttributeProductionRule(synthesisRule = this, otherRule = otherRule)
-    }
-
-    fun withOtherRule(makeOtherRule : (pr : ProductionRule) -> AttributedProductionRule) : SynthesizedCombinedAttributeProductionRule {
-        return SynthesizedCombinedAttributeProductionRule(synthesisRule = this, otherRule = makeOtherRule(this.rule))
-    }
 }

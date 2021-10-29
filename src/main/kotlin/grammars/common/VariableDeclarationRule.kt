@@ -9,7 +9,9 @@ import grammar.constraints.RuleConstraint
  * Create a rule that creates variable declaration attributes.
  */
 open class VariableDeclarationRule(lhs : Symbol, val rhs : Symbol, val subruleVarnameAttributeKey : String) :
-    AttributedProductionRule(ProductionRule(lhs, listOf(rhs))) {
+    KeyedAttributesProductionRule(lowercaseASCII.map {
+        DECLARED_VAR_ATTRIBUTE_KEY_REGEX_STR.replace("(\\w)", it)
+    }, ProductionRule(lhs, listOf(rhs))) {
     companion object {
         const val DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX = "_is_decl"
         const val DECLARED_VAR_ATTRIBUTE_KEY_REGEX_STR = "(\\w)$DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX"

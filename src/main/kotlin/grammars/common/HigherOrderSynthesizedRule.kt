@@ -11,7 +11,8 @@ import grammar.constraints.RuleConstraint
  * Attributes for rules that do higher-order transformations on types.
  * For example, if we have an attribute that is "type", and we want to change it to "list<type>"
  */
-open class HigherOrderSynthesizedRule(val childTypeKey : String, val childTypeLocation : Int, rule : PR) : APR(rule) {
+open class HigherOrderSynthesizedRule(val childTypeKey : String, val childTypeLocation : Int, rule : PR) :
+    KeyedAttributesProductionRule(listOf(childTypeKey), rule) {
     open fun wrapType(type : String) : String {
         return "[$type]"
     }
