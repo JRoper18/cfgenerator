@@ -10,7 +10,7 @@ internal class VariableDeclarationRuleTest {
 
     val r = StringSymbol("R")
     val rule = VariableDeclarationRule(NtSym("L"), r, "varname")
-    val hasAttr = NodeAttribute("r${VariableDeclarationRule.DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX}", "true")
+    val hasAttr = NodeAttribute("r${rule.attrKeySuffix}", "true")
     val needsAttr = NodeAttribute("varname", "r")
 
     @Test
@@ -26,7 +26,7 @@ internal class VariableDeclarationRuleTest {
         val res = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr(hasAttr))
         assert(res.first)
         assertEquals(res.second, listOf(listOf(BasicRuleConstraint(needsAttr))))
-        val res2 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr(NodeAttribute("x${VariableDeclarationRule.DECLARED_VARS_ATTRIBUTE_KEY_SUFFIX}", "true")))
+        val res2 = rule.canMakeProgramWithAttributes(NodeAttributes.fromAttr(NodeAttribute("x${rule.attrKeySuffix}", "true")))
         assert(res2.first)
         assertEquals(res2.second, listOf(listOf(BasicRuleConstraint(NodeAttribute("varname", "x")))))
 

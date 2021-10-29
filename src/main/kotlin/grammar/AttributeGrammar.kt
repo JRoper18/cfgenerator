@@ -19,7 +19,7 @@ import java.nio.file.Paths
 class AttributeGrammar(givenRules: List<AttributedProductionRule>,
                        val constraints : Map<ProductionRule, ConstraintGenerator>,
                        val start : Symbol,
-                       val globalAttributeRegexes : Set<Regex> = setOf(VariableDeclarationRule.DECLARED_VAR_ATTRIBUTE_KEY_REGEX)){
+                       val globalAttributeRegexes : Set<Regex> = setOf()){
     // Maps LHS symbols to a list of possible RHS symbol lists.
     val expansions: Map<Symbol, List<AttributedProductionRule>> by lazy {
         this.rules.groupBy {

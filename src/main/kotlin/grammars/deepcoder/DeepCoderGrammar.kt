@@ -93,7 +93,7 @@ object DeepCoderGrammar {
             "ZipWith" to "3",
             "ScanL1" to "2",
         )),
-        FUNCARG_VARIABLE.rule to VariableConstraintGenerator(varAttrName)
+        FUNCARG_VARIABLE.rule to VariableConstraintGenerator(varAttrName, VARDECL_RULE_BASE)
     ))
 }
 

@@ -2,6 +2,7 @@ package grammar.constraints
 
 import grammar.NodeAttribute
 import grammar.NodeAttributes
+import grammar.NtSym
 import grammar.StringsetSymbol
 import grammars.common.VariableDeclarationRule
 import org.junit.jupiter.api.Test
@@ -12,9 +13,10 @@ internal class VariableConstraintGeneratorTest {
 
     @Test
     fun testGenerate() {
-        val rule = StringsetSymbol(setOf("a", "b", "c"))
-        val gen = VariableConstraintGenerator(rule.attributeName)
-        val cons = gen.generate(NodeAttributes.fromAttr(VariableDeclarationRule.makeAttrFromVarname("a")))
-        assertEquals(cons, listOf(BasicRuleConstraint(NodeAttribute(rule.attributeName, "a"))))
+        val rhs = StringsetSymbol(setOf("a", "b", "c"))
+        val rule = VariableDeclarationRule(NtSym("lhs"), rhs, rhs.attributeName)
+        val gen = VariableConstraintGenerator(rhs.attributeName, rule)
+        val cons = gen.generate(NodeAttributes.fromAttr(NodeAttribute("a_is_decl", "true")))
+        assertEquals(cons, listOf(BasicRuleConstraint(NodeAttribute(rhs.attributeName, "a"))))
     }
 }

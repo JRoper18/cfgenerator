@@ -25,9 +25,10 @@ def cons(a, b):
         # Can't cons something to a not-list
         return None
     alist = canBeList(a)
-    al = expand_iters(a) if alist else [a]
+    al = expand_iters(a) if alist else a
     bl = expand_iters(b) if blist else b
-    return al + bl
+    bl.insert(0, al)
+    return bl
 
 foldl = lambda f, acc, xs: reduce(f, xs, acc)
 foldr = lambda f, acc, xs: reduce(lambda x, y: f(y, x), xs[::-1], acc)

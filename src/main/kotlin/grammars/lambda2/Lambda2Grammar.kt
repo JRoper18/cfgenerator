@@ -72,6 +72,7 @@ object Lambda2Grammar {
         ), displayName = "lowercaseAscii")
     val varInit = NtSym("varInit")
 
+    val newVarRule = VariableDeclarationRule(varInit, varName, varName.attributeName)
     val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0, retTypeAttrName to 0), (PR(declared, listOf(varName))))
 
     val filterRule = SynthesizeAttributeProductionRule(
@@ -120,17 +121,17 @@ object Lambda2Grammar {
         // Let's just say empty lists are int lists, for now.
         InitAttributeProductionRule(PR(constant, listOf(emptyList)), retTypeAttrName, "[int]"),
         // Basic function definitions.
-        APR(PR(basicFunc, listOf(declared))),
-        SynthesizeAttributeProductionRule(
-            mapOf(
-                retTypeAttrName to 0
-            ), PR(basicFunc, listOf(constant))),
-        int2BoolRule,
-        int2IntRule,
-        bool2BoolRule,
+//        APR(PR(basicFunc, listOf(declared))),
+//        SynthesizeAttributeProductionRule(
+//            mapOf(
+//                retTypeAttrName to 0
+//            ), PR(basicFunc, listOf(constant))),
+//        int2BoolRule,
+//        int2IntRule,
+//        bool2BoolRule,
 
         // Variable declaration
-        VariableDeclarationRule(varInit, varName, varName.attributeName),
+        newVarRule,
         // declareds are just variables with the constraint that they're inited/delcared already.
         declaredRule,
         // Lambda initialization.
@@ -145,10 +146,10 @@ object Lambda2Grammar {
             mapOf(
                 retTypeAttrName to 0
             ), PR(stmtSym, listOf(constant))),
-        SynthesizeAttributeProductionRule(
-            mapOf(
-                retTypeAttrName to 0
-            ), PR(stmtSym, listOf(basicFunc))),
+//        SynthesizeAttributeProductionRule(
+//            mapOf(
+//                retTypeAttrName to 0
+//            ), PR(stmtSym, listOf(basicFunc))),
         consRule,
         HigherOrderSynthesizedRule(
             retTypeAttrName, 2,
@@ -166,7 +167,7 @@ object Lambda2Grammar {
         ),
     ), start = programSym, constraints = mapOf(
         // Make sure variables are declared before we use them.
-        declaredRule.rule to VariableConstraintGenerator(varName.attributeName),
+        declaredRule.rule to VariableConstraintGenerator(varName.attributeName, newVarRule),
 
         // Filters need functions that return bools
         filterRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", boolType)))),

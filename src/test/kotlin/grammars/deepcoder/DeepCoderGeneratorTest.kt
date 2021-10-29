@@ -2,10 +2,7 @@ package grammars.deepcoder
 
 import generators.ProgramGenerator
 import generators.ProgramStringifier
-import grammar.NodeAttribute
-import grammar.NtSym
-import grammar.RootGrammarNode
-import grammar.Symbol
+import grammar.*
 import grammar.constraints.BasicRuleConstraint
 import grammars.common.UnexpandedAPR
 import grammars.common.VariableDeclarationRule
@@ -95,9 +92,11 @@ internal class DeepCoderGeneratorTest {
         val program = makeProgramFromSymbol(generator, VARNAME)
         val attrs = program.attributes()
         val varname = attrs.getStringAttribute(varAttrName)!!
-        val varAttr = attrs.getStringAttribute(VariableDeclarationRule.makeAttrFromVarname(varname).first)
-        assertNotNull(varAttr)
-        assertEquals(VariableDeclarationRule.makeAttrFromVarname(varname).second, varAttr)
+        val varAttr = attrs.getStringAttribute(DeepCoderGrammar.VARDECL_RULE_BASE.makeAttrKeyFromVarname(varname))
+        repeat(5) {
+            assertNotNull(varAttr)
+            assertEquals(DeepCoderGrammar.VARDECL_RULE_BASE.makeAttrValueFromChildren(NodeAttributes(), varname), varAttr)
+        }
     }
 
     @Test
