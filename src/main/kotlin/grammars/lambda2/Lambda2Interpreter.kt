@@ -55,27 +55,21 @@ class Lambda2Interpreter(val random : Random = Random(100L),
         return strout.toBooleanStrict()
     }
 
-    fun getNumberOfInputs(program: String) : Int {
-        val script = libStr + "func = $program\nprint(func.__code__.co_argcount)"
-        return runPyScript(script).toInt()
-    }
-
     internal fun makeInput(inputType: String) : Any {
         when(inputType) {
             "int" -> return this.generatedIntRange.random(this.random)
             "bool" -> return this.random.nextBoolean()
         }
         // Perhaps it's a list of ints or bools
-        val unwrapped = Lambda2Grammar.mapRule.unwrapType(inputType)
-        require(unwrapped != null) {
+        val unwrapped = Lambda2Grammar.listTypeMapper.backward(inputType)
+        require(unwrapped.isNotEmpty()) {
             "Unknown type $inputType!"
         }
         return List(this.generatedListSizeRange.random(this.random)) {
-            makeInput(unwrapped)
+            makeInput(unwrapped[0])
         }
     }
     fun makeExamples(progNode : RootGrammarNode, num : Int) : List<Pair<String, String>> {
-        val attrs = progNode.attributes()
         val progStr = programToString(progNode)
         val inputsNode = progNode.rhs[1]
         val inputsNodeList : List<GenericGrammarNode>

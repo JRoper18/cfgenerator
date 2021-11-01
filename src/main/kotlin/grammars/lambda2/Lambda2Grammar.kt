@@ -14,6 +14,8 @@ object Lambda2Grammar {
     const val intListType = "[int]"
     const val intListListType = "[[int]]"
 
+    val listTypeMapper = WrapperAttributeMapper()
+
     val maps = StringSymbol("map")
     val mapt = StringSymbol("mapt")
     val filter = StringSymbol("filter")
@@ -23,6 +25,9 @@ object Lambda2Grammar {
     val recl = StringSymbol("recl")
     val cons = StringSymbol("cons")
     val lambda = StringSymbol("lambda")
+    val len = StringSymbol("len")
+    val minOrMax = StringsetSymbol(setOf("min", "max"))
+    val inOrNotIn = StringsetSymbol(setOf("in", "not in"))
 
     val lambdaArgs = NtSym("lamargs")
     val stmtSym = NtSym("stmt")
@@ -87,9 +92,8 @@ object Lambda2Grammar {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
     }
 
-    val mapRule = HigherOrderSynthesizedRule(
-        retTypeAttrName, 2,
-        PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP)))
+    val mapRule = AttributeMappingProductionRule(
+        PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP)), retTypeAttrName, 2, listTypeMapper)
 
     val foldlRule = SynthesizeAttributeProductionRule(
         mapOf(
@@ -115,7 +119,22 @@ object Lambda2Grammar {
     val consRule = SynthesizeAttributeProductionRule(
         mapOf(
             retTypeAttrName to 4 // Assuming the second arg is a list already.
-        ), PR(stmtSym, listOf(cons, LP, declared, COMMA, declared, RP)))
+        ), PR(stmtSym, listOf(cons, LP, stmtSym, COMMA, stmtSym, RP)))
+
+    val minOrMaxRule = InitAttributeProductionRule(PR(stmtSym, listOf(minOrMax, LP, stmtSym, RP)), retTypeAttrName, intType).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
+    }
+
+    val indexIntoRule = AttributeMappingProductionRule(PR(stmtSym, listOf(stmtSym, LSB, stmtSym, RSB)), retTypeAttrName, 0, listTypeMapper.inverse()).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
+    }
+
+
+    val indexIntoRangeRule = SynthesizeAttributeProductionRule(mapOf(retTypeAttrName to 0), PR(stmtSym, listOf(stmtSym, LSB, stmtSym, COLON, stmtSym, RSB))).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 4)), it)
+    }
+
+    val listContainsRule = InitAttributeProductionRule(PR(stmtSym, listOf(stmtSym, inOrNotIn, stmtSym)), retTypeAttrName, boolType)
 
     val int2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
     val int2IntRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToIntOp, LP, basicFunc, RP)), retTypeAttrName, "int")
@@ -159,12 +178,23 @@ object Lambda2Grammar {
 //            mapOf(
 //                retTypeAttrName to 0
 //            ), PR(stmtSym, listOf(basicFunc))),
+
         consRule,
+        // Len
+        InitAttributeProductionRule(PR(stmtSym, listOf(len, LP, declared, RP)), retTypeAttrName, intType),
+        // min and max
+        minOrMaxRule,
+        // Indexers
+        indexIntoRule,
+        indexIntoRangeRule,
+        listContainsRule,
+        // Higher-order stuff.
         mapRule,
         filterRule,
         foldlRule,
         foldrRule,
         reclRule,
+
         //Let's ignore trees for now
 //        APR(PR(stmtSym, listOf(foldt, LP, programSym, COMMA, constant, COMMA, declared, RP))),
 //        APR(PR(stmtSym, listOf(mapt, LP, programSym, COMMA, declared, RP))),
@@ -188,6 +218,16 @@ object Lambda2Grammar {
         consRule.rule to BasicConstraintGenerator(listOf(OrRuleConstraint(listOf(boolListType, intListListType, intListType).map{
             BasicRuleConstraint(NodeAttribute(retTypeAttrName, it))
         }))),
+
+        // min/max needs int list
+        minOrMaxRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intListType)))),
+
+        // Indexers need integer indicies
+        indexIntoRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intType)))),
+        indexIntoRangeRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intType)),
+            BasicRuleConstraint(NodeAttribute("4.${retTypeAttrName}", intType)))),
+
+
     ))
 
 
