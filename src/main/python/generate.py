@@ -6,10 +6,11 @@ from .utils import ProgramDataset, make_max_length
 def generate_gpt(eval_generated_fname,
     eval_output_generated_fname,
     model_run_name,
+    model_dir_base,
     param_size = "125M",
      
 ):
-    model_dir = "./output/gpt-results-%s-%s" % (param_size, model_run_name)
+    model_dir = "%s/gpt-results-%s-%s" % (model_dir_base, param_size, model_run_name)
 
     # Now, make the outputs for us to evaluate:
     fine_model = GPTNeoForCausalLM.from_pretrained(model_dir).cuda()
@@ -40,8 +41,8 @@ def generate_gpt(eval_generated_fname,
             cutpoint = 0
             if new_len < curr_len :
                 cutpoint = curr_len - new_len
-            # input_tensor = tokens[:, cutpoint:]
-            input_tensor = tokens
+            input_tensor = tokens[:, cutpoint:]
+            # input_tensor = tokens
             outputs = fine_model.generate(
                 input_tensor, 
                 max_length=2048,  
@@ -49,7 +50,7 @@ def generate_gpt(eval_generated_fname,
                 # no_repeat_ngram_size=2,
                 # repetition_penalty=1.5,
                 top_p=0.95,
-                temperature=.55,
+                temperature=.25,
                 do_sample=True,
                 top_k=50,
                 # early_stopping=True

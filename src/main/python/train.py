@@ -10,10 +10,10 @@ import os
 
 
 
-def train_gpt(run_name, generated_path):
+def train_gpt(run_name, generated_path, output_dir):
     param_size = "125M"
     pretrained_name = "EleutherAI/gpt-neo-%s" % param_size
-    output_dir = "./output/gpt-results-%s-%s" % (param_size, run_name)
+    output_dir = "%s/gpt-results-%s-%s" % (output_dir, param_size, run_name)
 
     print(transformers.__version__)
     model = GPTNeoForCausalLM.from_pretrained(pretrained_name).cuda()
