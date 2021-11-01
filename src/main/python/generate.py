@@ -50,7 +50,7 @@ def generate_gpt(eval_generated_fname,
                 # no_repeat_ngram_size=2,
                 # repetition_penalty=1.5,
                 top_p=0.95,
-                temperature=.25,
+                temperature=.55,
                 do_sample=True,
                 top_k=50,
                 # early_stopping=True
