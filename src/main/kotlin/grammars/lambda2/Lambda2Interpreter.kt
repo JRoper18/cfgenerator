@@ -124,7 +124,6 @@ class Lambda2Interpreter(val random : Random = Random(100L),
     }
 
     fun interp(program: String, args2str: String) : String {
-        println("Trying program $program input $args2str")
         val script = File("./src/main/kotlin/grammars/lambda2/lambda2.py").readText() + "\nfunc = $program\nprint(expand_iters(func($args2str)))"
         return runPyScript(script)
     }

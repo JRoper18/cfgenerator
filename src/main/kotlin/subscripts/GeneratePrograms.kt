@@ -67,8 +67,6 @@ suspend fun generatePrograms(
                             }
 
                             // Okay, now we have a good program. Is it useful?
-                            logOutputStream.println(generationResult.examples)
-                            logOutputStream.println(language.programToString(generationResult.program))
                             val useful = language.isProgramUseful(generationResult)
                             if(!useful) {
                                 continue
