@@ -123,10 +123,13 @@ object Lambda2Grammar {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
     }
 
-    val consRule = SynthesizeAttributeProductionRule(
-        mapOf(
-            retTypeAttrName to 4 // Assuming the second arg is a list already.
-        ), PR(stmtSym, listOf(cons, LP, stmtSym, COMMA, stmtSym, RP)))
+    val consRule = AttributeMappingProductionRule(
+        PR(stmtSym, listOf(cons, LP, stmtSym, COMMA, stmtSym, RP)),
+        // Makes a list of the 2nd child's type
+        retTypeAttrName, 2, listTypeMapper).withOtherRule {
+        // Bring up the list that's being cons'd to. We'll check that it and the retType are the same.
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 4)), it)
+    }
 
     val minOrMaxRule = InitAttributeProductionRule(PR(stmtSym, listOf(minOrMax, LP, stmtSym, RP)), retTypeAttrName, intType).withOtherRule {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
@@ -143,6 +146,11 @@ object Lambda2Grammar {
 
     val listContainsRule = InitAttributeProductionRule(PR(stmtSym, listOf(stmtSym, inOrNotIn, stmtSym)), retTypeAttrName, boolType)
 
+    val lenRule = InitAttributeProductionRule(PR(stmtSym, listOf(len, LP, declared, RP)), retTypeAttrName, intType).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it) // So we can make a constraint that len() only takes lists.
+    }
+
+
     val int2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
     val int2IntRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToIntOp, LP, basicFunc, RP)), retTypeAttrName, "int")
     val bool2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, boolToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
@@ -152,6 +160,11 @@ object Lambda2Grammar {
             BasicRuleConstraint(NodeAttribute(attrKey, it))
         })
     }
+
+    val totalRootLambdaRule = SynthesizeAttributeProductionRule(mapOf(retTypeAttrName to 3),
+        PR(programSym, listOf(lambda, lambdaArgs, COLON, stmtSym))
+    )
+
 
     val grammar = AttributeGrammar(listOf(
         // Constants
@@ -193,7 +206,7 @@ object Lambda2Grammar {
 
         consRule,
         // Len
-        InitAttributeProductionRule(PR(stmtSym, listOf(len, LP, declared, RP)), retTypeAttrName, intType),
+        lenRule,
         // min and max
         minOrMaxRule,
         // Indexers
@@ -212,9 +225,7 @@ object Lambda2Grammar {
 //        APR(PR(stmtSym, listOf(foldt, LP, programSym, COMMA, constant, COMMA, declared, RP))),
 //        APR(PR(stmtSym, listOf(mapt, LP, programSym, COMMA, declared, RP))),
         //Finally:
-        SynthesizeAttributeProductionRule(mapOf(retTypeAttrName to 3),
-            PR(programSym, listOf(lambda, lambdaArgs, COLON, stmtSym))
-        ),
+        totalRootLambdaRule,
     ), start = programSym, constraints = mapOf(
         // Make sure variables are declared before we use them.
         declaredRule.rule to VariableConstraintGenerator(varName.attributeName, newVarRule),
@@ -227,8 +238,14 @@ object Lambda2Grammar {
         foldrRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
         reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
 
-        // Cons needs a list as a return value.
-        consRule.rule to BasicConstraintGenerator(listOf(isListConstraint(retTypeAttrName))),
+        // Cons needs a list as a return value and a list as an input value.
+        consRule.rule to BasicConstraintGenerator(listOf(isListConstraint(retTypeAttrName))).and(
+            // Check that the list returned is the same type as the list arg of cons.
+            EqualAttributeValueConstraintGenerator(setOf("4.${retTypeAttrName}", retTypeAttrName))
+        ),
+
+        // len needs a list
+        lenRule.rule to BasicConstraintGenerator(listOf(isListConstraint("2.${retTypeAttrName}"))),
 
         // min/max needs int list
         minOrMaxRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intListType)))),
@@ -239,5 +256,7 @@ object Lambda2Grammar {
         indexIntoRangeRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intType)),
             BasicRuleConstraint(NodeAttribute("4.${retTypeAttrName}", intType)),
             isListConstraint(retTypeAttrName))),
+    ), scopeCloserRules = setOf(
+        totalRootLambdaRule.rule
     ))
 }

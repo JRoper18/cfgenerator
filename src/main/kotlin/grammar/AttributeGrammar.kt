@@ -3,22 +3,14 @@ package grammar
 import grammar.constraints.ConstraintGenerator
 import grammars.common.*
 import org.antlr.v4.runtime.*
-import org.antlr.v4.runtime.tree.ParseTree
-import org.antlr.v4.runtime.tree.TerminalNodeImpl
 import org.antlr.v4.tool.Grammar
-import org.antlr.v4.tool.GrammarInterpreterRuleContext
-import org.antlr.v4.tool.Rule
 import utils.duplicates
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.lang.IllegalStateException
-import java.nio.charset.StandardCharsets
-import java.nio.file.Paths
 
 
 class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
                        val constraints : Map<ProductionRule, ConstraintGenerator>,
                        val start : Symbol,
+                       val scopeCloserRules : Set<ProductionRule> = setOf(),
                        val globalAttributeRegexes : Set<Regex> = givenRules.flatMap {
                            // By default, variable attributes are global.
                            if(it is VariableAttributeRule){
@@ -57,7 +49,7 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
         }
         ret
     }).distinct().map { apr ->
-        GlobalCombinedAttributeProductionRule(this.globalAttributeRegexes, apr)
+        GlobalCombinedAttributeRule(this.globalAttributeRegexes, apr, apr.rule in scopeCloserRules)
     }
 
     val symbols : List<Symbol> = rules.flatMap {
