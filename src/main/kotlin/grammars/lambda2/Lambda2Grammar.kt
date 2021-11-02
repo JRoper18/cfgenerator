@@ -78,11 +78,18 @@ object Lambda2Grammar {
     val varInit = NtSym("varInit")
 
     val newVarRule = VariableDeclarationRule(varInit, varName, varName.attributeName)
-    val typedNewVarRule = VariableChildValueRule(varInit, varName, newVarRule.subruleVarnameAttributeKey, "_type", retTypeAttrName)
+    val typedNewVarRule = VariableChildValueRule(varInit, varName, newVarRule.subruleVarnameAttributeKey, "_type", retTypeAttrName).withOtherRule {
+        SynthesizeAttributeProductionRule(mapOf(retTypeAttrName to 0), it) // Bring up the ret type
+    }
     val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0, retTypeAttrName to 0), (PR(declared, listOf(varName))))
-
-    val lambdaArgsRule = SizedListAttributeProductionRule(listName = lambdaArgs, unit = varInit, separator = ",")
-    val lambdaArgsInitRule = InitAttributeProductionRule(PR(lambdaArgs, listOf(varInit)), "length", "1")
+    val argLPR = ListProductionRule(listName = lambdaArgs, unitName = varInit, separator = ",")
+    val lambdaArgsOrderedRuleBase = OrderedListAttributeRule(argLPR, retTypeAttrName)
+    val lambdaArgsRule = lambdaArgsOrderedRuleBase.withOtherRule {
+        SizedListAttributeProductionRule(argLPR)
+    }
+    val lambdaArgsInitRule = InitAttributeProductionRule(PR(lambdaArgs, listOf(varInit)), "length", "1").withOtherRule {
+        lambdaArgsOrderedRuleBase.initListRule(0, it)
+    }
 
     val filterRule = SynthesizeAttributeProductionRule(
         mapOf(
@@ -126,7 +133,7 @@ object Lambda2Grammar {
     }
 
     val indexIntoRule = AttributeMappingProductionRule(PR(stmtSym, listOf(stmtSym, LSB, stmtSym, RSB)), retTypeAttrName, 0, listTypeMapper.inverse()).withOtherRule {
-        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 0)), it)
     }
 
 
@@ -140,6 +147,11 @@ object Lambda2Grammar {
     val int2IntRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToIntOp, LP, basicFunc, RP)), retTypeAttrName, "int")
     val bool2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, boolToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
 
+    fun isListConstraint(attrKey : String) : RuleConstraint {
+        return OrRuleConstraint(listOf(boolListType, intListListType, intListType).map{
+            BasicRuleConstraint(NodeAttribute(attrKey, it))
+        })
+    }
 
     val grammar = AttributeGrammar(listOf(
         // Constants
@@ -188,6 +200,7 @@ object Lambda2Grammar {
         indexIntoRule,
         indexIntoRangeRule,
         listContainsRule,
+
         // Higher-order stuff.
         mapRule,
         filterRule,
@@ -215,20 +228,16 @@ object Lambda2Grammar {
         reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
 
         // Cons needs a list as a return value.
-        consRule.rule to BasicConstraintGenerator(listOf(OrRuleConstraint(listOf(boolListType, intListListType, intListType).map{
-            BasicRuleConstraint(NodeAttribute(retTypeAttrName, it))
-        }))),
+        consRule.rule to BasicConstraintGenerator(listOf(isListConstraint(retTypeAttrName))),
 
         // min/max needs int list
         minOrMaxRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intListType)))),
 
         // Indexers need integer indicies
-        indexIntoRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intType)))),
+        indexIntoRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intType)),
+            isListConstraint("0.${retTypeAttrName}"))),
         indexIntoRangeRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intType)),
-            BasicRuleConstraint(NodeAttribute("4.${retTypeAttrName}", intType)))),
-
-
+            BasicRuleConstraint(NodeAttribute("4.${retTypeAttrName}", intType)),
+            isListConstraint(retTypeAttrName))),
     ))
-
-
 }

@@ -3,13 +3,14 @@ package grammars.common
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.RuleConstraint
+import grammars.lambda2.Lambda2Grammar
 
-class SizedListAttributeProductionRule(listName: NtSym,
-                                       val unit: Symbol,
-                                       separator: String = "") : KeyedAttributesProductionRule(
-
+class SizedListAttributeProductionRule(val lpr : ListProductionRule) : KeyedAttributesProductionRule(
     listOf("length"),
-    ListProductionRule(listName, unit, separator)) {
+    lpr) {
+
+    constructor(listName : NtSym, unitName : Symbol, seperator : String = ","):
+            this(ListProductionRule(listName = listName, unitName = unitName, separator = seperator))
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         val listAttrs = childAttributes[0]
         val sizeKey = "length"

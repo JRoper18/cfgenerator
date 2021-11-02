@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
 
-class AttributeGrammar(givenRules: List<AttributedProductionRule>,
+class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
                        val constraints : Map<ProductionRule, ConstraintGenerator>,
                        val start : Symbol,
                        val globalAttributeRegexes : Set<Regex> = givenRules.flatMap {
