@@ -4,7 +4,8 @@ import grammar.AttributeGrammar
 import grammar.RootGrammarNode
 import grammars.Language
 
-class CfgLanguage(val language: Language, val attrReg : Regex = Regex("retType")) : Language {
+// By default, print all attributes. 
+class CfgLanguage(val language: Language, val attrReg : Regex = Regex("(.*?)")) : Language {
     override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult {
         return language.generateProgramAndExamples(numExamples)
     }

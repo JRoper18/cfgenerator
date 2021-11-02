@@ -27,7 +27,8 @@ def main():
                         help='number of examples to make for GPT to train on')
     parser.add_argument('--num_eval', type=int, default=1000, 
                         help='number of examples to make for GPT to generate/eval for')
-    
+    parser.add_argument('--attr_regex', type=str, default=None,
+                        help='If using a CFG-printing language, this is an attribute regex to filter the attributes that GPT sees. ')
     args = parser.parse_args()
 
     language = args.language
@@ -35,6 +36,7 @@ def main():
     evalname = args.evalname
     modeldir = './output/{}'.format(modelname)
     evaldir = './output/{}'.format(evalname)
+    attr_regex = args.attr_regex
     os.makedirs(modeldir, exist_ok=True)
     os.makedirs(evaldir, exist_ok=True)
     cfg_generated_train_path = '{}/cfg-generated-{}.txt'.format(modeldir, modelname)
@@ -47,7 +49,7 @@ def main():
         if (ret != 0):
             return
     if(args.do_train):
-        train_gpt(run_name = modelname, generated_path = cfg_generated_train_path, output_dir = modeldir)
+        train_gpt(run_name = modelname, generated_path = cfg_generated_train_path, output_dir = modeldir, attr_regex=attr_regex)
 
     if(args.do_eval_cfgs):
         cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(args.num_eval, cfg_generated_eval_path, language)

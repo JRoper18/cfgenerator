@@ -7,10 +7,10 @@ import torch
 from transformers import GPTNeoForCausalLM, GPT2Tokenizer
 import transformers
 import os
+import re
 
 
-
-def train_gpt(run_name, generated_path, output_dir):
+def train_gpt(run_name, generated_path, output_dir, attr_regex = None):
     param_size = "125M"
     pretrained_name = "EleutherAI/gpt-neo-%s" % param_size
     output_dir = "%s/gpt-results-%s-%s" % (output_dir, param_size, run_name)
@@ -48,7 +48,7 @@ def train_gpt(run_name, generated_path, output_dir):
     # if(ds_max_length != max_length):
     #     print("WARNING!!! WE MUST TRUNCATE SENTENCES TO %d!!!" % ds_max_length)
     #     print("WE MIGHT LOSE A LOT OF EXAMPLES!")
-    dataset = ProgramDataset(dataset_strs, tokenizer, ds_max_length, padding="max_length")
+    dataset = ProgramDataset(dataset_strs, tokenizer, ds_max_length, padding="max_length", attr_regex = attr_regex)
     train_size = int(0.95 * len(dataset))
     train_ds, eval_ds = random_split(dataset, [train_size, len(dataset) - train_size], generator=torch.Generator().manual_seed(42))
     print("Training size: %d" % train_size)
