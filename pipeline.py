@@ -48,7 +48,7 @@ def main():
             return
     if(args.do_train):
         from src.main.python.train import train_gpt
-        train_gpt(run_name = modelname, generated_path = cfg_generated_train_path, output_dir = modeldir)
+        train_gpt(run_name = modelname, generated_path = cfg_generated_train_path, output_dir = modeldir, attr_regex=attr_regex)
 
     if(args.do_eval_cfgs):
         cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(args.num_eval, cfg_generated_eval_path, language)
