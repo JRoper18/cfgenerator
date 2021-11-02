@@ -10,8 +10,9 @@ import grammar.constraints.RuleConstraint
  * So, if you declare a variable attribute, and you have a regex to detect it,
  * Then when that rule is produced, the node, it's rightmost siblings, and it's paretns with right siblings
  * Will all have that attribute
+ * If the scopeCloser is true, this rule will be considered a "scope closer" and will not take attributes from children.
  */
-class GlobalCombinedAttributeProductionRule(val attrKeyRegexes : Set<Regex>, val combinedWith : AttributedProductionRule) : AttributedProductionRule(combinedWith.rule) {
+class GlobalCombinedAttributeRule(val attrKeyRegexes : Set<Regex>, val combinedWith : AttributedProductionRule, val scopeCloser : Boolean) : AttributedProductionRule(combinedWith.rule) {
     override fun makeInheritedAttributes(
         myIdx: Int,
         parentAttributes: NodeAttributes,
@@ -30,10 +31,12 @@ class GlobalCombinedAttributeProductionRule(val attrKeyRegexes : Set<Regex>, val
 
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         var attrs = combinedWith.makeSynthesizedAttributes(childAttributes)
-        (childAttributes).forEach { attr ->
-            attrKeyRegexes.forEach {
-                val filteredAttrs = attr.filterRegex(it)
-                attrs = attrs.union(filteredAttrs)
+        if(!scopeCloser) {
+            (childAttributes).forEach { attr ->
+                attrKeyRegexes.forEach {
+                    val filteredAttrs = attr.filterRegex(it)
+                    attrs = attrs.union(filteredAttrs)
+                }
             }
         }
         return attrs

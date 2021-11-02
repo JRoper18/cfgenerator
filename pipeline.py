@@ -1,7 +1,5 @@
 import subprocess
 import argparse
-from src.main.python.train import train_gpt
-from src.main.python.generate import generate_gpt
 import os
 
 def main():
@@ -49,7 +47,8 @@ def main():
         if (ret != 0):
             return
     if(args.do_train):
-        train_gpt(run_name = modelname, generated_path = cfg_generated_train_path, output_dir = modeldir, attr_regex=attr_regex)
+        from src.main.python.train import train_gpt
+        train_gpt(run_name = modelname, generated_path = cfg_generated_train_path, output_dir = modeldir)
 
     if(args.do_eval_cfgs):
         cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(args.num_eval, cfg_generated_eval_path, language)
@@ -58,6 +57,7 @@ def main():
             return
 
     if(args.do_gpt_gen):
+        from src.main.python.generate import generate_gpt
         generate_gpt(model_run_name = modelname, eval_output_generated_fname=gpt_generated_eval_path, eval_generated_fname=cfg_generated_eval_path, model_dir_base = modeldir)
 
     if(args.do_eval):

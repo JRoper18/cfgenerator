@@ -58,8 +58,8 @@ object DeepCoderGrammar {
         PR(VARDEF, listOf(TYPES)))
     val STMT_LIST_RULE = SizedListAttributeProductionRule(STMT_LIST, STMT, "\n")
     val FUNCTION_LIST_RULE = SizedListAttributeProductionRule(FUNCTION_ARGS, FUNCTION_ARG, " ")
-    val LIST_INIT_RULE = InitAttributeProductionRule(ProductionRule(STMT_LIST, listOf()), "length", "0")
-    val INIT_FUNCTION_ARGS_RULE = InitAttributeProductionRule(ProductionRule(FUNCTION_ARGS, listOf()), "length", "0")
+    val LIST_INIT_RULE = InitAttributeProductionRule(ProductionRule(STMT_LIST, listOf(STMT)), "length", "1")
+    val INIT_FUNCTION_ARGS_RULE = InitAttributeProductionRule(ProductionRule(FUNCTION_ARGS, listOf(FUNCTION_ARG)), "length", "1")
     val FUNCARG_VARIABLE = SynthesizeAttributeProductionRule(mapOf(varAttrName to 0), ProductionRule(FUNCTION_ARG, listOf(VARNAME_STRINGSET)))
     val FUNCARG_LAMBDA = SynthesizeAttributeProductionRule(mapOf(lambdaAttrName to 0), ProductionRule(FUNCTION_ARG, listOf(LAMBDA_FUNC))) // A lambda symbol
 

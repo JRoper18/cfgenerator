@@ -10,6 +10,8 @@ val UNEXPANDED = StringSymbol("UNEXPANDED")
 val SPACE = StringSymbol(" ")
 val LP = StringSymbol("(")
 val RP = StringSymbol(")")
+val LSB = StringSymbol("[")
+val RSB = StringSymbol("]")
 val COLON = StringSymbol(":")
 val COMMA = StringSymbol(",")
 fun TerminalProductionRule(lhs: Symbol) : ProductionRule{
