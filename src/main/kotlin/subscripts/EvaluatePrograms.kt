@@ -12,6 +12,8 @@ import kotlinx.cli.required
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
@@ -25,12 +27,26 @@ suspend fun evaluateProgramsCmd(args: Array<String>) {
         shortName = "i",
         description = "Input file name of GPT-generated programs"
     ).required()
+    val outputLogName by parser.option(
+        ArgType.String,
+        fullName = "output",
+        shortName = "o",
+        description = "Output log file path"
+    )
     val lanChoice by parser.option(ArgType.Choice<LanguageRef>(), shortName = "l", description = "Input language to generate").required()
 
     parser.parse(args)
+    val logWriter : PrintWriter
+    if(outputLogName == null){
+        println("Output file: to STDOUT")
+        logWriter = PrintWriter(System.out, true)
+    } else {
+        println("Output file: $outputLogName")
+        logWriter = PrintWriter(FileOutputStream(outputLogName), true)
+    }
     evaluatePrograms(argsToLanguage(lanChoice), File(inputFileName).readText().split("<|splitter|>").filter {
         it.isNotBlank()
-    })
+    }, logWriter)
 
 }
 
@@ -53,7 +69,7 @@ fun analyzeSymbolFrequency(program : String, language : Language, frequencies: M
     }
 }
 
-suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
+suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, logWriter : PrintWriter){
     val numProgramsWithExamples = AtomicInteger(0)
     val numFullyCorrectPrograms = AtomicInteger(0)
     val numTotalExamples = AtomicInteger(0)
@@ -99,23 +115,23 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
             }
         }
     }
-    println("NUM PROGRAMS: ${evalExamples.size}")
-    println("NUM FULLY CORRECT PROGRAMS: ${numFullyCorrectPrograms.get()}")
-    println(runResultCounts)
-    println("Good frequencies: ")
+    logWriter.println("NUM PROGRAMS: ${evalExamples.size}")
+    logWriter.println("NUM FULLY CORRECT PROGRAMS: ${numFullyCorrectPrograms.get()}")
+    logWriter.println(runResultCounts)
+    logWriter.println("Good frequencies: ")
     val search4Symbols = setOf("cons", "foldl", "foldr", "map", "recl", "filter", "+", "-", "*", "/", ">", "<", "or", "and")
     val finalGoodRules = FrequencyCounter(goodRuleFreqs, topK = 20)
     val finalBadRules = FrequencyCounter(badRuleFreqs, topK = 20)
-    println(FrequencyCounter(goodSymFreqs, search4Symbols))
-    println(finalGoodRules)
-    println("Bad frequencies: ")
-    println(FrequencyCounter(badSymFreqs, search4Symbols))
-    println(finalBadRules)
-    println("Biggest differences:")
-    println("Mostly in good: ")
-    println(finalGoodRules.freqDiff(finalBadRules))
-    println("Mostly in bad: ")
-    println(finalBadRules.freqDiff(finalGoodRules))
+    logWriter.println(FrequencyCounter(goodSymFreqs, search4Symbols))
+    logWriter.println(finalGoodRules)
+    logWriter.println("Bad frequencies: ")
+    logWriter.println(FrequencyCounter(badSymFreqs, search4Symbols))
+    logWriter.println(finalBadRules)
+    logWriter.println("Biggest differences:")
+    logWriter.println("Mostly in good: ")
+    logWriter.println(finalGoodRules.freqDiff(finalBadRules))
+    logWriter.println("Mostly in bad: ")
+    logWriter.println(finalBadRules.freqDiff(finalGoodRules))
 
 //    println("Exception map values: ${weirdMap.values.first()[0].first.stackTraceToString()}")
 }
