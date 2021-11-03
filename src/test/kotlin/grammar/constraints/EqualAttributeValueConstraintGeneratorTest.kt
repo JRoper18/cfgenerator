@@ -16,4 +16,11 @@ internal class EqualAttributeValueConstraintGeneratorTest {
         val made1 = gen.generate(NodeAttributes.fromList(listOf(attr1, attr2)))
         assertEquals(listOf(BasicRuleConstraint(attr1), BasicRuleConstraint(NodeAttribute("b", "1"))), made1)
     }
+
+    @Test
+    fun testGenerateWithNoExisting() {
+        val gen = EqualAttributeValueConstraintGenerator(setOf("a", "b"), possibleValues = setOf("1"))
+        val made1 = gen.generate(NodeAttributes())
+        assertEquals(made1, listOf(BasicRuleConstraint(NodeAttribute("a", "1")), BasicRuleConstraint(NodeAttribute("b", "1"))))
+    }
 }

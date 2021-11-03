@@ -243,9 +243,9 @@ object Lambda2Grammar {
         filterRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", boolType)))),
 
         // Folds and recls should have 2nd children (input functions) that return the same stuff they function returns.
-        foldlRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), basicTypes),
-        foldrRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), basicTypes),
-        reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), basicTypes),
+        foldlRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), possibleValues = basicTypes),
+        foldrRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), possibleValues = basicTypes),
+        reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), possibleValues = basicTypes),
 
         // Cons needs a list as a return value and a list as an input value.
         consRule.rule to BasicConstraintGenerator(listOf(isListConstraint(retTypeAttrName))).and(

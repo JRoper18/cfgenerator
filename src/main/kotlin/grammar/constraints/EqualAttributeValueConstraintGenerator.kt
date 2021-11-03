@@ -18,10 +18,7 @@ class EqualAttributeValueConstraintGenerator(val attrKeys : Set<String>, val pos
         }
         if(!setVal) {
             // Shit, no attributes existed with those keys. Pick one from the possible values
-            val attrVal = possibleValues.random(random)
-            return attrKeys.map {
-                BasicRuleConstraint(NodeAttribute(it, attrVal))
-            }
+            attrVal = possibleValues.random(random)
         }
         return attrKeys.map {
             BasicRuleConstraint(NodeAttribute(it, attrVal))

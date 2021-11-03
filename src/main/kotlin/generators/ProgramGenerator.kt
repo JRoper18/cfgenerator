@@ -46,7 +46,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
             else {
                 val fittingAttributes = constraints.map {
                     (it.makeSatisfyingAttribute(random))
-                } //Make a set of attributes that would satisfy these constraints.
+                }.distinct() //Make a set of attributes that would satisfy these constraints.
                 // TODO: Sometimes satisfying attributes overlap and have the same keys. The current approach is just to fail these cases,
                 // and then hope we have enough retires to randomly generate a set of attributes with no conflicts. A better approach would be to
                 // SAT and create a set of satisfying attributes in one try.
