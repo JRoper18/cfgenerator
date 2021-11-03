@@ -17,6 +17,12 @@ class ProgramGenerator(val ag: AttributeGrammar,
 ) {
 
 
+    private fun isValidAttributeList(attrList : List<NodeAttribute>) : Boolean {
+        // No duplicate keys.
+        return attrList.distinctBy {
+            it.first
+        }.size == attrList.size
+    }
     /**
      * Given a list of our current attributes, APRs, and a list of attributes we want to make,
      * return a map from APRs in that list to new constraints we could substitute them out for.
@@ -41,7 +47,15 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 val fittingAttributes = constraints.map {
                     (it.makeSatisfyingAttribute(random))
                 } //Make a set of attributes that would satisfy these constraints.
-                canMakeProgramTrade = apr.canMakeProgramWithAttributes(NodeAttributes.fromList(fittingAttributes))
+                // TODO: Sometimes satisfying attributes overlap and have the same keys. The current approach is just to fail these cases,
+                // and then hope we have enough retires to randomly generate a set of attributes with no conflicts. A better approach would be to
+                // SAT and create a set of satisfying attributes in one try.
+                if(!isValidAttributeList(fittingAttributes)) {
+                    canMakeProgramTrade = apr.cantMakeProgramReturn
+                }
+                else {
+                    canMakeProgramTrade = apr.canMakeProgramWithAttributes(NodeAttributes.fromList(fittingAttributes))
+                }
             }
             Pair(apr, canMakeProgramTrade)
         }.filter { aprPair ->
@@ -86,9 +100,8 @@ class ProgramGenerator(val ag: AttributeGrammar,
             return fillsCons
         }
         val expansions = ag.getPossibleExpansions(lhsSymbol)
-        var foundSatisfying = false
         var tryCount = 0
-        while (!foundSatisfying && (tryCount < numRandomTries || numRandomTries == -1)) {
+        while ((tryCount < numRandomTries || numRandomTries == -1)) {
             tryCount += 1
 
             val substitutedConstraints = this.getConstraintSubstitutions(node, expansions, additionalConstraints)
@@ -119,6 +132,11 @@ class ProgramGenerator(val ag: AttributeGrammar,
                     expansionIsGood
                 })
                 if(expansionIsGood) {
+                    for(cons in additionalConstraints) {
+                        check(cons.satisfies(node.attributes())) {
+                            "Node $node doesn't satisfy needed constraint:\n$cons"
+                        }
+                    }
                     return true
                 }
             }

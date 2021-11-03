@@ -92,7 +92,7 @@ internal class ProgramGeneratorTest {
         val gram1 = AttributeGrammar(listOf(
             r1, r2
         ), start=NtSym("start"), constraints = mapOf(
-            r1.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("attr", "b")))) //Impossible
+            r1.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("attr", "b"))))
         ))
 
         val gen = ProgramGenerator(gram1, numRandomTries = 1)
@@ -103,5 +103,20 @@ internal class ProgramGeneratorTest {
         }
     }
 
+    @Test
+    fun testCannotExpandImpossibleConstraint() {
+        val r1 = InitAttributeProductionRule(PR(NtSym("start"), listOf(StringSymbol("a"))), "attr", "a")
+        val gram1 = AttributeGrammar(listOf(
+            r1
+        ), start=NtSym("start"), constraints = mapOf(
+            r1.rule to BasicConstraintGenerator(listOf(
+                BasicRuleConstraint(NodeAttribute("attr", "b")),
+            )) //Impossible
+        ))
+        val gen = ProgramGenerator(gram1, numRandomTries = 20)
+
+        val prog = gen.generate()
+        assert(prog.isUnexpanded())
+    }
 
 }
