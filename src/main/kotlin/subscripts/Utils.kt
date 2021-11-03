@@ -19,7 +19,7 @@ suspend fun <A> Iterable<A>.pforall(f: suspend (A) -> Unit) = coroutineScope {
     }.awaitAll()
 }
 
-const val MAX_COROUTINES = 100;
+val MAX_COROUTINES = Runtime.getRuntime().availableProcessors() - 2;
 
 
 enum class LanguageRef {

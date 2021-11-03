@@ -7,6 +7,7 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import kotlinx.cli.required
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -45,7 +46,7 @@ suspend fun generatePrograms(
         File(outputFileName).printWriter().use { outF ->
             coroutineScope {
                 repeat(numCoroutines) {
-                    launch {
+                    launch(Dispatchers.Default) {
                         var num = 0
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
