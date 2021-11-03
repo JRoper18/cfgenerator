@@ -28,18 +28,17 @@ open class Lambda2Language : Language {
         if(outputs.toSet().size == 1){
             return false
         }
-        // If we're returning an input arg unmodified, that's not useful either. 
-        // We'll check for this by checking for every example, if the output is a substring the input.
-//        var isModifying = false
-//        for(example in examples) {
-//            if(!example.first.contains(example.second)) {
-//                isModifying = true
-//                break
-//            }
-//        }
-//        if(!isModifying) {
-//            return false
-//        }
+        // If we're the identity, that's not useful either. 
+       var isModifying = false
+       for(example in examples) {
+           if(example.first != example.second) {
+               isModifying = true
+               break
+           }
+       }
+       if(!isModifying) {
+           return false
+       }
         return result.examples.isNotEmpty() && result.status == ProgramGenerationResult.PROGRAM_STATUS.RUNNABLE
     }
 

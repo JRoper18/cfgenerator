@@ -2,8 +2,16 @@ import subprocess
 import argparse
 import os
 
+
+def makedir(name):
+    dirname = './output/{}'.format(name)
+    os.makedirs(dirname, exist_ok=True)
+    return dirname
+
 def main():
     parser = argparse.ArgumentParser(description='Run the entire generate-train-generate-eval pipeline')
+    parser.add_argument('--genname', type=str,
+                        help='name of the run of the CFG generation (changes file suffixes)')
     parser.add_argument('--evalname', type=str,
                         help='name of the run of the evaluation (changes file suffixes)')
     parser.add_argument('--modelname', type=str,
@@ -32,12 +40,12 @@ def main():
     language = args.language
     modelname = args.modelname
     evalname = args.evalname
-    modeldir = './output/{}'.format(modelname)
-    evaldir = './output/{}'.format(evalname)
+    genname = args.genname
+    gendir = makedir(genname)
+    modeldir = makedir(modelname)
+    evaldir = makedir(evalname)
     attr_regex = args.attr_regex
-    os.makedirs(modeldir, exist_ok=True)
-    os.makedirs(evaldir, exist_ok=True)
-    cfg_generated_train_path = '{}/cfg-generated-{}.txt'.format(modeldir, modelname)
+    cfg_generated_train_path = '{}/cfg-generated-{}.txt'.format(gendir, genname)
     cfg_generated_eval_path = '{}/cfg-generated-{}-eval.txt'.format(evaldir, evalname)
     gpt_generated_eval_path = '{}/gpt-generated-{}-eval.txt'.format(evaldir, evalname)
     if(args.do_cfgs):
