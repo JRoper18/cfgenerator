@@ -39,7 +39,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
             }
             else {
                 val fittingAttributes = constraints.map {
-                    (it.makeSatisfyingAttribute())
+                    (it.makeSatisfyingAttribute(random))
                 } //Make a set of attributes that would satisfy these constraints.
                 canMakeProgramTrade = apr.canMakeProgramWithAttributes(NodeAttributes.fromList(fittingAttributes))
             }

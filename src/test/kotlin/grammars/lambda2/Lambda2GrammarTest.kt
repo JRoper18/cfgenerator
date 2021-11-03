@@ -6,10 +6,11 @@ import grammar.ProductionRule
 import grammars.common.UnexpandedAPR
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import kotlin.random.Random
 
 internal class Lambda2GrammarTest {
 
-    val generator = ProgramGenerator(Lambda2Grammar.grammar)
+    val generator = ProgramGenerator(Lambda2Grammar.grammar, random = Random(42L))
     val strfier = ProgramStringifier(tokenSeperator = " ")
     val interp = Lambda2Interpreter()
 
@@ -26,6 +27,7 @@ internal class Lambda2GrammarTest {
             }.joinToString ("\n"))
         }
     }
+
 
     @Test
     fun testCanMakeAllRules() {

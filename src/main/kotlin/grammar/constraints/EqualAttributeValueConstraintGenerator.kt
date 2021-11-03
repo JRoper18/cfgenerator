@@ -4,7 +4,7 @@ import grammar.NodeAttribute
 import grammar.NodeAttributes
 import kotlin.random.Random
 
-class EqualAttributeValueConstraintGenerator(val attrKeys : Set<String>): ConstraintGenerator {
+class EqualAttributeValueConstraintGenerator(val attrKeys : Set<String>, val possibleValues : Set<String>): ConstraintGenerator {
     override fun generate(attrs: NodeAttributes, random: Random): List<RuleConstraint> {
         var attrVal : String = ""
         var setVal = false
@@ -17,8 +17,11 @@ class EqualAttributeValueConstraintGenerator(val attrKeys : Set<String>): Constr
             }
         }
         if(!setVal) {
-            // Shit, no attributes existed with those keys. I guess they're all equal...?
-            return listOf()
+            // Shit, no attributes existed with those keys. Pick one from the possible values
+            val attrVal = possibleValues.random(random)
+            return attrKeys.map {
+                BasicRuleConstraint(NodeAttribute(it, attrVal))
+            }
         }
         return attrKeys.map {
             BasicRuleConstraint(NodeAttribute(it, attrVal))

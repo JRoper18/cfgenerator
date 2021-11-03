@@ -13,7 +13,8 @@ object Lambda2Grammar {
     const val boolListType = "[bool]"
     const val intListType = "[int]"
     const val intListListType = "[[int]]"
-
+    val listTypes = setOf(boolListType, intListType, intListListType)
+    val basicTypes = setOf(intType, boolType, boolListType, intListType, intListListType)
     val listTypeMapper = WrapperAttributeMapper()
 
     val maps = StringSymbol("map")
@@ -24,6 +25,7 @@ object Lambda2Grammar {
     val foldt = StringSymbol("foldt")
     val recl = StringSymbol("recl")
     val cons = StringSymbol("cons")
+    val concat = StringSymbol("concat")
     val lambda = StringSymbol("lambda")
     val len = StringSymbol("len")
     val minOrMax = StringsetSymbol(setOf("min", "max"))
@@ -141,13 +143,19 @@ object Lambda2Grammar {
 
 
     val indexIntoRangeRule = SynthesizeAttributeProductionRule(mapOf(retTypeAttrName to 0), PR(stmtSym, listOf(stmtSym, LSB, stmtSym, COLON, stmtSym, RSB))).withOtherRule {
-        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 4)), it)
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 0), Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 4)), it)
     }
 
-    val listContainsRule = InitAttributeProductionRule(PR(stmtSym, listOf(stmtSym, inOrNotIn, stmtSym)), retTypeAttrName, boolType)
+    val listContainsRule = InitAttributeProductionRule(PR(stmtSym, listOf(stmtSym, inOrNotIn, stmtSym)), retTypeAttrName, boolType).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 0), Pair(retTypeAttrName, 2)), it)
+    }
 
-    val lenRule = InitAttributeProductionRule(PR(stmtSym, listOf(len, LP, declared, RP)), retTypeAttrName, intType).withOtherRule {
+    val lenRule = InitAttributeProductionRule(PR(stmtSym, listOf(len, LP, stmtSym, RP)), retTypeAttrName, intType).withOtherRule {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it) // So we can make a constraint that len() only takes lists.
+    }
+
+    val concatRule = SynthesizeAttributeProductionRule(mapOf(retTypeAttrName to 2), PR(stmtSym, listOf(concat, LP, stmtSym, COMMA, stmtSym, RP))).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 4)), it)
     }
 
 
@@ -172,7 +180,7 @@ object Lambda2Grammar {
         InitAttributeProductionRule(PR(constant, listOf(boolConstant)), retTypeAttrName, "bool"),
 
         // Let's just say empty lists are int lists, for now.
-        InitAttributeProductionRule(PR(constant, listOf(emptyList)), retTypeAttrName, "[int]"),
+//        InitAttributeProductionRule(PR(constant, listOf(emptyList)), retTypeAttrName, "[int]"),
         // Basic function definitions.
 //        APR(PR(basicFunc, listOf(declared))),
 //        SynthesizeAttributeProductionRule(
@@ -205,6 +213,7 @@ object Lambda2Grammar {
 //            ), PR(stmtSym, listOf(basicFunc))),
 
         consRule,
+        concatRule,
         // Len
         lenRule,
         // min and max
@@ -234,18 +243,25 @@ object Lambda2Grammar {
         filterRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", boolType)))),
 
         // Folds and recls should have 2nd children (input functions) that return the same stuff they function returns.
-        foldlRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
-        foldrRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
-        reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName)),
+        foldlRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), basicTypes),
+        foldrRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), basicTypes),
+        reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), basicTypes),
 
         // Cons needs a list as a return value and a list as an input value.
         consRule.rule to BasicConstraintGenerator(listOf(isListConstraint(retTypeAttrName))).and(
             // Check that the list returned is the same type as the list arg of cons.
-            EqualAttributeValueConstraintGenerator(setOf("4.${retTypeAttrName}", retTypeAttrName))
+            EqualAttributeValueConstraintGenerator(setOf("4.${retTypeAttrName}", retTypeAttrName), listTypes),
+        ),
+        // Concat takes lists of same type and returns a list
+        concatRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", "4.${retTypeAttrName}"), listTypes).and(
+            BasicConstraintGenerator(listOf(isListConstraint(retTypeAttrName))),
         ),
 
         // len needs a list
         lenRule.rule to BasicConstraintGenerator(listOf(isListConstraint("2.${retTypeAttrName}"))),
+
+        // contains takes a list
+        listContainsRule.rule to BasicConstraintGenerator(listOf(isListConstraint("2.${retTypeAttrName}"))),
 
         // min/max needs int list
         minOrMaxRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intListType)))),

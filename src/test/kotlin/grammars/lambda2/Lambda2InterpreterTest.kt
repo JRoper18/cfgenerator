@@ -1,5 +1,6 @@
 package grammars.lambda2
 
+import grammar.RootGrammarNode
 import grammars.deepcoder.DeepCoderInterpreter
 import org.junit.jupiter.api.Test
 
@@ -76,5 +77,9 @@ internal class Lambda2InterpreterTest {
     fun testSanity() {
         val prog1 = "lambda r    : r  "
         testIO(prog1, "True", "True")
+    }
+
+    @Test
+    fun testCanMakeExamples() {
     }
 }

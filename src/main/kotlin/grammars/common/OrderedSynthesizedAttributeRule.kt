@@ -36,7 +36,6 @@ class OrderedSynthesizedAttributeRule(val toSynthesize: Set<Pair<String, Int>>, 
             return null
         }
         fun isOrderedAttrKey(key : String) : Boolean {
-
             return true
         }
     }
@@ -67,6 +66,9 @@ class OrderedSynthesizedAttributeRule(val toSynthesize: Set<Pair<String, Int>>, 
         attrs.toList().forEach { attr ->
             val pair = attrKeyToPair(attr.first) ?: return cantMakeProgramReturn // If it's a pair we generate, make a constraint.
             // Else it's null, and we can't make it.
+            if (!toSynthesize.contains(pair)) {
+                return cantMakeProgramReturn
+            }
             constraintList[pair.second].add(BasicRuleConstraint(NodeAttribute(pair.first, attr.second)))
         }
         return Pair(true, constraintList.map {

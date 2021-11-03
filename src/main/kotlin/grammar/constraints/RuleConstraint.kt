@@ -6,5 +6,5 @@ import kotlin.random.Random
 
 sealed interface RuleConstraint {
     fun satisfies(attrs : NodeAttributes) : Boolean
-    fun makeSatisfyingAttribute(random: Random = Random(42L)) : NodeAttribute
+    fun makeSatisfyingAttribute(random: Random) : NodeAttribute
 }

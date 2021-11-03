@@ -85,6 +85,19 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
         return this.expansions.getOrDefault(lhs, listOf())
     }
 
+    fun satisfies(prog : GenericGrammarNode) {
+        for(child in prog.rhs) {
+            satisfies(child)
+        }
+        val currentConsGen = constraints[prog.productionRule.rule] ?: return
+        val currentCons = currentConsGen.generate(prog.attributes())
+        for(cons in currentCons) {
+            check(cons.satisfies(prog.attributes())) {
+                "${prog.attributes()}\n$cons"
+            }
+        }
+    }
+
     fun encode(prog : GenericGrammarNode, attrRegex : Regex = Regex(".*?")) : String {
         var progStr = prog.toString(printAttrs = true, printAPR = false, prettyLines = false, splitAttrs = false,
         onlyPrintAttrs = attrRegex)

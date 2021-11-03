@@ -5,6 +5,7 @@ import grammar.NodeAttributes
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
+import kotlin.random.Random
 
 internal class OrRuleConstraintTest {
 
@@ -23,7 +24,7 @@ internal class OrRuleConstraintTest {
     @Test
     fun testMakeSatisfyingAttribute() {
         repeat(10) {
-            assert(cons.makeSatisfyingAttribute() in attrs)
+            assert(cons.makeSatisfyingAttribute(Random(42L)) in attrs)
         }
     }
 }

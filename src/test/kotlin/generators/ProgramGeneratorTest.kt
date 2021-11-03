@@ -102,4 +102,6 @@ internal class ProgramGeneratorTest {
             assertEquals("b", prog.attributes().getStringAttribute("attr"))
         }
     }
+
+
 }
