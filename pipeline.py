@@ -49,6 +49,7 @@ def main():
     cfg_generated_eval_path = '{}/cfg-generated-{}-eval.txt'.format(gendir, genname)
     gpt_generated_eval_path = '{}/gpt-generated-{}-eval.txt'.format(evaldir, evalname)
     eval_log_path = '{}/results.txt'.format(evaldir)
+    examples_eval_path = '{}/examples.txt'.format(evaldir)
     if(args.do_cfgs):
         cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(args.num_train, cfg_generated_train_path, language)
         print(cmd)
@@ -70,7 +71,7 @@ def main():
         generate_gpt(model_run_name = modelname, eval_output_generated_fname=gpt_generated_eval_path, eval_generated_fname=cfg_generated_eval_path, model_dir_base = modeldir)
 
     if(args.do_eval):
-        cmd = 'echo -n | ./gradlew run --args="evaluate -i {} -l {} -o {}"'.format(gpt_generated_eval_path, language, eval_log_path)
+        cmd = 'echo -n | ./gradlew run --args="evaluate -i {} -l {} -o {} -e {}"'.format(gpt_generated_eval_path, language, eval_log_path, examples_eval_path)
         ret = subprocess.call(cmd, shell=True)
         if (ret != 0):
             return

@@ -13,6 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
@@ -33,6 +34,12 @@ suspend fun evaluateProgramsCmd(args: Array<String>) {
         shortName = "o",
         description = "Output log file path"
     )
+    val outputExampleDir by parser.option(
+        ArgType.String,
+        fullName = "examples",
+        shortName = "e",
+        description = "A directory to put good and bad runs of each program. "
+    )
     val lanChoice by parser.option(ArgType.Choice<LanguageRef>(), shortName = "l", description = "Input language to generate").required()
 
     parser.parse(args)
@@ -44,10 +51,18 @@ suspend fun evaluateProgramsCmd(args: Array<String>) {
         println("Output file: $outputLogName")
         logWriter = PrintWriter(FileOutputStream(outputLogName), true)
     }
+    val exampleWriter : PrintWriter
+    if(outputExampleDir == null){
+        println("Examples file: to NOWHERE")
+        exampleWriter = PrintWriter(OutputStream.nullOutputStream(), true)
+    } else {
+        println("Examples file: $outputExampleDir")
+        exampleWriter = PrintWriter(FileOutputStream(outputExampleDir), true)
+    }
     logWriter.println("Input file: $inputFileName")
     evaluatePrograms(argsToLanguage(lanChoice), File(inputFileName).readText().split("<|splitter|>").filter {
         it.isNotBlank()
-    }, logWriter)
+    }, logWriter, exampleWriter)
 
 }
 
@@ -70,7 +85,7 @@ fun analyzeSymbolFrequency(program : String, language : Language, frequencies: M
     }
 }
 
-suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, logWriter : PrintWriter){
+suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, logWriter : PrintWriter, exampleWriter : PrintWriter){
     val numProgramsWithExamples = AtomicInteger(0)
     val numFullyCorrectPrograms = AtomicInteger(0)
     val numTotalExamples = AtomicInteger(0)
@@ -81,12 +96,14 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, l
     val goodSymFreqs = mutableMapOf<String, Int>()
     val goodRuleFreqs = mutableMapOf<String, Int>()
     val badRuleFreqs = mutableMapOf<String, Int>()
+    val mutex = Mutex()
     evalExamples.pforall { example ->
         val splitExample = example.split("Program:")
         val programStr = splitExample[1].trim()
         var inputOutputExamples = splitExample[0].trim().removePrefix("Examples:").trim().split("Inputs:").filter {
             it.isNotBlank()
         }
+        val programExampleStr = StringBuilder()
         // Remove the first -- it may have been trimmed by the GPT model
         inputOutputExamples = inputOutputExamples.subList(1, inputOutputExamples.size)
         var gotOneRun = false
@@ -102,6 +119,15 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, l
                 gotOneRun = gotOneRun || runResult.finishedRun()
                 hitsAllExamples = hitsAllExamples && runResult.isGood()
                 runResultCounts[runResult]!!.incrementAndGet()
+                programExampleStr.append("Input:\n")
+                programExampleStr.append(it.trim())
+                programExampleStr.append("\nResult: ${runResult}\n")
+            }
+            
+            programExampleStr.append("\nProgram:\n${programStr}")
+            programExampleStr.append("\n<|splitter|>")
+            mutex.withLock {
+                exampleWriter.println(programExampleStr.toString())
             }
             if(gotOneRun) {
                 if(hitsAllExamples) {
