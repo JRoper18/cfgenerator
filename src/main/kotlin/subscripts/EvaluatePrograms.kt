@@ -120,7 +120,7 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, l
                 hitsAllExamples = hitsAllExamples && runResult.result.isGood()
                 runResultCounts[runResult.result]!!.incrementAndGet()
                 programExampleStr.append("Input:\n")
-                programExampleStr.append(input)
+                programExampleStr.append(it.trim().replace("Output", "Expected Output"))
                 programExampleStr.append("\nResult: ${runResult.result}\n")
                 val resMsg = runResult.message.trim()
                 if(resMsg.isNotBlank()) {
