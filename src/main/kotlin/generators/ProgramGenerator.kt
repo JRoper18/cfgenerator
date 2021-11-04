@@ -37,7 +37,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
         }
         return agExpansionConstraints.map { entry ->
             val apr = entry.first
-            val constraints = entry.second + (additionalConstraints)
+            val constraints = (entry.second + (additionalConstraints)).toSet()
             var canMakeProgramTrade : Pair<Boolean, List<List<RuleConstraint>>>
             if(constraints.isEmpty()) {
                 // No constraints!
@@ -134,6 +134,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 if(expansionIsGood) {
                     for(cons in additionalConstraints) {
                         check(cons.satisfies(node.attributes())) {
+
                             "Node $node doesn't satisfy needed constraint:\n$cons"
                         }
                     }

@@ -1,6 +1,7 @@
 package grammars.common
 
 import grammar.AttributedProductionRule
+import grammar.NodeAttribute
 import grammar.NodeAttributes
 import grammar.constraints.RuleConstraint
 import utils.duplicates
@@ -26,11 +27,13 @@ class CombinedKeyedAttributesRule(val rules : List<KeyedAttributesProductionRule
             cons.add(mutableListOf()) //Prefill the lists.
         }
         val attrList = attrs.toList()
+        val madeAttrs = mutableListOf<NodeAttribute>()
         // Alright, now remove the attributes we synthesize.
         this.rules.forEach { subrule  ->
             val synthedAttrs = attrList.filter {
                 subrule.attrKeysMade.contains(it.first)
             }
+            madeAttrs.addAll(synthedAttrs)
             val canMakeSynthedAttrs = subrule.canMakeProgramWithAttributes(NodeAttributes.fromList(synthedAttrs))
             if(!canMakeSynthedAttrs.first) {
                 return cantMakeProgramReturn
@@ -40,7 +43,13 @@ class CombinedKeyedAttributesRule(val rules : List<KeyedAttributesProductionRule
                 cons[cidx].addAll(newCons)
             }
         }
-        return Pair(true, cons)
+        if(attrList != madeAttrs) {
+            return cantMakeProgramReturn // If the attributes we make and the ones we want to make aren't the same, it's bad.
+            // Can happen when we don't hit every single attribute, OR we synthesze too many.
+        }
+        return Pair(true, cons.map {
+            it.distinct().toList()
+        })
     }
 
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {

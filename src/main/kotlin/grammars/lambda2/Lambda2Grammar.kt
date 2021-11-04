@@ -20,8 +20,7 @@ object Lambda2Grammar {
     val maps = StringSymbol("map")
     val mapt = StringSymbol("mapt")
     val filter = StringSymbol("filter")
-    val foldl = StringSymbol("foldl")
-    val foldr = StringSymbol("foldr")
+    val foldAny = StringsetSymbol(setOf("foldl", "foldr"))
     val foldt = StringSymbol("foldt")
     val recl = StringSymbol("recl")
     val cons = StringSymbol("cons")
@@ -104,23 +103,23 @@ object Lambda2Grammar {
     val mapRule = AttributeMappingProductionRule(
         PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP)), retTypeAttrName, 2, listTypeMapper)
 
-    val foldlRule = SynthesizeAttributeProductionRule(
+    val foldAnyRule = SynthesizeAttributeProductionRule(
         mapOf(
-            retTypeAttrName to 2
-        ), PR(stmtSym, listOf(foldl, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
-        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
-    }
-
-    val foldrRule = SynthesizeAttributeProductionRule(
-        mapOf(
-            retTypeAttrName to 2
-        ), PR(stmtSym, listOf(foldr, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
-        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
-    }
+            retTypeAttrName to 2,
+            "length" to 2, // Need the # of args for constraint purposes.
+            "0.${retTypeAttrName}" to 2, // We also want the types of the first arg of the lambda... also for constraints.
+        ), PR(stmtSym, listOf(foldAny, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
+    OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 4), Pair(retTypeAttrName, 6)), it).withOtherRule {
+        // Finally, we also need the list-ified type of the 2nd arg of the lambda, to make sure it matches with the type of the 2nd total arg.
+        AttributeMappingProductionRule(it, "1.${retTypeAttrName}", 2, listTypeMapper)
+    }}
 
     val reclRule = SynthesizeAttributeProductionRule(
         mapOf(
-            retTypeAttrName to 2
+            retTypeAttrName to 2,
+            "length" to 2, // Need the # of args for constraint purposes.
+            "0.${retTypeAttrName}" to 2, // We also want the types of the first 2 args of the lambda... also for constraints.
+            "1.${retTypeAttrName}" to 2
         ), PR(stmtSym, listOf(recl, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
     }
@@ -169,8 +168,10 @@ object Lambda2Grammar {
         })
     }
 
-    val totalRootLambdaRule = SynthesizeAttributeProductionRule(mapOf(retTypeAttrName to 3),
-        PR(programSym, listOf(lambda, lambdaArgs, COLON, stmtSym))
+    val totalRootLambdaRule = SynthesizeAttributeProductionRule(mapOf(retTypeAttrName to 3) + lambdaArgsRule.attrKeysMade.map {
+        Pair(it, 1) // Inherit every attribute from the lambdaArgs
+    }.toMap(),
+        PR(programSym, listOf(lambda, lambdaArgs, COLON, stmtSym)),
     )
 
 
@@ -226,8 +227,7 @@ object Lambda2Grammar {
         // Higher-order stuff.
         mapRule,
         filterRule,
-        foldlRule,
-        foldrRule,
+        foldAnyRule,
         reclRule,
 
         //Let's ignore trees for now
@@ -242,9 +242,15 @@ object Lambda2Grammar {
         // Filters need functions that return bools
         filterRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", boolType)))),
 
-        // Folds and recls should have 2nd children (input functions) that return the same stuff they function returns.
-        foldlRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), possibleValues = basicTypes),
-        foldrRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), possibleValues = basicTypes),
+        // Folds and recls should have 2nd children (input functions) that return the same stuff they function returns,
+        // and that the return type of the 2nd arg of fold is the same
+        // They also need the first arg of their child lambda to be the same as the return type
+
+        foldAnyRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName,
+            "4.${retTypeAttrName}", "0.${retTypeAttrName}"), possibleValues = basicTypes).and(
+            //AND that the list-ified 1st arg of the lambda matches the 2nd arg of fold
+            EqualAttributeValueConstraintGenerator(setOf("1.${retTypeAttrName}", "6.${retTypeAttrName}"), possibleValues = listTypes)
+        ),
         reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), possibleValues = basicTypes),
 
         // Cons needs a list as a return value and a list as an input value.
