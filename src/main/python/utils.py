@@ -19,15 +19,21 @@ def remove_line_attrs(line, attr_regex):
     assert attrs_idx != -1
     attrs_str = line[attrs_idx:].replace("{", "").replace("}", "").strip()
     before_attrs = line[:attrs_idx]
-    attrs = attrs_str.split(",")
+    attrs = list(map(lambda attr_str: attr_str.strip(), attrs_str.split(",")))
     new_attrs = list(filter(lambda attr : re.match(attr_regex, attr.split("=")[0]), attrs))
-    return before_attrs + " {" + ",".join(new_attrs) + "}"
+    return before_attrs + " {" + ", ".join(new_attrs) + "}"
 
 def remove_attrs(txt, attr_regex):
     new_lines = []
+    in_program = False
     for line in txt.split("\n"):
-        new_line = remove_line_attrs(line, attr_regex)
+        if in_program and line: # If the line's not empty and we're in the program
+            new_line = remove_line_attrs(line, attr_regex)
+        else:
+            new_line = line
         new_lines.append(new_line)
+        if line.strip() == "Program:":
+            in_program = True
     return "\n".join(new_lines)
 
 class ProgramDataset(Dataset):
@@ -35,10 +41,18 @@ class ProgramDataset(Dataset):
         self.input_ids = []
         self.attn_masks = []
         self.labels = []
-        for txt in txt_list:
+        num_debug_examples = 10
+        for idx, txt in enumerate(txt_list):
+            if not txt:
+                continue # No blank/empty strings.  
             built_txt = txt
             if attr_regex is not None:
                 built_txt = remove_attrs(txt, attr_regex)
+                if idx < num_debug_examples:
+                    print("Before attr regex:")
+                    print(txt)
+                    print("After attr regex:")
+                    print(built_txt)
             # Encode the descriptions using the GPT-Neo tokenizer
             encodings_dict = tokenizer(wrap_str(built_txt),
                                         truncation=False,
