@@ -26,18 +26,18 @@ class CfgLanguage(val language: Language, val attrReg : Regex = Regex("(.*?)")) 
         return language.runProgramWithExample(language.programToString(progs[0]), input)
     }
 
-    override fun runProgramAgainstExample(program: String, input: String, output: String): ProgramRunResult {
+    override fun runProgramAgainstExample(program: String, input: String, output: String): ProgramRunDetailedResult {
         val progTree : RootGrammarNode
         try {
             val progs = this.grammar().decode(program)
             progTree = progs[0]
         } catch (ex : Exception) {
-            return ProgramRunResult.DECODEERROR
+            return ProgramRunDetailedResult(ProgramRunResult.DECODEERROR, ex.localizedMessage)
         }
         try {
             progTree.verify()
         } catch (ex : Exception) {
-            return ProgramRunResult.VERIFYERROR
+            return ProgramRunDetailedResult(ProgramRunResult.VERIFYERROR, ex.localizedMessage)
         }
         return language.runProgramAgainstExample(language.programToString(progTree), input, output)
     }

@@ -8,6 +8,6 @@ interface Language {
     fun isProgramUseful(result : ProgramGenerationResult) : Boolean
     fun programToString(program : RootGrammarNode) : String
     fun runProgramWithExample(program : String, input : String) : String
-    fun runProgramAgainstExample(program : String, input : String, output : String) : ProgramRunResult
+    fun runProgramAgainstExample(program : String, input : String, output : String) : ProgramRunDetailedResult
     fun grammar() : AttributeGrammar
 }

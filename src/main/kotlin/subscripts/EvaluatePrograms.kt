@@ -82,9 +82,9 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>){
                 val input = ioSplit[0].trim()
                 val expectedOutput = ioSplit[1].trim()
                 val runResult = language.runProgramAgainstExample(programStr, input, expectedOutput)
-                gotOneRun = gotOneRun || runResult.finishedRun()
-                hitsAllExamples = hitsAllExamples && runResult.isGood()
-                runResultCounts[runResult]!!.incrementAndGet()
+                gotOneRun = gotOneRun || runResult.result.finishedRun()
+                hitsAllExamples = hitsAllExamples && runResult.result.isGood()
+                runResultCounts[runResult.result]!!.incrementAndGet()
             }
             if(gotOneRun) {
                 if(hitsAllExamples) {

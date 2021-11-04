@@ -6,6 +6,7 @@ import generators.ProgramStringifier
 import grammar.AttributeGrammar
 import grammar.RootGrammarNode
 import grammars.Language
+import grammars.ProgramRunDetailedResult
 import grammars.ProgramRunResult
 import kotlin.random.Random
 
@@ -51,14 +52,15 @@ open class Lambda2Language : Language {
         return interp.interp(program, input)
     }
 
-    override fun runProgramAgainstExample(program: String, input: String, output: String): ProgramRunResult {
+    override fun runProgramAgainstExample(program: String, input: String, output: String): ProgramRunDetailedResult {
         if(interp.hasSyntaxErr(program)) {
-            return ProgramRunResult.PARSEERROR
+            return ProgramRunDetailedResult(ProgramRunResult.PARSEERROR, "")
         }
         try {
-            return ProgramRunResult.fromBool(runProgramWithExample(program, input).trim() == output.trim())
+            val actual = runProgramWithExample(program, input).trim()
+            return ProgramRunDetailedResult.fromInputOutput(input, actual, output.trim())
         } catch (iex : Lambda2Interpreter.InterpretError) {
-            return ProgramRunResult.RUNTIMEERROR
+            return ProgramRunDetailedResult(ProgramRunResult.RUNTIMEERROR, iex.localizedMessage)
         }
     }
 

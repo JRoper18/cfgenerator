@@ -26,4 +26,6 @@ enum class ProgramRunResult {
     fun finishedRun() : Boolean {
         return !isError()
     }
+
+
 }
