@@ -89,7 +89,18 @@ open class Lambda2Language : Language {
             val actual = runProgramWithExample(program, input).trim()
             return ProgramRunDetailedResult.fromInputOutput(input, actual, output.trim())
         } catch (iex : Lambda2Interpreter.InterpretError) {
-            return ProgramRunDetailedResult(ProgramRunResult.RUNTIMEERROR, iex.localizedMessage)
+            val localMsg = iex.localizedMessage
+            val rrs : ProgramRunResult;
+            if(localMsg.contains("TypeError")) {
+                rrs = ProgramRunResult.TYPEERROR
+            }
+            else if(localMsg.contains("NameError")) {
+                rrs = ProgramRunResult.NAMEERROR
+            }
+            else {
+                rrs = ProgramRunResult.RUNTIMEERROR
+            }
+            return ProgramRunDetailedResult(rrs, iex.localizedMessage)
         }
     }
 

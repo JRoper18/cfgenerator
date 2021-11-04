@@ -73,3 +73,8 @@ class ProgramDataset(Dataset):
         return len(self.input_ids)
     def __getitem__(self, idx):    
         return self.input_ids[idx], self.attn_masks[idx]
+
+def cfg2prog(func_raw_str):
+    symbols = re.findall('"([\w\(\),:\[\]\d-]+)"', func_raw_str)
+    func_str = ' '.join(symbols)
+    return func_str

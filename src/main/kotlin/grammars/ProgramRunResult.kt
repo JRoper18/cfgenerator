@@ -7,6 +7,7 @@ enum class ProgramRunResult {
     TYPEERROR,
     DECODEERROR,
     VERIFYERROR,
+    NAMEERROR,
     RUNTIMEERROR;
 
     companion object {

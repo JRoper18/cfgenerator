@@ -3,8 +3,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import subscripts.evaluateProgramsCmd
 import subscripts.generateProgramsCmd
+import kotlinx.coroutines.Dispatchers
 
-fun main(args: Array<String>) = runBlocking {
+
+fun main(args: Array<String>) = runBlocking(Dispatchers.Default) {
     val runTypesToSubscripts = mapOf<String, (args: Array<String>) -> Unit>(
         "generate" to { this.launch {
                 generateProgramsCmd(it)

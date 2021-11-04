@@ -170,9 +170,9 @@ sealed class GenericGrammarNode(
         }
         val unexpanded = getUnexpandedNodes()
         check(unexpanded.isEmpty()) {
-            var str = "There are ${unexpanded.size} unexpanded nodes present:"
+            var str = "There are ${unexpanded.size} unexpanded nodes present:\n"
             unexpanded.forEach {
-                str += "$it\n"
+                str += "\t${it.productionRule.toString()}\n"
             }
             str
         }

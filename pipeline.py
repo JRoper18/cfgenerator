@@ -48,8 +48,8 @@ def main():
     cfg_generated_train_path = '{}/cfg-generated-{}.txt'.format(gendir, genname)
     cfg_generated_eval_path = '{}/cfg-generated-{}-eval.txt'.format(gendir, genname)
     gpt_generated_eval_path = '{}/gpt-generated-{}-eval.txt'.format(evaldir, evalname)
-    eval_log_path = '{}/results.txt'.format(evaldir)
-    examples_eval_path = '{}/examples.txt'.format(evaldir)
+    eval_log_path = '{}/{}-results.txt'.format(evaldir, evalname)
+    examples_eval_path = '{}/{}-examples.txt'.format(evaldir, evalname)
     if(args.do_cfgs):
         cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(args.num_train, cfg_generated_train_path, language)
         print(cmd)
