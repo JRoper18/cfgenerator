@@ -58,4 +58,5 @@ open class AttributedProductionRule(val rule: ProductionRule) {
     override fun toString(): String {
         return "${this.javaClass.name}:(rule=$rule)"
     }
+
 }

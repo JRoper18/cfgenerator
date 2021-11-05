@@ -14,7 +14,7 @@ sealed class GenericGrammarNode(
     }
 
     private var cachedSynthAttrs : NodeAttributes? = null
-    private var cachedInheritedAttrs : NodeAttributes? = null
+    protected var cachedInheritedAttrs : NodeAttributes? = null
     private var cachedAttrs : NodeAttributes? = null
     protected fun clearAttributeCache() {
         cachedSynthAttrs = null
@@ -23,6 +23,9 @@ sealed class GenericGrammarNode(
     }
     private fun isSynthesizedCached() : Boolean {
         return cachedSynthAttrs != null
+    }
+    protected fun isInheritedCached() : Boolean {
+        return cachedInheritedAttrs != null
     }
     private fun isAttributesCached() : Boolean {
         return cachedAttrs != null
@@ -77,7 +80,6 @@ sealed class GenericGrammarNode(
         false
     }) {
         val oldSynthCache = cachedSynthAttrs
-        val oldInheritedCache = cachedInheritedAttrs
         val oldAttrCache = cachedAttrs
         this.clearAttributeCache()
         this.withChildren(children)
@@ -87,7 +89,6 @@ sealed class GenericGrammarNode(
             this.productionRule = UnexpandedAPR(this.lhsSymbol())
             this.withChildren(listOf())
             cachedAttrs = oldAttrCache
-            cachedInheritedAttrs = oldInheritedCache
             cachedSynthAttrs = oldSynthCache
         }
     }

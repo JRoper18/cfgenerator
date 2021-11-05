@@ -22,7 +22,7 @@ internal class AttributeGrammarTest {
     @Test
     fun testEncodeDecode() {
         val gen = ProgramGenerator(Lambda2Grammar.grammar)
-        repeat(100) {
+        repeat(10) {
             val orig = gen.generate(listOf())
             val encoded = Lambda2Grammar.grammar.encode(orig, Regex("retType"))
             val remade = Lambda2Grammar.grammar.decode(encoded)[0]

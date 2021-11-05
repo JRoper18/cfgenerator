@@ -66,4 +66,10 @@ internal class OrderedSynthesizedAttributeRuleTest {
         ))
         assert(!resNot.first)
     }
+
+    @Test
+    fun testAttrKeys() {
+        assertEquals(listOf(OrderedSynthesizedAttributeRule.makeAttrKey(key1, 1),
+            OrderedSynthesizedAttributeRule.makeAttrKey(key2, 0)), r1.attrKeysMade)
+    }
 }

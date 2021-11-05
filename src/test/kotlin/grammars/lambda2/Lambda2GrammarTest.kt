@@ -10,7 +10,7 @@ import kotlin.random.Random
 
 internal class Lambda2GrammarTest {
 
-    val generator = ProgramGenerator(Lambda2Grammar.grammar, random = Random(42L))
+    val generator = ProgramGenerator(Lambda2Grammar.grammar, random = Random(42L), numRandomTries = 5)
     val strfier = ProgramStringifier(tokenSeperator = " ")
     val interp = Lambda2Interpreter()
 
@@ -32,17 +32,21 @@ internal class Lambda2GrammarTest {
     @Test
     fun testCanMakeAllRules() {
         // Can every rule be generated?
+        val givenRulesSet = Lambda2Grammar.grammar.givenRules.map {
+            it.rule
+        }.toSet()
         val generatedRules = mutableSetOf<ProductionRule>()
-        repeat(100) {
+        for(i in 0 until 100) {
             val prog = generator.generate()
             prog.forEachInTree {
                 generatedRules.add(it.productionRule.rule)
             }
+            if(generatedRules.size == givenRulesSet.size){
+                break // done early
+            }
         }
+
         // Turn them to strings so that our junit output is cleaner if it fails.
-        val givenRulesSet = Lambda2Grammar.grammar.givenRules.map {
-            it.rule
-        }.toSet()
         val generatedStr = generatedRules.filter {
             it in givenRulesSet // Only worry about given rules
             // Stringset/generated rules are too much

@@ -26,14 +26,13 @@ class CombinedKeyedAttributesRule(val rules : List<KeyedAttributesProductionRule
         this.rule.rhs.forEach {
             cons.add(mutableListOf()) //Prefill the lists.
         }
-        val attrList = attrs.toList()
-        val madeAttrs = mutableListOf<NodeAttribute>()
+        val attrList = attrs.toList().toMutableSet()
         // Alright, now remove the attributes we synthesize.
         this.rules.forEach { subrule  ->
             val synthedAttrs = attrList.filter {
                 subrule.attrKeysMade.contains(it.first)
             }
-            madeAttrs.addAll(synthedAttrs)
+            attrList.removeAll(synthedAttrs)
             val canMakeSynthedAttrs = subrule.canMakeProgramWithAttributes(NodeAttributes.fromList(synthedAttrs))
             if(!canMakeSynthedAttrs.first) {
                 return cantMakeProgramReturn
@@ -43,9 +42,9 @@ class CombinedKeyedAttributesRule(val rules : List<KeyedAttributesProductionRule
                 cons[cidx].addAll(newCons)
             }
         }
-        if(attrList != madeAttrs) {
-            return cantMakeProgramReturn // If the attributes we make and the ones we want to make aren't the same, it's bad.
-            // Can happen when we don't hit every single attribute, OR we synthesze too many.
+        if(attrList.isNotEmpty()) {
+            return cantMakeProgramReturn
+            // Can happen when we don't hit every single attribute with our rules. If there's attributes left over, we're toast.
         }
         return Pair(true, cons.map {
             it.distinct().toList()

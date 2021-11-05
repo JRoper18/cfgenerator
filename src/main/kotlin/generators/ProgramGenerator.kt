@@ -134,7 +134,6 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 if(expansionIsGood) {
                     for(cons in additionalConstraints) {
                         check(cons.satisfies(node.attributes())) {
-
                             "Node $node doesn't satisfy needed constraint:\n$cons"
                         }
                     }

@@ -9,12 +9,16 @@ class GrammarNode(
 
     constructor(lhs: Symbol, parent: GenericGrammarNode, idx: Int) : this(TerminalAPR(lhs), parent, idx)
     override fun inheritedAttributes(): NodeAttributes {
+        if(isInheritedCached()) {
+            return cachedInheritedAttrs!!
+        }
         val siblingAttrs = mutableListOf<NodeAttributes>()
         for(i in 0 until idx){ // For every left-node:
             siblingAttrs.add(parent.rhs[i].synthesizedAttributes())
         }
         val parentAttrs = parent.inheritedAttributes()
-        return productionRule.makeInheritedAttributes(idx, parentAttrs, siblingAttrs)
+        cachedInheritedAttrs = productionRule.makeInheritedAttributes(idx, parentAttrs, siblingAttrs)
+        return cachedInheritedAttrs!!
     }
 
     override fun depth(): Int {
