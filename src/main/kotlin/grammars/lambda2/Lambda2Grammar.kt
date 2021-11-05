@@ -105,7 +105,7 @@ object Lambda2Grammar {
             "length" to 2, // Need the # of args for constraint purposes.
             "0.${retTypeAttrName}" to 2, // We also want the types of the first arg of the lambda... also for constraints.
         ), PR(stmtSym, listOf(foldAny, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
-    OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 4), Pair(retTypeAttrName, 6)), it).withOtherRule {
+    OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 4), Pair(retTypeAttrName, 6)), it).withOtherRule {
         // Finally, we also need the list-ified type of the 2nd arg of the lambda, to make sure it matches with the type of the 2nd total arg.
         AttributeMappingProductionRule(it, "1.${retTypeAttrName}", 2, listTypeMapper)
     }}
@@ -114,11 +114,14 @@ object Lambda2Grammar {
         mapOf(
             retTypeAttrName to 2,
             "length" to 2, // Need the # of args for constraint purposes.
-            "0.${retTypeAttrName}" to 2, // We also want the types of the first 2 args of the lambda... also for constraints.
             "1.${retTypeAttrName}" to 2
         ), PR(stmtSym, listOf(recl, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
-        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 4), Pair(retTypeAttrName, 6)), it).withOtherRule {
+            AttributeMappingProductionRule(it, "0.${retTypeAttrName}", 2, listTypeMapper)
+        }
     }
+    // This gives us the list-ified 0th arg to the lambda, the 1st arg to the lambda, the length of the lambda's args,
+    // And the return type of the lambda, the type of the constant, and the type of the variable.
 
     val consRule = AttributeMappingProductionRule(
         PR(stmtSym, listOf(cons, LP, stmtSym, COMMA, stmtSym, RP)),
@@ -246,7 +249,7 @@ object Lambda2Grammar {
         // and that the return type of the 2nd arg of fold is the same
         // They also need the first arg of their child lambda to be therae same as the return type
 
-        foldAnyRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName,
+        foldAnyRule.rule to EqualAttributeValueConstraintGenerator(setOf(retTypeAttrName,
             "4.${retTypeAttrName}", "0.${retTypeAttrName}"), possibleValues = basicTypes).and(
             //AND that the list-ified 1st arg of the lambda matches the 2nd arg of fold
             EqualAttributeValueConstraintGenerator(setOf("1.${retTypeAttrName}", "6.${retTypeAttrName}"), possibleValues = listTypes)
@@ -254,7 +257,12 @@ object Lambda2Grammar {
             // and the lambda needs 2 args
             BasicConstraintGenerator(BasicRuleConstraint(NodeAttribute("length", "2")))
         ),
-        reclRule.rule to EqualAttributeValueConstraintGenerator(setOf("2.${retTypeAttrName}", retTypeAttrName), possibleValues = basicTypes),
+
+        reclRule.rule to EqualAttributeValueConstraintGenerator(setOf(retTypeAttrName, "4.${retTypeAttrName}"), possibleValues = basicTypes).and(
+            EqualAttributeValueConstraintGenerator(setOf("1.${retTypeAttrName}", "6.${retTypeAttrName}", "0.${retTypeAttrName}"), possibleValues = listTypes)
+        ).and(
+            BasicConstraintGenerator(BasicRuleConstraint(NodeAttribute("length", "2")))
+        ),
 
         // Cons needs a list as a return value and a list as an input value.
         consRule.rule to BasicConstraintGenerator(listOf(isListConstraint(retTypeAttrName))).and(
@@ -280,7 +288,7 @@ object Lambda2Grammar {
             isListConstraint("0.${retTypeAttrName}"))),
         indexIntoRangeRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intType)),
             BasicRuleConstraint(NodeAttribute("4.${retTypeAttrName}", intType)),
-//            isListConstraint(retTypeAttrName)
+            isListConstraint(retTypeAttrName)
         )),
     ), scopeCloserRules = setOf(
         totalRootLambdaRule.rule

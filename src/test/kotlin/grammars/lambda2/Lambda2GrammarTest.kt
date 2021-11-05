@@ -10,12 +10,13 @@ import kotlin.random.Random
 
 internal class Lambda2GrammarTest {
 
-    val generator = ProgramGenerator(Lambda2Grammar.grammar, random = Random(42L), numRandomTries = 5)
     val strfier = ProgramStringifier(tokenSeperator = " ")
     val interp = Lambda2Interpreter()
 
     @Test
     fun testGenerate() {
+        val generator = ProgramGenerator(Lambda2Grammar.grammar, random = Random(42L), numRandomTries = 5)
+
         println(Lambda2Grammar.grammar.globalAttributeRegexes)
         repeat(5){
             val prog = generator.generate()
@@ -31,6 +32,8 @@ internal class Lambda2GrammarTest {
 
     @Test
     fun testCanMakeAllRules() {
+        val generator = ProgramGenerator(Lambda2Grammar.grammar, numRandomTries = 5)
+
         // Can every rule be generated?
         val givenRulesSet = Lambda2Grammar.grammar.givenRules.map {
             it.rule
@@ -39,9 +42,13 @@ internal class Lambda2GrammarTest {
         for(i in 0 until 100) {
             val prog = generator.generate()
             prog.forEachInTree {
-                generatedRules.add(it.productionRule.rule)
+                val r = it.productionRule.rule
+                if(r in givenRulesSet) {
+                    generatedRules.add(r)
+                }
             }
             if(generatedRules.size == givenRulesSet.size){
+                println("Found early")
                 break // done early
             }
         }
