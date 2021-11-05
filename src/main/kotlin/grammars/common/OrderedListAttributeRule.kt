@@ -29,6 +29,9 @@ KeyedAttributesProductionRule(attrKeysMade = (0 until (listLength)).map {
     }
 
     fun initListRule(childIdx : Int, rule : PR) : KeyedAttributesProductionRule {
+        require(rule.lhs == this.rule.lhs) {
+            "LHS of init rule and ordered list rule must match"
+        }
         return KeyChangeAttributeRule(rule, attrKey, childIdx, toAttrKey(0, attrKey)).withOtherRule {
             InitAttributeProductionRule(rule, "length", "1")
         }

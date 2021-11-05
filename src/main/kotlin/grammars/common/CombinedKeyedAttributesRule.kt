@@ -22,15 +22,22 @@ class CombinedKeyedAttributesRule(val rules : List<KeyedAttributesProductionRule
     }
 
     override fun canMakeProgramWithAttributes(attrs: NodeAttributes): Pair<Boolean, List<List<RuleConstraint>>> {
+        if(attrs.isEmpty()) {
+            return Pair(true, noConstraints)
+        }
         val cons : MutableList<MutableList<RuleConstraint>> = mutableListOf();
         this.rule.rhs.forEach {
             cons.add(mutableListOf()) //Prefill the lists.
         }
         val attrList = attrs.toList().toMutableSet()
         // Alright, now remove the attributes we synthesize.
-        this.rules.forEach { subrule  ->
+        for(subrule in this.rules){
             val synthedAttrs = attrList.filter {
                 subrule.attrKeysMade.contains(it.first)
+            }
+            if(synthedAttrs.isEmpty()) {
+                // Ths rule can't be used to make stuff
+                continue
             }
             attrList.removeAll(synthedAttrs)
             val canMakeSynthedAttrs = subrule.canMakeProgramWithAttributes(NodeAttributes.fromList(synthedAttrs))

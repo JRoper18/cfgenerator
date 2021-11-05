@@ -39,15 +39,24 @@ internal class CombinedKeyedAttributesRuleTest {
     }
 
     @Test
-    fun testCakeSynthesizedAttributes() {
+    fun testMakeSynthesizedAttributes() {
         val attrs = t1.makeSynthesizedAttributes(listOf())
         assertEquals(NodeAttributes.fromList(listOf(attr1, attr2)), attrs)
+
+
     }
 
     @Test
     fun testCantMakeTooManyAttrs() {
         val resBad = t1.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(attr1, attr2, NodeAttribute("notthere", "dne"))))
         assert(!resBad.first)
+    }
+
+    @Test
+    fun testCanMakeNone() {
+        val res = t1.canMakeProgramWithAttributes(NodeAttributes())
+        assert(res.first)
+        assertEquals(res.second, t1.noConstraints)
     }
 
 }

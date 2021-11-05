@@ -153,7 +153,14 @@ internal class OrderedListAttributeRuleTest {
         assert(res5.first)
         assertEquals(res5.second, listOf(listOf(BasicRuleConstraint(NodeAttribute("length", "1"))), listOf(), listOf()))
 
+    }
 
+    @Test
+    fun testInitRule() {
+        val iRule = rule.initListRule(0, PR(NtSym("list"), listOf(StringSymbol("len1"))))
+        val res1 = iRule.canMakeProgramWithAttributes(NodeAttributes.fromAttr(NodeAttribute("length", "1")))
+        assert(res1.first)
+        assertEquals(res1.second, iRule.noConstraints)
     }
 
 }
