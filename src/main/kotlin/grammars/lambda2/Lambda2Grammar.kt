@@ -33,8 +33,6 @@ object Lambda2Grammar {
     val lambdaArgs = NtSym("lamargs")
     val stmtSym = NtSym("stmt")
     val programSym = NtSym("prog")
-    val basicFunc = NtSym("basicFunc")
-    val constant = NtSym("constant")
     val declared = NtSym("declared") // Only used when forcing them to use a var that's already declared.
 
 
@@ -75,7 +73,7 @@ object Lambda2Grammar {
         "u" to setOf(NodeAttribute(retTypeAttrName, intListType)),
         "v" to setOf(NodeAttribute(retTypeAttrName, intListType)),
         "w" to setOf(NodeAttribute(retTypeAttrName, intListType)),
-        ), displayName = "lowercaseAscii")
+    ), displayName = "lowercaseAscii")
     val varInit = NtSym("varInit")
 
     val newVarRule = VariableDeclarationRule(varInit, varName, varName.attributeName)
@@ -92,30 +90,32 @@ object Lambda2Grammar {
             retTypeAttrName to 4,
             "length" to 2,
         ),
-        PR(stmtSym, listOf(filter, LP, programSym, COMMA, declared, RP))).withOtherRule {
+        PR(stmtSym, listOf(filter, LP, programSym, COMMA, stmtSym, RP))).withOtherRule {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2)), it)
     }
 
     val mapRule = AttributeMappingProductionRule(
-        PR(stmtSym, listOf(maps, LP, programSym, COMMA, declared, RP)), retTypeAttrName, 2, listTypeMapper)
+        PR(stmtSym, listOf(maps, LP, programSym, COMMA, stmtSym, RP)), retTypeAttrName, 2, listTypeMapper).withOtherRule {
+            OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 4)), it)
+    }
 
     val foldAnyRule = SynthesizeAttributeProductionRule(
         mapOf(
             retTypeAttrName to 2,
             "length" to 2, // Need the # of args for constraint purposes.
             "0.${retTypeAttrName}" to 2, // We also want the types of the first arg of the lambda... also for constraints.
-        ), PR(stmtSym, listOf(foldAny, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
-    OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 4), Pair(retTypeAttrName, 6)), it).withOtherRule {
-        // Finally, we also need the list-ified type of the 2nd arg of the lambda, to make sure it matches with the type of the 2nd total arg.
-        AttributeMappingProductionRule(it, "1.${retTypeAttrName}", 2, listTypeMapper)
-    }}
+        ), PR(stmtSym, listOf(foldAny, LP, programSym, COMMA, stmtSym, COMMA, stmtSym, RP))).withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 4), Pair(retTypeAttrName, 6)), it).withOtherRule {
+            // Finally, we also need the list-ified type of the 2nd arg of the lambda, to make sure it matches with the type of the 2nd total arg.
+            AttributeMappingProductionRule(it, "1.${retTypeAttrName}", 2, listTypeMapper)
+        }}
 
     val reclRule = SynthesizeAttributeProductionRule(
         mapOf(
             retTypeAttrName to 2,
             "length" to 2, // Need the # of args for constraint purposes.
             "1.${retTypeAttrName}" to 2
-        ), PR(stmtSym, listOf(recl, LP, programSym, COMMA, constant, COMMA, declared, RP))).withOtherRule {
+        ), PR(stmtSym, listOf(recl, LP, programSym, COMMA, stmtSym, COMMA, stmtSym, RP))).withOtherRule {
         OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 2), Pair(retTypeAttrName, 4), Pair(retTypeAttrName, 6)), it).withOtherRule {
             AttributeMappingProductionRule(it, "0.${retTypeAttrName}", 2, listTypeMapper)
         }
@@ -157,9 +157,15 @@ object Lambda2Grammar {
     }
 
 
-    val int2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
-    val int2IntRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, intToIntOp, LP, basicFunc, RP)), retTypeAttrName, "int")
-    val bool2BoolRule = InitAttributeProductionRule(PR(basicFunc, listOf(LP, basicFunc, RP, boolToBoolOp, LP, basicFunc, RP)), retTypeAttrName, "bool")
+    val int2BoolRule = InitAttributeProductionRule(PR(stmtSym, listOf(LP, stmtSym, RP, intToBoolOp, LP, stmtSym, RP)), retTypeAttrName, "bool").withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 1), Pair(retTypeAttrName, 5)), it)
+    }
+    val int2IntRule = InitAttributeProductionRule(PR(stmtSym, listOf(LP, stmtSym, RP, intToIntOp, LP, stmtSym, RP)), retTypeAttrName, "int").withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 1), Pair(retTypeAttrName, 5)), it)
+    }
+    val bool2BoolRule = InitAttributeProductionRule(PR(stmtSym, listOf(LP, stmtSym, RP, boolToBoolOp, LP, stmtSym, RP)), retTypeAttrName, "bool").withOtherRule {
+        OrderedSynthesizedAttributeRule(setOf(Pair(retTypeAttrName, 1), Pair(retTypeAttrName, 5)), it)
+    }
 
     fun isListConstraint(attrKey : String) : RuleConstraint {
         return OrRuleConstraint(listOf(boolListType, intListListType, intListType).map{
@@ -176,20 +182,16 @@ object Lambda2Grammar {
 
     val grammar = AttributeGrammar(listOf(
         // Constants
-        InitAttributeProductionRule(PR(constant, listOf(intConstant)), retTypeAttrName, "int"),
-        InitAttributeProductionRule(PR(constant, listOf(boolConstant)), retTypeAttrName, "bool"),
+        InitAttributeProductionRule(PR(stmtSym, listOf(intConstant)), retTypeAttrName, "int"),
+        InitAttributeProductionRule(PR(stmtSym, listOf(boolConstant)), retTypeAttrName, "bool"),
 
         // Let's just say empty lists are int lists, for now.
-//        InitAttributeProductionRule(PR(constant, listOf(emptyList)), retTypeAttrName, "[int]"),
+        InitAttributeProductionRule(PR(stmtSym, listOf(emptyList)), retTypeAttrName, "[int]"),
+
         // Basic function definitions.
-//        APR(PR(basicFunc, listOf(declared))),
-//        SynthesizeAttributeProductionRule(
-//            mapOf(
-//                retTypeAttrName to 0
-//            ), PR(basicFunc, listOf(constant))),
-//        int2BoolRule,
-//        int2IntRule,
-//        bool2BoolRule,
+         int2BoolRule,
+         int2IntRule,
+         bool2BoolRule,
 
         // Variable declaration
         newVarRule.withOtherRule(typedNewVarRule),
@@ -203,15 +205,6 @@ object Lambda2Grammar {
             mapOf(
                 retTypeAttrName to 0
             ), PR(stmtSym, listOf(declared))),
-        SynthesizeAttributeProductionRule(
-            mapOf(
-                retTypeAttrName to 0
-            ), PR(stmtSym, listOf(constant))),
-//        SynthesizeAttributeProductionRule(
-//            mapOf(
-//                retTypeAttrName to 0
-//            ), PR(stmtSym, listOf(basicFunc))),
-
         consRule,
         concatRule,
         // Len
@@ -244,6 +237,9 @@ object Lambda2Grammar {
             // And the length of their lambda args needs to be 1
             // BasicRuleConstraint(NodeAttribute("length", "1")),
         )),
+
+        // Maps need a list as input.
+        mapRule.rule to BasicConstraintGenerator(listOf(isListConstraint("4.${retTypeAttrName}"))),
 
         // Folds and recls should have 2nd children (input functions) that return the same stuff they function returns,
         // and that the return type of the 2nd arg of fold is the same
@@ -289,6 +285,23 @@ object Lambda2Grammar {
         indexIntoRangeRule.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", intType)),
             BasicRuleConstraint(NodeAttribute("4.${retTypeAttrName}", intType)),
             isListConstraint(retTypeAttrName)
+        )),
+
+        // Int2bools and int2ints need int inputs.
+        int2BoolRule.rule to BasicConstraintGenerator(listOf(
+            BasicRuleConstraint(NodeAttribute("5.${retTypeAttrName}", intType)),
+            BasicRuleConstraint(NodeAttribute("1.${retTypeAttrName}", intType))
+        )),
+
+        int2IntRule.rule to BasicConstraintGenerator(listOf(
+            BasicRuleConstraint(NodeAttribute("5.${retTypeAttrName}", intType)),
+            BasicRuleConstraint(NodeAttribute("1.${retTypeAttrName}", intType))
+        )),
+
+        // And bool2bool needs bools.
+        bool2BoolRule.rule to BasicConstraintGenerator(listOf(
+            BasicRuleConstraint(NodeAttribute("5.${retTypeAttrName}", boolType)),
+            BasicRuleConstraint(NodeAttribute("1.${retTypeAttrName}", boolType))
         )),
     ), scopeCloserRules = setOf(
         totalRootLambdaRule.rule

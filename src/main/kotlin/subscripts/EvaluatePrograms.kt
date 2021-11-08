@@ -68,7 +68,7 @@ suspend fun evaluateProgramsCmd(args: Array<String>) {
 
 
 fun analyzeRuleFrequency(program : String, language : Language, frequencies : MutableMap<String, Int>) {
-    language.grammar().rules.forEachIndexed { idx, rule -> 
+    language.grammar().rules.forEachIndexed { idx, rule ->
         val toFind = "$idx {"
         val key = rule.rule.toString()
         val numOccurances = (program.length - (program.replace(toFind, "")).length) / toFind.length
@@ -98,18 +98,29 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, l
     val badRuleFreqs = mutableMapOf<String, Int>()
     val mutex = Mutex()
     evalExamples.pforall { example ->
+        val exLines = example.lines()
+        val nameLines = exLines.filter {
+            it.contains("Name: ")
+        }
+        val name : String?
+        if(nameLines.isNotEmpty()) {
+            name = nameLines[0] + "\n"
+        } else {
+            name = "\n"
+        }
         val splitExample = example.split("Program:")
         val programStr = splitExample[1].trim()
         var inputOutputExamples = splitExample[0].trim().removePrefix("Examples:").trim().split("Inputs:").filter {
             it.isNotBlank()
         }
         val programExampleStr = StringBuilder()
-        // Remove the first -- it may have been trimmed by the GPT model
+        // Remove the first -- it may have been trimmed by the GPT model, and it also may contain a "Name: <name>"
         inputOutputExamples = inputOutputExamples.subList(1, inputOutputExamples.size)
         var gotOneRun = false
         var hitsAllExamples = true
         numTotalExamples.addAndGet(inputOutputExamples.size)
         if(inputOutputExamples.isNotEmpty()) {
+            programExampleStr.append(name ?: "")
             numProgramsWithExamples.incrementAndGet()
             inputOutputExamples.subList(1, inputOutputExamples.size).forEach {
                 val ioSplit = it.split("Output:")
@@ -119,7 +130,7 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, l
                 gotOneRun = gotOneRun || runResult.result.finishedRun()
                 hitsAllExamples = hitsAllExamples && runResult.result.isGood()
                 runResultCounts[runResult.result]!!.incrementAndGet()
-                programExampleStr.append("Input:\n")
+                programExampleStr.append("Inputs :\n")
                 programExampleStr.append(it.trim().replace("Output", "Expected Output"))
                 programExampleStr.append("\nResult: ${runResult.result}\n")
                 val resMsg = runResult.message.trim()
@@ -127,7 +138,7 @@ suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, l
                     programExampleStr.append("${resMsg}\n")
                 }
             }
-            
+
             programExampleStr.append("\nProgram:\n${programStr}")
             programExampleStr.append("\n<|splitter|>")
             mutex.withLock {
