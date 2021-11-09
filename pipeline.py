@@ -64,9 +64,9 @@ def main():
     attr_regex = args.attr_regex
     cfg_generated_train_path = '{}/cfg-generated-{}.txt'.format(gendir, genname)
     cfg_generated_eval_path = '{}/cfg-generated-{}-eval.txt'.format(gendir, genname)
-    gpt_generated_eval_path = '{}/gpt-generated-{}-eval.txt'.format(evaldir, evalname)
-    eval_log_path = '{}/{}-results.txt'.format(evaldir, evalname)
-    examples_eval_path = '{}/{}-examples.txt'.format(evaldir, evalname)
+    gpt_generated_eval_path = '{}/gpt-generated-{}-model-{}-eval.txt'.format(evaldir, evalname, modelname)
+    eval_log_path = '{}/{}-model-{}-results.txt'.format(evaldir, evalname, modelname)
+    examples_eval_path = '{}/{}-model-{}-examples.txt'.format(evaldir, evalname, modelname)
     if(args.do_cfgs or do_all):
         cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(args.num_train, cfg_generated_train_path, language)
         print(cmd)

@@ -41,9 +41,9 @@ object Lambda2Grammar {
     val boolConstant = StringsetSymbol(setOf("True", "False"), displayName = "Bool")
     val boolToBoolOp = StringsetSymbol(setOf("or", "and", "=="), displayName = "Bool2BoolOp")
     val intToBoolOp = StringsetSymbol(setOf("<", ">", "=="), displayName = "Int2BoolOp")
-    // It's a boolOp because it RETURNS a bool. It's arguments can be ints.
 
-    val intConstant = StringsetSymbol(intSymbols(-20, 20), displayName = "Int")
+    // Keep the int constant range low to help GPT. It doesn't like to have too many options.  
+    val intConstant = StringsetSymbol(intSymbols(-1, 5), displayName = "Int")
     val intToIntOp = StringsetSymbol(setOf("+", "-", "/", "*"), displayName = "Int2IntOp")
 
     //Here's a trick: We'll force variables to have names that represent their type.
