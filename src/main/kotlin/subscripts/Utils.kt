@@ -93,7 +93,7 @@ class FrequencyCounter(val counts : Map<String, Int>,
                 it.first.trim() in include
             }
         }
-        if(topK != null) {
+        if(topK != null && topK < pairs.size) {
             pairs = pairs.subList(0, topK)
         }
         pairs.forEach {
