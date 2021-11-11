@@ -7,10 +7,9 @@ import torch
 from transformers import GPTNeoForCausalLM, GPT2Tokenizer
 import transformers
 import os
-import re
 
 
-def train_gpt(run_name, generated_path, output_dir, attr_regex = None):
+def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretrained = False):
     param_size = "125M"
     pretrained_name = "EleutherAI/gpt-neo-%s" % param_size
     output_dir = "%s/gpt-results-%s-%s" % (output_dir, param_size, run_name)
@@ -21,6 +20,9 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None):
         bos_token="<|startoftext|>",
         eos_token="<|endoftext|>",
         pad_token="<|pad|>")
+    if not use_pretrained:
+        print("Not using pretrained weights! Using random instead")
+        model = GPTNeoForCausalLM(model.config).cuda()     
     # Resize the token embeddings because we've just added 3 new tokens 
     model.resize_token_embeddings(len(tokenizer))
 

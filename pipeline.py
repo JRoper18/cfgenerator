@@ -43,6 +43,7 @@ def main():
                         help='number of examples to make for GPT to generate/eval for')
     parser.add_argument('--attr_regex', type=str, default=None,
                         help='If using a CFG-printing language, this is an attribute regex to filter the attributes that GPT sees. ')
+    parser.add_argument('--randomize_weights', action='store_true', help="Use randomized, as opposed to pretrained EutherAI weights when training. ")
     args = parser.parse_args()
 
     language = args.language
@@ -75,7 +76,7 @@ def main():
             return
     if(args.do_train or do_all):
         from src.main.python.train import train_gpt
-        train_gpt(run_name = modelname, generated_path = cfg_generated_train_path, output_dir = modeldir, attr_regex=attr_regex)
+        train_gpt(run_name = modelname, generated_path = cfg_generated_train_path, output_dir = modeldir, attr_regex=attr_regex, use_pretrained=(not args.randomize_weights))
 
     if(args.do_eval_cfgs or do_all):
         cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(args.num_eval, cfg_generated_eval_path, language)

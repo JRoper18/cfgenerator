@@ -1,7 +1,5 @@
 import torch
 from transformers import GPTNeoForCausalLM, GPT2Tokenizer
-from .utils import ProgramDataset, make_max_length
-
 
 def generate_gpt(eval_generated_fname,
     eval_output_generated_fname,
@@ -42,7 +40,6 @@ def generate_gpt(eval_generated_fname,
             if new_len < curr_len :
                 cutpoint = curr_len - new_len
             input_tensor = tokens[:, cutpoint:]
-            # input_tensor = tokens
             outputs = fine_model.generate(
                 input_tensor, 
                 max_length=2048,  

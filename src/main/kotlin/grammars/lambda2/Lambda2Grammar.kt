@@ -189,9 +189,9 @@ object Lambda2Grammar {
         InitAttributeProductionRule(PR(stmtSym, listOf(emptyList)), retTypeAttrName, "[int]"),
 
         // Basic function definitions.
-         int2BoolRule,
-         int2IntRule,
-         bool2BoolRule,
+        int2BoolRule,
+        int2IntRule,
+        bool2BoolRule,
 
         // Variable declaration
         newVarRule.withOtherRule(typedNewVarRule),
