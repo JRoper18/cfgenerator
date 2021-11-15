@@ -1,10 +1,10 @@
-import grammar.AttributedProductionRule
+package grammars.common.rules
+
 import grammar.NodeAttribute
 import grammar.NodeAttributes
 import grammar.ProductionRule
 import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.RuleConstraint
-import grammars.common.KeyedAttributesProductionRule
 import java.text.ParseException
 
 class OrderedSynthesizedAttributeRule(val toSynthesize: Set<Pair<String, Int>>, rule: ProductionRule) : KeyedAttributesProductionRule(toSynthesize.map {

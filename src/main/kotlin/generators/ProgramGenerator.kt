@@ -3,8 +3,8 @@ package generators
 import grammar.RootGrammarNode
 import grammar.*
 import grammar.constraints.RuleConstraint
-import grammars.common.TerminalAPR
-import grammars.common.UnexpandedAPR
+import grammars.common.rules.TerminalAPR
+import grammars.common.rules.UnexpandedAPR
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.*
 import kotlin.random.Random

@@ -1,9 +1,8 @@
-package grammars.common
+package grammars.common.rules
 
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.RuleConstraint
-import grammars.lambda2.Lambda2Grammar
 
 class SizedListAttributeProductionRule(val lpr : ListProductionRule) : KeyedAttributesProductionRule(
     listOf("length"),

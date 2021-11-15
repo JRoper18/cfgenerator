@@ -3,7 +3,7 @@ package grammars.deepcoder
 import grammar.*
 import grammar.constraints.LookupConstraintGenerator
 import grammar.constraints.VariableConstraintGenerator
-import grammars.common.*
+import grammars.common.rules.*
 
 object DeepCoderGrammar {
     val STMT = NtSym("Stmt")

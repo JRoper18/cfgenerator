@@ -1,9 +1,7 @@
 package grammars.deepcoder
 
 import grammar.GenericGrammarNode
-import grammar.RootGrammarNode
-import grammars.common.ListProductionRule
-import grammars.common.SizedListAttributeProductionRule
+import grammars.common.rules.ListProductionRule
 import grammars.deepcoder.DeepCoderGrammar.FUNCARG_VARIABLE
 import grammars.deepcoder.DeepCoderGrammar.FUNCTION_CALL_RULE
 import grammars.deepcoder.DeepCoderGrammar.INIT_FUNCTION_ARGS_RULE

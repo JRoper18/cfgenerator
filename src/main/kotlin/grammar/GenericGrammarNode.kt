@@ -1,7 +1,6 @@
 package grammar
 
-import grammars.common.TerminalAPR
-import grammars.common.UnexpandedAPR
+import grammars.common.rules.UnexpandedAPR
 
 
 sealed class GenericGrammarNode(

@@ -2,6 +2,8 @@ package grammars.common
 
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
+import grammars.common.rules.AttributeMappingProductionRule
+import grammars.common.rules.FiniteAttributeMapper
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

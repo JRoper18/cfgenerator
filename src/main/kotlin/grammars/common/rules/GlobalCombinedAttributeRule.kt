@@ -1,7 +1,6 @@
-package grammars.common
+package grammars.common.rules
 
 import grammar.AttributedProductionRule
-import grammar.GenericGrammarNode
 import grammar.NodeAttributes
 import grammar.constraints.RuleConstraint
 

@@ -1,9 +1,7 @@
 package grammar
 
-import generators.ProgramGenerator
-import grammars.common.TerminalAPR
-import grammars.common.UnexpandedAPR
-import grammars.lambda2.Lambda2Grammar
+import grammars.common.rules.TerminalAPR
+import grammars.common.rules.UnexpandedAPR
 import org.junit.jupiter.api.Assertions.*
 import kotlin.test.Test
 

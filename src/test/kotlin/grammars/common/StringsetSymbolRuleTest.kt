@@ -4,6 +4,7 @@ import grammar.NodeAttribute
 import grammar.NodeAttributes
 import grammar.StringsetSymbol
 import grammar.constraints.RuleConstraint
+import grammars.common.rules.makeStringsetRules
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

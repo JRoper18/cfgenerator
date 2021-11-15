@@ -4,10 +4,10 @@ package generators
 import grammar.*
 import grammar.constraints.BasicConstraintGenerator
 import grammar.constraints.BasicRuleConstraint
-import grammars.common.InitAttributeProductionRule
-import grammars.common.SizedListAttributeProductionRule
-import grammars.common.SynthesizeAttributeProductionRule
-import grammars.common.TerminalProductionRule
+import grammars.common.rules.InitAttributeProductionRule
+import grammars.common.rules.SizedListAttributeProductionRule
+import grammars.common.rules.SynthesizeAttributeProductionRule
+import grammars.common.rules.TerminalProductionRule
 import grammars.deepcoder.DeepCoderGrammar
 import grammars.lambda2.Lambda2Grammar
 import org.junit.jupiter.api.Test
@@ -52,8 +52,10 @@ internal class ProgramGeneratorTest {
     fun testExpandStringsetSymbol() {
         val ntSym = NtSym("NT")
         val setSymbol = StringsetSymbol(setOf("a", "b", "c"))
-        val grammar = AttributeGrammar(listOf(SynthesizeAttributeProductionRule(mapOf(setSymbol.attributeName to 0),
-            PR(ntSym, listOf(setSymbol)))), start=ntSym, constraints = mapOf())
+        val grammar = AttributeGrammar(listOf(
+            SynthesizeAttributeProductionRule(mapOf(setSymbol.attributeName to 0),
+            PR(ntSym, listOf(setSymbol)))
+        ), start=ntSym, constraints = mapOf())
         val generator = ProgramGenerator(grammar)
         val program = generator.generate()
         val attrs = program.attributes()

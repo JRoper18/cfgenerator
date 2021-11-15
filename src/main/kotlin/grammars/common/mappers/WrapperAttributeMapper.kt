@@ -1,4 +1,4 @@
-package grammars.common
+package grammars.common.mappers
 
 class WrapperAttributeMapper : SingleAttributeMapper {
     override fun forward(attrVal: String): String {

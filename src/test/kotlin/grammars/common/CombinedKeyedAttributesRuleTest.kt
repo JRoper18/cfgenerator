@@ -1,11 +1,11 @@
 package grammars.common
 
 import grammar.*
+import grammars.common.rules.InitAttributeProductionRule
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.assertThrows
-import java.lang.Exception
 
 internal class CombinedKeyedAttributesRuleTest {
     val pr = ProductionRule(NtSym("left"), listOf(StringSymbol("end")))

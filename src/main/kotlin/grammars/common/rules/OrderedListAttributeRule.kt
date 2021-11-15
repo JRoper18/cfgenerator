@@ -1,12 +1,10 @@
-package grammars.common
+package grammars.common.rules
 
-import grammar.APR
 import grammar.NodeAttribute
 import grammar.NodeAttributes
 import grammar.PR
 import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.RuleConstraint
-import java.util.Collections.max
 import kotlin.math.max
 
 class OrderedListAttributeRule(pr : ListProductionRule, val attrKey : String, val listLength : Int = 10) :

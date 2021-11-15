@@ -1,9 +1,7 @@
-package grammars.common
+package grammars.common.rules
 
-import StringsetSymbolRule
 import grammar.*
 import grammar.StringsetSymbol
-import grammar.constraints.RuleConstraint
 
 val TERMINAL = StringSymbol("")
 val UNEXPANDED = StringSymbol("UNEXPANDED")

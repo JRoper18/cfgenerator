@@ -1,4 +1,4 @@
-package grammars.common
+package grammars.common.mappers
 
 class InverseAttributeMapper(val orig : SingleAttributeMapper, val default : String = "null") : SingleAttributeMapper {
     override fun forward(attrVal: String): String {

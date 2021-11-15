@@ -2,6 +2,7 @@ package grammars.common
 
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
+import grammars.common.rules.VariableDeclarationRule
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

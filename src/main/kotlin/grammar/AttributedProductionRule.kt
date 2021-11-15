@@ -1,8 +1,8 @@
 package grammar
 
 import grammar.constraints.RuleConstraint
-import grammars.common.TerminalAPR
-import grammars.common.UnexpandedAPR
+import grammars.common.rules.TerminalAPR
+import grammars.common.rules.UnexpandedAPR
 
 open class AttributedProductionRule(val rule: ProductionRule) {
 

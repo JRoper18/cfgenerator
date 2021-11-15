@@ -1,6 +1,7 @@
+package grammars.common.rules
+
 import grammar.*
 import grammar.constraints.RuleConstraint
-import grammars.common.KeyedAttributesProductionRule
 
 class StringsetSymbolRule(val stringSetSymbol : StringsetSymbol, val stringSymbol : StringSymbol) : AttributedProductionRule(PR(stringSetSymbol, listOf(stringSymbol))) {
     val generatedAttrs = stringSetSymbol.stringAttributeSet.getOrDefault(stringSymbol.name, setOf())

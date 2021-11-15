@@ -1,8 +1,9 @@
-package grammars.common
+package grammars.common.rules
 
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.RuleConstraint
+import grammars.common.mappers.SingleAttributeMapper
 
 /**
  * Takes in a production rule and a map from a pair of a node attribute and the child it came from,

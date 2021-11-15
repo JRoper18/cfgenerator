@@ -2,6 +2,8 @@ package grammars.common
 
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
+import grammars.common.rules.ListProductionRule
+import grammars.common.rules.OrderedListAttributeRule
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

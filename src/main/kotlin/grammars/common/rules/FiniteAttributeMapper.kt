@@ -1,4 +1,6 @@
-package grammars.common
+package grammars.common.rules
+
+import grammars.common.mappers.SingleAttributeMapper
 
 class FiniteAttributeMapper(val attrMap : Map<String, String>, val default : String = "null") : SingleAttributeMapper {
     /**

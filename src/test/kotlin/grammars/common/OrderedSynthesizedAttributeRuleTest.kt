@@ -1,6 +1,6 @@
 package grammars.common
 
-import OrderedSynthesizedAttributeRule
+import grammars.common.rules.OrderedSynthesizedAttributeRule
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
 import org.junit.jupiter.api.Test
@@ -69,7 +69,8 @@ internal class OrderedSynthesizedAttributeRuleTest {
 
     @Test
     fun testAttrKeys() {
-        assertEquals(listOf(OrderedSynthesizedAttributeRule.makeAttrKey(key1, 1),
+        assertEquals(listOf(
+            OrderedSynthesizedAttributeRule.makeAttrKey(key1, 1),
             OrderedSynthesizedAttributeRule.makeAttrKey(key2, 0)), r1.attrKeysMade)
     }
 }

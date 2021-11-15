@@ -1,6 +1,6 @@
 package grammar
 
-import grammars.common.TerminalAPR
+import grammars.common.rules.TerminalAPR
 
 class GrammarNode(
     productionRule: AttributedProductionRule,

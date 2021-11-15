@@ -1,8 +1,6 @@
-package grammars.common
+package grammars.common.rules
 
 import grammar.*
-import grammar.constraints.BasicRuleConstraint
-import grammar.constraints.RuleConstraint
 
 /**
  * Given a LHS symbol, a subrule that creates an attribute where the key is the name of the variable, and the name of that attribute,

@@ -2,6 +2,9 @@ package grammars.common
 
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
+import grammars.common.rules.InitAttributeProductionRule
+import grammars.common.rules.SizedListAttributeProductionRule
+import grammars.common.rules.TerminalProductionRule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

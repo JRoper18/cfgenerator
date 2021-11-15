@@ -1,4 +1,4 @@
-package grammars.common
+package grammars.common.rules
 
 import grammar.*
 

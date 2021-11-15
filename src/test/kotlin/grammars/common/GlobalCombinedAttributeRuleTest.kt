@@ -1,6 +1,7 @@
 package grammars.common
 
 import grammar.*
+import grammars.common.rules.GlobalCombinedAttributeRule
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

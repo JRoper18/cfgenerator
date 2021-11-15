@@ -1,9 +1,10 @@
 package grammars.lambda2
 
-import OrderedSynthesizedAttributeRule
+import grammars.common.rules.OrderedSynthesizedAttributeRule
 import grammar.*
 import grammar.constraints.*
-import grammars.common.*
+import grammars.common.mappers.WrapperAttributeMapper
+import grammars.common.rules.*
 
 object Lambda2Grammar {
 
@@ -235,7 +236,7 @@ object Lambda2Grammar {
         filterRule.rule to BasicConstraintGenerator(listOf(
             BasicRuleConstraint(NodeAttribute("2.${retTypeAttrName}", boolType)),
             // And the length of their lambda args needs to be 1
-            // BasicRuleConstraint(NodeAttribute("length", "1")),
+//             BasicRuleConstraint(NodeAttribute("length", "1")),
         )),
 
         // Maps need a list as input.

@@ -4,8 +4,7 @@ import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.*
 import grammar.constraints.BasicRuleConstraint
-import grammars.common.UnexpandedAPR
-import grammars.common.VariableDeclarationRule
+import grammars.common.rules.UnexpandedAPR
 import grammars.deepcoder.DeepCoderGrammar.FUNCTION_NAME
 import grammars.deepcoder.DeepCoderGrammar.STMT
 import grammars.deepcoder.DeepCoderGrammar.STMT_LIST

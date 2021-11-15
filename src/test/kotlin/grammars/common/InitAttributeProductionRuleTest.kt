@@ -2,10 +2,10 @@ package grammars.common
 
 import grammar.NodeAttribute
 import grammar.NodeAttributes
-import grammar.RootGrammarNode
 import grammar.StringSymbol
+import grammars.common.rules.InitAttributeProductionRule
+import grammars.common.rules.TerminalProductionRule
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 internal class InitAttributeProductionRuleTest {
 

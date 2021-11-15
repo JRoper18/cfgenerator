@@ -4,7 +4,7 @@ import grammar.NodeAttribute
 import grammar.NodeAttributes
 import grammar.NtSym
 import grammar.StringsetSymbol
-import grammars.common.VariableDeclarationRule
+import grammars.common.rules.VariableDeclarationRule
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

@@ -1,7 +1,7 @@
 package grammar
 
 import grammar.constraints.ConstraintGenerator
-import grammars.common.*
+import grammars.common.rules.*
 import org.antlr.v4.runtime.*
 import org.antlr.v4.tool.Grammar
 import utils.duplicates

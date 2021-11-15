@@ -3,12 +3,11 @@ package grammars.lambda2
 import generators.ProgramStringifier
 import grammar.GenericGrammarNode
 import grammar.RootGrammarNode
-import grammars.common.ListProductionRule
+import grammars.common.rules.ListProductionRule
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import kotlin.random.Random
-import kotlin.random.nextInt
 
 
 class Lambda2Interpreter(val random : Random = Random(100L),

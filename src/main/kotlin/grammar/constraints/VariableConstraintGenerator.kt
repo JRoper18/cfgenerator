@@ -2,8 +2,7 @@ package grammar.constraints
 
 import grammar.NodeAttribute
 import grammar.NodeAttributes
-import grammars.common.VariableAttributeRule
-import grammars.common.VariableDeclarationRule
+import grammars.common.rules.VariableAttributeRule
 import kotlin.random.Random
 
 /**

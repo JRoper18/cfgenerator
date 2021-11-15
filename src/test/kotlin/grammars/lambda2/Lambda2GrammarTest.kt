@@ -3,7 +3,6 @@ package grammars.lambda2
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.ProductionRule
-import grammars.common.UnexpandedAPR
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
