@@ -9,7 +9,7 @@ import grammars.common.interpreters.TypedFunctionalLanguage
 import grammars.common.mappers.WrapperAttributeMapper
 import grammars.common.rules.intSymbols
 
-class Lambda2FunctionalLanguage {
+object Lambda2FunctionalLanguage {
     val intType = "int"
     val boolType = "bool"
     val listType = "list"
@@ -45,8 +45,8 @@ class Lambda2FunctionalLanguage {
         "w" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListType)),
     ))
     
-    val interp = TypedFunctionalLanguage(
-        basicTypesToValues = mapOf(intType to intSymbols(-1, 5), boolType to setOf("True", "False")),
+    val language = TypedFunctionalLanguage(
+        basicTypesToValues = mapOf(intType to IntRange(-1, 5).toSet(), boolType to setOf(true, false)),
         complexTypes = mapOf(listType to listTypeMapper),
         varName = varnames,
     functions = mapOf(

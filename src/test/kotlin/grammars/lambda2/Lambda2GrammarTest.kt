@@ -10,8 +10,7 @@ import kotlin.random.Random
 internal class Lambda2GrammarTest {
 
     val strfier = ProgramStringifier(tokenSeperator = " ")
-    val interp = Lambda2Interpreter()
-    val grammar = Lambda2FunctionalLanguage().interp.grammar
+    val grammar = Lambda2FunctionalLanguage.language.grammar
     @Test
     fun testGenerate() {
         val generator = ProgramGenerator(grammar, random = Random(40L), numRandomTries = 5)
@@ -19,11 +18,10 @@ internal class Lambda2GrammarTest {
         println(grammar.globalAttributeRegexes)
         repeat(5){
             val prog = generator.generate()
-            println(prog)
             val progStr = strfier.stringify(prog)
             println(progStr)
-            println(interp.makeExamples(prog, 3).map {
-                it.first + "\t" + it.second
+            println(Lambda2FunctionalLanguage.language.makeExamples(prog, 3).map {
+                "${it.first} \t ${it.second} : ${it.second.javaClass.name}"
             }.joinToString ("\n"))
         }
     }

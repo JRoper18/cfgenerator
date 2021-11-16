@@ -15,8 +15,8 @@ abstract class TypeRefinement<I, O>(val inTypeName : String, val outTypeName : S
     }
 
     fun computeSignature(beforeState : ProgramState, afterState : ProgramState) : PropertySignature {
-        val beforeVars = beforeState.getVars<I>(inTypeName)
-        val afterVars = afterState.getVars<O>(outTypeName)
+        val beforeVars = beforeState.getVars(inTypeName)
+        val afterVars = afterState.getVars(outTypeName)
         var trues = 0
         var falses = 0
         if(beforeVars.isEmpty()) {
@@ -25,7 +25,7 @@ abstract class TypeRefinement<I, O>(val inTypeName : String, val outTypeName : S
         }
         for(it in beforeVars){
             val av = afterVars[it.key] ?: continue
-            val prop = computeProperty(it.value, av)
+            val prop = computeProperty(it.value as I, av as O)
             if(prop) {
                 trues += 1
             }

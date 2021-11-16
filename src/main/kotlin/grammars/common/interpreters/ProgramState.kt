@@ -5,31 +5,36 @@ import kotlin.reflect.KClass
 class ProgramState {
     val classesToTypes = mutableMapOf<KClass<*>, String>()
     val variableTypes = mutableMapOf<String, String>()
-    val variables = mutableMapOf<String, TypedProgramVariables<*>>()
+    val variables = mutableMapOf<String, MutableMap<String, Any>>()
 
-    fun <T> getVars(type : String) : TypedProgramVariables<T> {
+    fun getVars(type : String) : MutableMap<String, Any> {
         val vars = variables.getOrPut(type) {
-            TypedProgramVariables<T>()
+            mutableMapOf()
         }
-        return vars as TypedProgramVariables<T>
+        return vars
     }
 
     fun getType(name : String) : String? {
         return variableTypes[name]
     }
-    fun <T> getVar(name : String) : T? {
+    fun getVar(name : String) : Any? {
         val type = getType(name) ?: return null
-        return getVars<T>(type)[name]
+        return getVars(type)[name]
     }
 
     // God this is janky
-    fun <T> setVar(name : String, type : String, value : T) {
+    fun setVar(name : String, type : String, value : Any) {
         val existingVarType = variableTypes.getOrPut(name){
             type
         }
         require(variableTypes[name] == type) {
             "Variable already exists as type $existingVarType"
         }
-        getVars<T>(type)[name] = value
+        getVars(type)[name] = value
+    }
+    fun unsetVar(name : String) {
+        val existingVarType = variableTypes[name]
+        variables[existingVarType]!!.remove(name)
+        variableTypes.remove(name)
     }
 }
