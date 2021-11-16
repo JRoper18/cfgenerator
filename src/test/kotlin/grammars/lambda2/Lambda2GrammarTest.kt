@@ -14,7 +14,7 @@ internal class Lambda2GrammarTest {
     val grammar = Lambda2FunctionalLanguage().interp.grammar
     @Test
     fun testGenerate() {
-        val generator = ProgramGenerator(grammar, random = Random(42L), numRandomTries = 5)
+        val generator = ProgramGenerator(grammar, random = Random(40L), numRandomTries = 5)
 
         println(grammar.globalAttributeRegexes)
         repeat(5){
@@ -59,7 +59,7 @@ internal class Lambda2GrammarTest {
         }.map {
             it.toString()
         }.sorted().joinToString("\n")
-        val expectedRulesStr = Lambda2Grammar.grammar.givenRules.map {
+        val expectedRulesStr = grammar.givenRules.map {
             it.rule.toString()
         }.sorted().joinToString("\n")
         assertEquals(expectedRulesStr, generatedStr)

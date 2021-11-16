@@ -4,11 +4,12 @@ import grammar.*
 import grammar.constraints.*
 import grammars.common.mappers.SingleAttributeMapper
 import grammars.common.rules.*
+import grammars.lambda2.Lambda2Grammar
 
-class TypedFunctionalInterpreter(val basicTypes : Set<String>,
-                                 val complexTypes : Map<String, SingleAttributeMapper>,
-                                 val varName : StringsetSymbol,
-                                 val functions : Map<String, FunctionExecutor>
+class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<String>>,
+                              val complexTypes : Map<String, SingleAttributeMapper>,
+                              val varName : StringsetSymbol,
+                              val functions : Map<String, FunctionExecutor>
 ) {
 
     class ParseError(msg : String) : IllegalStateException(msg)
@@ -23,7 +24,7 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
     class InterpretError(msg : String) : IllegalStateException(msg)
 
     val flattenedComplexTypes = complexTypes.map {
-        Pair(it.key, basicTypes.map { bType ->
+        Pair(it.key, basicTypesToValues.keys.map { bType ->
             it.value.forward(bType)
         })
     }.toMap()
@@ -31,30 +32,30 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
     companion object {
         val typeAttr : String = "type"
     }
-    val stmtSym : NtSym = NtSym("stmt")
-    val varInit = NtSym("varInit")
-    val declaredVar = NtSym("declared")
-    val newVarRule = VariableDeclarationRule(varInit, varName, varName.attributeName)
-    val typedNewVarRule = VariableChildValueRule(
+    protected val stmtSym : NtSym = NtSym("stmt")
+    protected val varInit = NtSym("varInit")
+    protected val declaredVar = NtSym("declared")
+    protected val newVarRule = VariableDeclarationRule(varInit, varName, varName.attributeName)
+    protected val typedNewVarRule = VariableChildValueRule(
         varInit,
         varName, newVarRule.subruleVarnameAttributeKey, "_type",
         typeAttr
     ).withOtherRule {
         SynthesizeAttributeProductionRule(mapOf(typeAttr to 0), it) // Bring up the ret type
     }
-    val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0, typeAttr to 0), (PR(
+    protected val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0, typeAttr to 0), (PR(
         declaredVar, listOf(varName))))
 
-    val stmtIsDeclaredVarRule = SynthesizeAttributeProductionRule(
+    protected val stmtIsDeclaredVarRule = SynthesizeAttributeProductionRule(
         mapOf(
             typeAttr to 0
         ), PR(stmtSym, listOf(declaredVar)))
-    val lambdaArgs = NtSym("lambdaArgs")
-    val lambdaArgsRule = OrderedListAttributeRule(ListProductionRule(listName = lambdaArgs, unitName = varInit, separator = ","),
+    protected val lambdaArgs = NtSym("lambdaArgs")
+    protected val lambdaArgsRule = OrderedListAttributeRule(ListProductionRule(listName = lambdaArgs, unitName = varInit, separator = ","),
         typeAttr, 3)
-    val lambdaArgsInitRule = lambdaArgsRule.initListRule(0, PR(lambdaArgs, listOf(varInit)))
-    val lambdaSym = NtSym("lambdaStmt")
-    val lambdaRule = SynthesizeAttributeProductionRule(mapOf(typeAttr to 3) + lambdaArgsRule.attrKeysMade.map {
+    protected val lambdaArgsInitRule = lambdaArgsRule.initListRule(0, PR(lambdaArgs, listOf(varInit)))
+    protected val lambdaSym = NtSym("lambdaStmt")
+    protected val lambdaRule = SynthesizeAttributeProductionRule(mapOf(typeAttr to 3) + lambdaArgsRule.attrKeysMade.map {
         Pair(it, 1) // Inherit every attribute from the lambdaArgs
     }.toMap(),
         PR(
@@ -64,30 +65,34 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
                 stmtSym
             )),
     )
-    val functionNamesToRules = functions.map {
+    protected val functionNamesToRules = functions.map {
         Pair(it.key, makeFunctionAPR(StringSymbol(it.key), it.value.numArgs) { pr ->
-            it.value.makeReturnTypeAPR(pr, typeAttr)
+            it.value.makeReturnTypeAPR(this, pr, typeAttr)
         })
+    }.toMap()
+
+    protected val basicTypeConstantRules = basicTypesToValues.map {
+        Pair(it.key, InitAttributeProductionRule(PR(stmtSym, listOf(StringsetSymbol(it.value))), typeAttr, it.key))
     }.toMap()
     val grammar : AttributeGrammar = AttributeGrammar(
         givenRules = listOf(
             stmtIsDeclaredVarRule,
-            typedNewVarRule,
+            newVarRule.withOtherRule(typedNewVarRule),
             declaredRule,
             lambdaRule,
             lambdaArgsRule,
             lambdaArgsInitRule,
-            ) + functionNamesToRules.values,
+            ) + basicTypeConstantRules.values + functionNamesToRules.values,
         constraints = mapOf(
-            declaredRule.rule to VariableConstraintGenerator(varName.attributeName, newVarRule),
-        ) + functions.map {
-            Pair(functionNamesToRules[it.key]!!.rule, it.value.makeConstraints(
-                { ithChildTypeKey(it) }, basicTypes, flattenedComplexTypes
-            ))
-        }.toMap(),
+                declaredRule.rule to VariableConstraintGenerator(varName.attributeName, newVarRule),
+            ) + functions.map {
+                Pair(functionNamesToRules[it.key]!!.rule, it.value.makeConstraints(
+                    this, basicTypesToValues.keys, flattenedComplexTypes
+                ))
+            }.toMap(),
         start = lambdaSym,
         scopeCloserRules = setOf(
-            lambdaRule.rule
+                lambdaRule.rule
         )
     )
 
@@ -96,7 +101,9 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
             if(index != 0){
                 listOf(COMMA, stmtSym)
             }
-            listOf(stmtSym)
+            else {
+                listOf(stmtSym)
+            }
         } + listOf(RP))
         return pr
     }
@@ -127,14 +134,14 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
     fun ithChildTypeKey(argIdx : Int) : String {
         return "${argIdx}.${typeAttr}"
     }
-    
+
     private fun makeFunctionAPR(headerSymbol: StringSymbol, numArgs: Int, returnTypeAttrRuleMaker : (ProductionRule) -> (KeyedAttributesProductionRule)) : AttributedProductionRule{
         val pr = makeFunctionPR(headerSymbol = headerSymbol, numArgs = numArgs)
         val returnTypeAttrRule = returnTypeAttrRuleMaker(pr)
         require(returnTypeAttrRule.attrKeysMade == listOf(typeAttr)) {
             "Return type rule should only make an attribute with key $typeAttr but makes keys ${returnTypeAttrRule.attrKeysMade}"
         }
-        // Map the 3rd entry to 0.type, 5th entry to 1.type, and so on. 
+        // Map the 3rd entry to 0.type, 5th entry to 1.type, and so on.
         var apr : KeyedAttributesProductionRule = returnTypeAttrRule
         for (i in 0 until numArgs){
             val cidx = argIdxToChild(i)
@@ -142,6 +149,4 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
         }
         return apr
     }
-    
-    
 }

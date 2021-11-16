@@ -2,7 +2,6 @@ package grammars.common.interpreters
 
 import grammar.NodeAttribute
 import grammar.ProductionRule
-import grammar.StringSymbol
 import grammar.constraints.*
 import grammars.common.rules.KeyedAttributesProductionRule
 
@@ -10,14 +9,14 @@ abstract class FunctionExecutor(val inTypes : List<String>) {
     val numArgs = inTypes.size
     inline fun <reified T> castToType(arg : Any, wantedType : String) : T {
         if(!(arg is T)) {
-            throw TypedFunctionalInterpreter.TypeError(wantedType = wantedType)
+            throw TypedFunctionalLanguage.TypeError(wantedType = wantedType)
         }
         return arg
     }
 
     fun checkArgs(args : List<Any>) {
         if(args.size != numArgs){
-            throw TypedFunctionalInterpreter.ParseError("Function expects ${inTypes.size} args")
+            throw TypedFunctionalLanguage.ParseError("Function expects ${inTypes.size} args")
         }
         args.forEachIndexed { index, any ->
             castToType(args[index], inTypes[index])
@@ -44,13 +43,13 @@ abstract class FunctionExecutor(val inTypes : List<String>) {
             }
         }
     }
-    open fun makeConstraints(typeKeyGetter : (Int) -> String, basicTypes : Set<String>,
+    open fun makeConstraints(language : TypedFunctionalLanguage, basicTypes : Set<String>,
                              flattenedComplexTypes : Map<String, List<String>>) : ConstraintGenerator {
         val constraints = inTypes.mapIndexed { index, type ->
-            makeConstraintFromType(typeKeyGetter(index), type, basicTypes, flattenedComplexTypes)
+            makeConstraintFromType(language.ithChildTypeKey(index), type, basicTypes, flattenedComplexTypes)
         }
         return BasicConstraintGenerator(constraints)
     }
-    abstract fun makeReturnTypeAPR(pr : ProductionRule, typeAttr : String) : KeyedAttributesProductionRule
+    abstract fun makeReturnTypeAPR(language : TypedFunctionalLanguage, pr : ProductionRule, typeAttr : String) : KeyedAttributesProductionRule
     abstract fun execute(args : List<Any>) : Any
 }

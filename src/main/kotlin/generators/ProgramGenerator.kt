@@ -103,7 +103,6 @@ class ProgramGenerator(val ag: AttributeGrammar,
         var tryCount = 0
         while ((tryCount < numRandomTries || numRandomTries == -1)) {
             tryCount += 1
-
             val substitutedConstraints = this.getConstraintSubstitutions(node, expansions, additionalConstraints)
             // For each rule + constraints, see if we can expand every node there.
             for(ruleEntry in substitutedConstraints.toList().shuffled(random)) {

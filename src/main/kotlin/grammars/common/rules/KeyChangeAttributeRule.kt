@@ -31,8 +31,9 @@ class KeyChangeAttributeRule(rule : ProductionRule, val initialAttrKey : String,
     }
 
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
+        val initialVal = childAttributes[childIdx].getStringAttribute(initialAttrKey) ?: return NodeAttributes()
         return NodeAttributes.fromAttr(
-            NodeAttribute(newKey, childAttributes[childIdx].getStringAttribute(initialAttrKey)!!)
+            NodeAttribute(newKey, initialVal)
         )
     }
 }
