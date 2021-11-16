@@ -4,7 +4,6 @@ import grammar.*
 import grammar.constraints.*
 import grammars.common.mappers.SingleAttributeMapper
 import grammars.common.rules.*
-import grammars.lambda2.Lambda2Grammar
 
 class TypedFunctionalInterpreter(val basicTypes : Set<String>,
                                  val complexTypes : Map<String, SingleAttributeMapper>,
@@ -21,7 +20,17 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
         "Wanted type $wantedType"
     )
 
-    val typeAttr : String = "type"
+    class InterpretError(msg : String) : IllegalStateException(msg)
+
+    val flattenedComplexTypes = complexTypes.map {
+        Pair(it.key, basicTypes.map { bType ->
+            it.value.forward(bType)
+        })
+    }.toMap()
+
+    companion object {
+        val typeAttr : String = "type"
+    }
     val stmtSym : NtSym = NtSym("stmt")
     val varInit = NtSym("varInit")
     val declaredVar = NtSym("declared")
@@ -56,7 +65,9 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
             )),
     )
     val functionNamesToRules = functions.map {
-        Pair(it.key, makeFunctionAPR(StringSymbol(it.key), it.value.numArgs, it.value.outType))
+        Pair(it.key, makeFunctionAPR(StringSymbol(it.key), it.value.numArgs) { pr ->
+            it.value.makeReturnTypeAPR(pr, typeAttr)
+        })
     }.toMap()
     val grammar : AttributeGrammar = AttributeGrammar(
         givenRules = listOf(
@@ -70,7 +81,9 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
         constraints = mapOf(
             declaredRule.rule to VariableConstraintGenerator(varName.attributeName, newVarRule),
         ) + functions.map {
-            Pair(functionNamesToRules[it.key]!!.rule, makeFunctionConstraints(it.value.inTypes))
+            Pair(functionNamesToRules[it.key]!!.rule, it.value.makeConstraints(
+                { ithChildTypeKey(it) }, basicTypes, flattenedComplexTypes
+            ))
         }.toMap(),
         start = lambdaSym,
         scopeCloserRules = setOf(
@@ -90,13 +103,6 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
 
     fun argIdxToChild(argIdx : Int) : Int {
         return (2 * argIdx) + 2
-    }
-
-    fun childIdxToArg(childIdx : Int) : Int {
-        require(childIdx % 2 == 0 && childIdx != 0) {
-            "ChildIDX is invalid!"
-        }
-        return (childIdx - 2) / 2
     }
 
     fun interpStmt(node : GenericGrammarNode, programState : ProgramState) : Any {
@@ -120,23 +126,6 @@ class TypedFunctionalInterpreter(val basicTypes : Set<String>,
     }
     fun ithChildTypeKey(argIdx : Int) : String {
         return "${argIdx}.${typeAttr}"
-    }
-
-    fun makeFunctionConstraints(inTypes : List<String>) : ConstraintGenerator {
-        val constraints = inTypes.mapIndexed { index, type ->
-            BasicRuleConstraint(NodeAttribute(ithChildTypeKey(index), type))
-        }
-        return BasicConstraintGenerator(constraints)
-    }
-    fun makeFunctionAPR(headerSymbol: StringSymbol, numArgs: Int, returnType : String) : AttributedProductionRule{
-        return makeFunctionAPR(headerSymbol, numArgs) {
-            InitAttributeProductionRule(it, typeAttr, returnType)
-        }
-    }
-    fun makeFunctionAPR(headerSymbol: StringSymbol, numArgs: Int, returnTypeMapperName : String, childTypeIdx : Int) : AttributedProductionRule {
-        return makeFunctionAPR(headerSymbol, numArgs) {
-            AttributeMappingProductionRule(it, typeAttr, childTypeIdx, complexTypes[returnTypeMapperName]!!)
-        }
     }
     
     private fun makeFunctionAPR(headerSymbol: StringSymbol, numArgs: Int, returnTypeAttrRuleMaker : (ProductionRule) -> (KeyedAttributesProductionRule)) : AttributedProductionRule{

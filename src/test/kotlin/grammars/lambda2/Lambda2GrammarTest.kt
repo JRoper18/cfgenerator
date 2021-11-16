@@ -11,12 +11,12 @@ internal class Lambda2GrammarTest {
 
     val strfier = ProgramStringifier(tokenSeperator = " ")
     val interp = Lambda2Interpreter()
-
+    val grammar = Lambda2FunctionalLanguage().interp.grammar
     @Test
     fun testGenerate() {
-        val generator = ProgramGenerator(Lambda2Grammar.grammar, random = Random(42L), numRandomTries = 5)
+        val generator = ProgramGenerator(grammar, random = Random(42L), numRandomTries = 5)
 
-        println(Lambda2Grammar.grammar.globalAttributeRegexes)
+        println(grammar.globalAttributeRegexes)
         repeat(5){
             val prog = generator.generate()
             println(prog)
@@ -31,10 +31,10 @@ internal class Lambda2GrammarTest {
 
     @Test
     fun testCanMakeAllRules() {
-        val generator = ProgramGenerator(Lambda2Grammar.grammar, numRandomTries = 5)
+        val generator = ProgramGenerator(grammar, numRandomTries = 5)
 
         // Can every rule be generated?
-        val givenRulesSet = Lambda2Grammar.grammar.givenRules.map {
+        val givenRulesSet = grammar.givenRules.map {
             it.rule
         }.toSet()
         val generatedRules = mutableSetOf<ProductionRule>()
