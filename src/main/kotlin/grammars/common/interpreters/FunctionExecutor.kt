@@ -6,11 +6,10 @@ import grammar.ProductionRule
 import grammar.constraints.*
 import grammars.common.rules.KeyedAttributesProductionRule
 
-abstract class FunctionExecutor(val inTypes : List<String>) {
+abstract class FunctionExecutor(val numArgs : Int) {
     companion object {
         const val anyType = "any"
     }
-    val numArgs = inTypes.size
     inline fun <reified T> castToType(arg : Any, wantedType : String) : T {
         if(!(arg is T)) {
             throw TypedFunctionalLanguage.TypeError(wantedType = wantedType)
@@ -20,10 +19,7 @@ abstract class FunctionExecutor(val inTypes : List<String>) {
 
     fun checkArgs(args : List<Any>) {
         if(args.size != numArgs){
-            throw TypedFunctionalLanguage.ParseError("Function expects ${inTypes.size} args")
-        }
-        args.forEachIndexed { index, any ->
-            castToType(args[index], inTypes[index])
+            throw TypedFunctionalLanguage.ParseError("Function expects ${numArgs} args")
         }
     }
     protected fun makeConstraintFromType(language: TypedFunctionalLanguage, idx : Int, type : String) : RuleConstraint {
@@ -56,17 +52,7 @@ abstract class FunctionExecutor(val inTypes : List<String>) {
             }
         }
     }
-    open fun makeConstraints(language : TypedFunctionalLanguage) : ConstraintGenerator {
-        val constraints = inTypes.flatMapIndexed { index, type ->
-            if(type == anyType) {
-                listOf()
-            }
-            else {
-                listOf(makeConstraintFromType(language, index, type))
-            }
-        }
-        return BasicConstraintGenerator(constraints)
-    }
+    abstract fun makeConstraints(language : TypedFunctionalLanguage) : ConstraintGenerator
     abstract fun makeReturnTypeAPR(language: TypedFunctionalLanguage, pr: ProductionRule) : KeyedAttributesProductionRule
     abstract fun execute(interpreter: (GenericGrammarNode, List<Any>) -> Any, args: List<Any>) : Any
 }
