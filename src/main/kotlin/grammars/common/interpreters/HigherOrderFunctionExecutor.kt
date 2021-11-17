@@ -1,13 +1,12 @@
 package grammars.common.interpreters
 
+import grammar.NodeAttribute
 import grammar.ProductionRule
 import grammar.constraints.BasicConstraintGenerator
+import grammar.constraints.BasicRuleConstraint
 import grammar.constraints.ConstraintGenerator
 import grammars.common.mappers.SingleAttributeMapper
-import grammars.common.rules.AttributeMappingProductionRule
-import grammars.common.rules.InitAttributeProductionRule
-import grammars.common.rules.KeyChangeAttributeRule
-import grammars.common.rules.KeyedAttributesProductionRule
+import grammars.common.rules.*
 
 abstract class HigherOrderFunctionExecutor(val lambdaArgTypes : List<String>, val otherArgs : List<String>) : FunctionExecutor(
     otherArgs.size + 1
@@ -17,13 +16,19 @@ abstract class HigherOrderFunctionExecutor(val lambdaArgTypes : List<String>, va
         return "lambdaArgs.$argIdx.${typeAttr}"
     }
 
+    protected fun lambdaNumArgsAttrKey() : String {
+        return "lambdaArgs.length"
+    }
+
     abstract fun makeLambdaReturnTypeAPR(language : TypedFunctionalLanguage, pr : ProductionRule) : KeyedAttributesProductionRule
 
     override fun makeReturnTypeAPR(
         language: TypedFunctionalLanguage,
         pr: ProductionRule,
     ): KeyedAttributesProductionRule {
-        var apr = makeLambdaReturnTypeAPR(language, pr)
+        var apr = makeLambdaReturnTypeAPR(language, pr).withOtherRule {
+            KeyChangeAttributeRule(pr, "length", language.argIdxToChild(0), lambdaNumArgsAttrKey())
+        }
         lambdaArgTypes.forEachIndexed { index, argType ->
             val lambdaKey = language.ithLambdaArgTypeToKey(index)
             apr = apr.withOtherRule(KeyChangeAttributeRule(pr, lambdaKey, language.argIdxToChild(0), lambdaArgAttrKey(index, language.typeAttr)))
@@ -33,7 +38,7 @@ abstract class HigherOrderFunctionExecutor(val lambdaArgTypes : List<String>, va
     override fun makeConstraints(language: TypedFunctionalLanguage): ConstraintGenerator {
         val constraints = otherArgs.flatMapIndexed { index, type ->
             if(type == anyType || index == 0) {
-                listOf()
+                listOf() // Ignore 0 index, that's the lambda
             }
             else {
                 listOf(makeConstraintFromType(language, index + 1, type))
@@ -45,7 +50,7 @@ abstract class HigherOrderFunctionExecutor(val lambdaArgTypes : List<String>, va
             else {
                 listOf(makeConstraintFromType(lambdaArgAttrKey(index, language.typeAttr), type, language.basicTypesToValues.keys, language.flattenedComplexTypes))
             }
-        }
+        } + BasicRuleConstraint(NodeAttribute(lambdaNumArgsAttrKey(), lambdaArgTypes.size.toString()))
         return BasicConstraintGenerator(constraints)
     }
 }

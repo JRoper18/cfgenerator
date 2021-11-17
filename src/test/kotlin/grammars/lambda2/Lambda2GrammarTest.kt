@@ -18,6 +18,7 @@ internal class Lambda2GrammarTest {
             val prog = generator.generate()
             val progStr = strfier.stringify(prog)
             println(progStr)
+            println(prog)
             println(Lambda2FunctionalLanguage.language.makeExamples(prog, 3).map {
                 "${it.first} \t ${it.second} : ${it.second.javaClass.name}"
             }.joinToString ("\n"))
@@ -27,7 +28,7 @@ internal class Lambda2GrammarTest {
 
     @Test
     fun testCanMakeAllRules() {
-        val generator = ProgramGenerator(grammar, numRandomTries = 5)
+        val generator = ProgramGenerator(grammar, random = Random(42L), numRandomTries = 5)
 
         // Can every rule be generated?
         val givenRulesSet = grammar.givenRules.map {
@@ -35,6 +36,7 @@ internal class Lambda2GrammarTest {
         }.toSet()
         val generatedRules = mutableSetOf<ProductionRule>()
         for(i in 0 until 100) {
+            println("made $i")
             val prog = generator.generate()
             prog.forEachInTree {
                 val r = it.productionRule.rule

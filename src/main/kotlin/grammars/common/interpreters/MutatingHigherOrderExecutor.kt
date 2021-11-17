@@ -13,6 +13,6 @@ abstract class MutatingHigherOrderExecutor(lambdaArgTypes : List<String>, otherA
         language: TypedFunctionalLanguage,
         pr: ProductionRule
     ): KeyedAttributesProductionRule {
-        return AttributeMappingProductionRule(pr, language.typeAttr, language.argIdxToChild(0), outTypeMapper)
+        return AttributeMappingProductionRule(pr, language.typeAttr, language.argIdxToChild(argIdx), outTypeMapper)
     }
 }

@@ -283,6 +283,9 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
     fun interpStmt(node : GenericGrammarNode, programState : ProgramState) : Any {
         var cidx = 2
         var argidx = 0
+        require(node.lhsSymbol() == stmtSym) {
+            "Non statement node $node"
+        }
         if(node.productionRule.rule == stmtIsDeclaredVarRule.rule) {
             // It's a variable, just fetch the value of the variable.
             val varname = node.rhs[0].attributes().getStringAttribute(varName.attributeName)!!
@@ -298,7 +301,18 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
         val args = mutableListOf<Any>()
         while(cidx < node.rhs.size){
             val argTree = node.rhs[cidx]
-            args.add(interpStmt(argTree, programState))
+            when(argTree.lhsSymbol()) {
+                stmtSym -> {
+                    args.add(interpStmt(argTree, programState)) //Eval the stmt and pass it in.
+                }
+                lambdaSym -> {
+                    // Send in the program itself
+                    args.add(argTree)
+                }
+                else -> {
+                    throw IllegalArgumentException("Unknown node $node")
+                }
+            }
             argidx += 1
             cidx = argIdxToChild(argidx)
         }
