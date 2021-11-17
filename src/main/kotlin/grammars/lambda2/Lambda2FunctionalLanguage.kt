@@ -13,35 +13,35 @@ object Lambda2FunctionalLanguage {
     val listTypeMapper = WrapperAttributeMapper()
     val intListType = listTypeMapper.forward(intType)
     val intListListType = listTypeMapper.forward(intListType)
-
+    val typeAttr = "type"
     val varnames = StringsetSymbol(mapOf(
         // Int variables
-        "i" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intType)),
-        "j" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intType)),
-        "k" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intType)),
-        "l" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intType)),
-        "m" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intType)),
-        "n" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intType)),
+        "i" to setOf(NodeAttribute(typeAttr, intType)),
+        "j" to setOf(NodeAttribute(typeAttr, intType)),
+        "k" to setOf(NodeAttribute(typeAttr, intType)),
+        "l" to setOf(NodeAttribute(typeAttr, intType)),
+        "m" to setOf(NodeAttribute(typeAttr, intType)),
+        "n" to setOf(NodeAttribute(typeAttr, intType)),
         // Bool variables
-        "o" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, boolType)),
-        "p" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, boolType)),
-        "q" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, boolType)),
-        "r" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, boolType)),
+        "o" to setOf(NodeAttribute(typeAttr, boolType)),
+        "p" to setOf(NodeAttribute(typeAttr, boolType)),
+        "q" to setOf(NodeAttribute(typeAttr, boolType)),
+        "r" to setOf(NodeAttribute(typeAttr, boolType)),
         // Int list lists
-        "x" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListListType)),
-        "y" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListListType)),
-        "z" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListListType)),
-        "a" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListListType)),
-        "b" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListListType)),
-        "c" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListListType)),
+        "x" to setOf(NodeAttribute(typeAttr, intListListType)),
+        "y" to setOf(NodeAttribute(typeAttr, intListListType)),
+        "z" to setOf(NodeAttribute(typeAttr, intListListType)),
+        "a" to setOf(NodeAttribute(typeAttr, intListListType)),
+        "b" to setOf(NodeAttribute(typeAttr, intListListType)),
+        "c" to setOf(NodeAttribute(typeAttr, intListListType)),
         // Int lists
-        "s" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListType)),
-        "t" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListType)),
-        "u" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListType)),
-        "v" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListType)),
-        "w" to setOf(NodeAttribute(TypedFunctionalLanguage.typeAttr, intListType)),
+        "s" to setOf(NodeAttribute(typeAttr, intListType)),
+        "t" to setOf(NodeAttribute(typeAttr, intListType)),
+        "u" to setOf(NodeAttribute(typeAttr, intListType)),
+        "v" to setOf(NodeAttribute(typeAttr, intListType)),
+        "w" to setOf(NodeAttribute(typeAttr, intListType)),
     ))
-    
+    val lambdaType = "lambda"
     val language = TypedFunctionalLanguage(
         basicTypesToValues = mapOf(intType to IntRange(-1, 5).toSet(), boolType to setOf(true, false)),
         complexTypes = mapOf(listType to listTypeMapper),
@@ -52,7 +52,9 @@ object Lambda2FunctionalLanguage {
         "indexinto" to IndexIntoFunction(listType, intType, listTypeMapper),
         "cons" to ConsFunction(listType, listTypeMapper),
         "concat" to ConcatFunction(listType),
-        "length" to LengthFunction(listType, intType),
-    ))
+        "len" to LengthFunction(listType, intType),
+        "map" to MapFunction(lambdaType, listType, listTypeMapper)
+    ),
+    typeAttr = typeAttr)
 
 }

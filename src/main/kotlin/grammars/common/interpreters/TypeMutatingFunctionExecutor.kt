@@ -12,7 +12,7 @@ abstract class TypeMutatingFunctionExecutor(inTypes : List<String>,
                                             val outTypeMapper : SingleAttributeMapper,
                                             val argTypeIdx : Int) :
     FunctionExecutor(inTypes) {
-    override fun makeReturnTypeAPR(language: TypedFunctionalLanguage, pr : ProductionRule, typeAttr : String, ): KeyedAttributesProductionRule {
-        return AttributeMappingProductionRule(pr, typeAttr, language.argIdxToChild(argTypeIdx), outTypeMapper)
+    override fun makeReturnTypeAPR(language: TypedFunctionalLanguage, pr : ProductionRule): KeyedAttributesProductionRule {
+        return AttributeMappingProductionRule(pr, language.typeAttr, language.argIdxToChild(argTypeIdx), outTypeMapper)
     }
 }

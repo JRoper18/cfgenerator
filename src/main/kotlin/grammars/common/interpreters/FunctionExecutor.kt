@@ -1,5 +1,6 @@
 package grammars.common.interpreters
 
+import grammar.GenericGrammarNode
 import grammar.NodeAttribute
 import grammar.ProductionRule
 import grammar.constraints.*
@@ -47,7 +48,10 @@ abstract class FunctionExecutor(val inTypes : List<String>) {
                 })
             }
             else {
-                // It's specific.
+                // It's specific, but double check:
+                check(type in flattenedComplexTypes.values.flatten()){
+                    "Unrecognized type $type"
+                }
                 return BasicRuleConstraint(NodeAttribute(consKey, type))
             }
         }
@@ -63,6 +67,6 @@ abstract class FunctionExecutor(val inTypes : List<String>) {
         }
         return BasicConstraintGenerator(constraints)
     }
-    abstract fun makeReturnTypeAPR(language : TypedFunctionalLanguage, pr : ProductionRule, typeAttr : String) : KeyedAttributesProductionRule
-    abstract fun execute(args : List<Any>) : Any
+    abstract fun makeReturnTypeAPR(language: TypedFunctionalLanguage, pr: ProductionRule) : KeyedAttributesProductionRule
+    abstract fun execute(interpreter: (GenericGrammarNode, List<Any>) -> Any, args: List<Any>) : Any
 }

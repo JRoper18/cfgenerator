@@ -1,5 +1,6 @@
 package grammars.common.interpreters
 
+import grammar.GenericGrammarNode
 import grammar.constraints.BasicConstraintGenerator
 import grammar.constraints.ConstraintGenerator
 import grammar.constraints.EqualAttributeValueConstraintGenerator
@@ -12,7 +13,7 @@ class ConcatFunction(val listType : String) : TypeMutatingFunctionExecutor(listO
         )
     }
 
-    override fun execute(args: List<Any>): Any {
+    override fun execute(interpreter: (GenericGrammarNode, List<Any>) -> Any, args: List<Any>): Any {
         return castToType<List<Any>>(args[0], listType) + castToType<List<Any>>(args[1], listType)
     }
 
