@@ -23,20 +23,19 @@ abstract class FunctionExecutor(val numArgs : Int) {
         }
     }
     protected fun makeConstraintFromType(language: TypedFunctionalLanguage, idx : Int, type : String) : RuleConstraint {
-        return makeConstraintFromType(language.ithChildTypeKey(idx), type, language.basicTypesToValues.keys, language.flattenedComplexTypes)
+        return makeConstraintFromType(language.ithChildTypeKey(idx), type, language)
     }
     protected fun makeConstraintFromType(consKey : String, type : String,
-                                         basicTypes : Set<String>,
-                                         flattenedComplexTypes : Map<String, Collection<String>>) : RuleConstraint {
+                                         language: TypedFunctionalLanguage) : RuleConstraint {
         require(type != anyType) {
             "Anytype doesn't make a constraint!"
         }
-        if(type in basicTypes) {
+        if(type in language.basicTypesToValues.keys) {
             return BasicRuleConstraint(NodeAttribute(consKey, type))
         }
         else { // It's a complex type, like an [int] or some other list.
             // Is it a specific complex type (we need a list of ints) or a generic (we just need any list)?
-            val genericTypes = flattenedComplexTypes[type]
+            val genericTypes = language.flattenedComplexTypes[type]
             if(genericTypes != null) {
                 // It's generic.
                 return OrRuleConstraint(genericTypes.map {
@@ -45,7 +44,7 @@ abstract class FunctionExecutor(val numArgs : Int) {
             }
             else {
                 // It's specific, but double check:
-                check(type in flattenedComplexTypes.values.flatten()){
+                check(type in language.flattenedComplexTypes.values.flatten()){
                     "Unrecognized type $type"
                 }
                 return BasicRuleConstraint(NodeAttribute(consKey, type))

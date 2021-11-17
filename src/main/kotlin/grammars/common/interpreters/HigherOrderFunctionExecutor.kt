@@ -48,7 +48,7 @@ abstract class HigherOrderFunctionExecutor(val lambdaArgTypes : List<String>, va
                 listOf()
             }
             else {
-                listOf(makeConstraintFromType(lambdaArgAttrKey(index, language.typeAttr), type, language.basicTypesToValues.keys, language.flattenedComplexTypes))
+                listOf(makeConstraintFromType(lambdaArgAttrKey(index, language.typeAttr), type, language))
             }
         } + BasicRuleConstraint(NodeAttribute(lambdaNumArgsAttrKey(), lambdaArgTypes.size.toString()))
         return BasicConstraintGenerator(constraints)
