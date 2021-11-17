@@ -5,6 +5,7 @@ import grammar.StringsetSymbol
 import grammars.common.interpreters.*
 import grammars.common.mappers.WrapperAttributeMapper
 import grammars.common.rules.intSymbols
+import java.util.logging.Filter
 
 object Lambda2FunctionalLanguage {
     val intType = "int"
@@ -53,7 +54,17 @@ object Lambda2FunctionalLanguage {
         "cons" to ConsFunction(listType, listTypeMapper),
         "concat" to ConcatFunction(listType),
         "len" to LengthFunction(listType, intType),
-        "map" to MapFunction(lambdaType, listType, listTypeMapper)
+        "map" to MapFunction(lambdaType, listType, listTypeMapper),
+        "filter" to FilterFunction(listType, boolType, lambdaType),
+        "plus" to BinaryInt2IntExecutor(BinaryInt2IntExecutor.Operation.PLUS, intType),
+        "minus" to BinaryInt2IntExecutor(BinaryInt2IntExecutor.Operation.MINUS, intType),
+        "lt" to BinaryInt2BoolExecutor(BinaryInt2BoolExecutor.Operation.LT, intType, boolType),
+        "gt" to BinaryInt2BoolExecutor(BinaryInt2BoolExecutor.Operation.GT, intType, boolType),
+        "neg" to NegationExecutor(boolType),
+        "equals" to EqualsExecutor(),
+        "contains" to ContainsRule(listType, boolType),
+        "or" to BinaryBool2BoolExecutor(BinaryBool2BoolExecutor.Operation.OR, boolType),
+        "and" to BinaryBool2BoolExecutor(BinaryBool2BoolExecutor.Operation.AND, boolType)
     ),
     typeAttr = typeAttr)
 
