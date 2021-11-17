@@ -18,14 +18,14 @@ internal class Lambda2InterpreterTest {
 
     @Test
     fun testFoldl() {
-        val prog = "lambda x : foldl ( lambda a , b: ( a ) + ( b ) , 0 , x ) "
+        val prog = "lambda x : foldl ( lambda a , b : ( a ) + ( b ) , 0 , x ) "
         val output = interp.interp(prog, "[1, 2, 3, 4, 5]")
         assertEquals("15", output)
     }
 
     @Test
     fun testFoldr() {
-        val prog = "lambda x : foldr( lambda a , b: ( a ) + ( b ) , 0 , x ) "
+        val prog = "lambda x : foldr( lambda a , b : ( a ) + ( b ) , 0 , x ) "
         val output = interp.interp(prog, "[1, 2, 3, 4, 5]")
         assertEquals("15", output)
     }

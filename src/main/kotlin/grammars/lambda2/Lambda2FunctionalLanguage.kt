@@ -2,10 +2,7 @@ package grammars.lambda2
 
 import grammar.NodeAttribute
 import grammar.StringsetSymbol
-import grammars.common.interpreters.IndexIntoFunction
-import grammars.common.interpreters.MaxFunction
-import grammars.common.interpreters.MinFunction
-import grammars.common.interpreters.TypedFunctionalLanguage
+import grammars.common.interpreters.*
 import grammars.common.mappers.WrapperAttributeMapper
 import grammars.common.rules.intSymbols
 
@@ -53,6 +50,9 @@ object Lambda2FunctionalLanguage {
         "min" to MinFunction(intType, intListType),
         "max" to MaxFunction(intType, intListType),
         "indexinto" to IndexIntoFunction(listType, intType, listTypeMapper),
+        "cons" to ConsFunction(listType, listTypeMapper),
+        "concat" to ConcatFunction(listType),
+        "length" to LengthFunction(listType, intType),
     ))
 
 }

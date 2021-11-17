@@ -39,7 +39,7 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
     }.map {
         Pair(it.key, it.value.map { it2 ->
             it2.second
-        })
+        }.toSet())
     }.toMap()
 
     companion object {
@@ -117,7 +117,7 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
                 declaredRule.rule to VariableConstraintGenerator(varName.attributeName, newVarRule),
             ) + functions.map {
                 Pair(functionNamesToRules[it.key]!!.rule, it.value.makeConstraints(
-                    this, basicTypesToValues.keys, flattenedComplexTypes
+                    this,
                 ))
             }.toMap(),
         start = lambdaSym,

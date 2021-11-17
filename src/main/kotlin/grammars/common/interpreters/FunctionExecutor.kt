@@ -6,6 +6,9 @@ import grammar.constraints.*
 import grammars.common.rules.KeyedAttributesProductionRule
 
 abstract class FunctionExecutor(val inTypes : List<String>) {
+    companion object {
+        const val anyType = "any"
+    }
     val numArgs = inTypes.size
     inline fun <reified T> castToType(arg : Any, wantedType : String) : T {
         if(!(arg is T)) {
@@ -22,9 +25,15 @@ abstract class FunctionExecutor(val inTypes : List<String>) {
             castToType(args[index], inTypes[index])
         }
     }
+    protected fun makeConstraintFromType(language: TypedFunctionalLanguage, idx : Int, type : String) : RuleConstraint {
+        return makeConstraintFromType(language.ithChildTypeKey(idx), type, language.basicTypesToValues.keys, language.flattenedComplexTypes)
+    }
     protected fun makeConstraintFromType(consKey : String, type : String,
                                          basicTypes : Set<String>,
-                                         flattenedComplexTypes : Map<String, List<String>>) : RuleConstraint {
+                                         flattenedComplexTypes : Map<String, Collection<String>>) : RuleConstraint {
+        require(type != anyType) {
+            "Anytype doesn't make a constraint!"
+        }
         if(type in basicTypes) {
             return BasicRuleConstraint(NodeAttribute(consKey, type))
         }
@@ -43,10 +52,14 @@ abstract class FunctionExecutor(val inTypes : List<String>) {
             }
         }
     }
-    open fun makeConstraints(language : TypedFunctionalLanguage, basicTypes : Set<String>,
-                             flattenedComplexTypes : Map<String, List<String>>) : ConstraintGenerator {
-        val constraints = inTypes.mapIndexed { index, type ->
-            makeConstraintFromType(language.ithChildTypeKey(index), type, basicTypes, flattenedComplexTypes)
+    open fun makeConstraints(language : TypedFunctionalLanguage) : ConstraintGenerator {
+        val constraints = inTypes.flatMapIndexed { index, type ->
+            if(type == anyType) {
+                listOf()
+            }
+            else {
+                listOf(makeConstraintFromType(language, index, type))
+            }
         }
         return BasicConstraintGenerator(constraints)
     }
