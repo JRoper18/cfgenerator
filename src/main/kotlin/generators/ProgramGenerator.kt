@@ -82,7 +82,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
      *  expand it out until valid.
      *  Returns true if we could expand, false if we couldn't.
      */
-    fun expandNode(node: GenericGrammarNode, additionalConstraints : List<RuleConstraint> = listOf(), depth : Int = 0) : Boolean {
+    fun expandNode(node: GenericGrammarNode, additionalConstraints : List<RuleConstraint> = listOf(), depth : Int = 0, scope : CoroutineScope = GlobalScope) : Boolean {
         // First, create the program by expanding the start symbol.
         if(depth > maxProgramDepth) {
             return false
@@ -102,10 +102,16 @@ class ProgramGenerator(val ag: AttributeGrammar,
         val expansions = ag.getPossibleExpansions(lhsSymbol)
         var tryCount = 0
         while ((tryCount < numRandomTries || numRandomTries == -1)) {
+            if(!scope.isActive) {
+                return false // Makes this function cancellable.
+            }
             tryCount += 1
             val substitutedConstraints = this.getConstraintSubstitutions(node, expansions, additionalConstraints)
             // For each rule + constraints, see if we can expand every node there.
             for(ruleEntry in substitutedConstraints.toList().shuffled(random)) {
+                if(!scope.isActive) {
+                    return false // Makes this function cancellable.
+                }
                 val expansion = ruleEntry.first
                 val allNewConstraints = ruleEntry.second
                 var expansionIsGood = true
@@ -117,7 +123,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
                         val child = it.rhs[i]
                         //Expand each unexpanded child with all it's new constraints.
                         if(child.isUnexpanded()) {
-                            val canExpand = expandNode(child, allNewConstraints[i], depth + 1)
+                            val canExpand = expandNode(child, allNewConstraints[i], depth + 1, scope)
                             if(!canExpand){
                                 expansionIsGood = false
                                 break
@@ -148,9 +154,9 @@ class ProgramGenerator(val ag: AttributeGrammar,
         var success: Boolean
         try {
             withTimeout(timeMillis = timeoutMs) {
-                success = expandNode(program, rootConstraints)
+                success = expandNode(program, rootConstraints, scope = this)
             }
-        } catch (ex: TimeoutException) {
+        } catch (ex: TimeoutCancellationException) {
             // We ran out of time.
             println("Ran out of time. Program so far: ")
             println(program)

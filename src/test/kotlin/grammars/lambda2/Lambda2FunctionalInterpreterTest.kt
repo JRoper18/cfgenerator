@@ -107,6 +107,15 @@ internal class Lambda2FunctionalInterpreterTest {
     }
 
     @Test
+    fun testEquals() {
+        val prog = "lambda x , y : equals ( x , y )"
+        testIO(prog, "1, 1", true)
+        testIO(prog, "[], []", true)
+        testIO(prog, "[1], [1]", true)
+        testIO(prog, "[], [1]", false)
+    }
+
+    @Test
     fun testSanity() {
         val prog1 = "lambda r    : r  "
         testIO(prog1, "true", true)

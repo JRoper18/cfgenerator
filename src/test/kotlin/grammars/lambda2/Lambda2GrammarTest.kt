@@ -45,6 +45,7 @@ internal class Lambda2GrammarTest {
                     generatedRules.add(r)
                 }
             }
+            println("Missing ${givenRulesSet - generatedRules}")
             if(generatedRules.size == givenRulesSet.size){
                 println("Found early")
                 break // done early
