@@ -251,6 +251,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
     }
     abstract fun lambdaVarnames(tokens : List<String>) : List<String>
     abstract fun getStmtFromLambda(tokens : List<String>) : List<String>
+
     /**
      * Returns the function names and the tokens for each of it's args.
      */

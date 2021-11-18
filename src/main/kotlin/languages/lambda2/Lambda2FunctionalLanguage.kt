@@ -24,7 +24,9 @@ class Lambda2FunctionalLanguage() : TypedFunctionalLanguage(
         "concat" to ConcatFunction(Lambda2.listType),
         "len" to LengthFunction(Lambda2.listType, Lambda2.intType),
         "map" to MapFunction(Lambda2.lambdaType, Lambda2.listType, Lambda2.listTypeMapper),
-        "filter" to FilterFunction(Lambda2.listType, Lambda2.boolType, Lambda2.lambdaType),
+        "filter" to FilterFunction(Lambda2.listType, Lambda2.boolType),
+        "foldl" to FoldlExecutor(Lambda2.listType),
+        "foldr" to FoldrExecutor(Lambda2.listType),
         "plus" to BinaryInt2IntExecutor(BinaryInt2IntExecutor.Operation.PLUS, Lambda2.intType),
         "minus" to BinaryInt2IntExecutor(BinaryInt2IntExecutor.Operation.MINUS, Lambda2.intType),
         "times" to BinaryInt2IntExecutor(BinaryInt2IntExecutor.Operation.TIMES, Lambda2.intType),
@@ -70,7 +72,19 @@ class Lambda2FunctionalLanguage() : TypedFunctionalLanguage(
         if(tokens.last() != ")") {
             throw ParseError("Must close parenthesis $tokens")
         }
-        val args = tokens.subList(2, tokens.size - 1).splitRecursive("(", ")", ",")
+        var args = tokens.subList(2, tokens.size - 1).splitRecursive("(", ")", ",")
+        if(args[0][0] == "lambda") {
+            // The first thing is a lambda. If the lambda has commas in it's arg list, we need to merge those.
+            for(idx in 0 until args.size) {
+                val nextArgBlock = args[idx]
+                if(nextArgBlock.contains(":")) {
+                    // This is where the lambda ends.
+                    val mergedLambda = args.subList(0, idx + 1).flatten()
+                    args = listOf(mergedLambda) + args.subList(idx + 1, args.size)
+                    break
+                }
+            }
+        }
         return Pair(funcName, args)
     }
 

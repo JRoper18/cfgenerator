@@ -7,7 +7,7 @@ import grammars.common.rules.KeyedAttributesProductionRule
 import grammars.common.rules.SynthesizeAttributeProductionRule
 import languages.TypedFunctionalLanguage
 
-class FilterFunction(val listType : String, val boolType : String, val lambdaType : String) : HigherOrderFunctionExecutor(listOf(anyType), listOf(listType)) {
+class FilterFunction(val listType : String, val boolType : String) : HigherOrderFunctionExecutor(listOf(anyType), listOf(listType)) {
     override fun makeLambdaReturnTypeAPR(
         language: TypedFunctionalLanguage,
         pr: ProductionRule
