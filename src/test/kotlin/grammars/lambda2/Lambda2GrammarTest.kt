@@ -29,7 +29,7 @@ internal class Lambda2GrammarTest {
 
     @Test
     fun testCanMakeAllRules() {
-        val generator = ProgramGenerator(grammar, random = Random(42L), numRandomTries = 5)
+        val generator = ProgramGenerator(grammar, timeoutMs = 1000L, returnPartialOnTimeout = true, random = Random(42L), numRandomTries = 5)
 
         // Can every rule be generated?
         val givenRulesSet = grammar.givenRules.map {

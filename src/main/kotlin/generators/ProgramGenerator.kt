@@ -11,10 +11,11 @@ import kotlin.random.Random
 
 class ProgramGenerator(val ag: AttributeGrammar,
                        val numRandomTries : Int = 3,
-                       val timeoutMs : Long = 10000L,
                        val maxProgramDepth : Int = 10,
-                       val random: Random = Random
-) {
+                       val random: Random = Random,
+                       val timeoutMs : Long = 999999999999L,
+                       val returnPartialOnTimeout : Boolean = false,
+                       ) {
 
 
     private fun isValidAttributeList(attrList : List<NodeAttribute>) : Boolean {
@@ -102,16 +103,10 @@ class ProgramGenerator(val ag: AttributeGrammar,
         val expansions = ag.getPossibleExpansions(lhsSymbol)
         var tryCount = 0
         while ((tryCount < numRandomTries || numRandomTries == -1)) {
-            if(!scope.isActive) {
-                return false // Makes this function cancellable.
-            }
             tryCount += 1
             val substitutedConstraints = this.getConstraintSubstitutions(node, expansions, additionalConstraints)
             // For each rule + constraints, see if we can expand every node there.
             for(ruleEntry in substitutedConstraints.toList().shuffled(random)) {
-                if(!scope.isActive) {
-                    return false // Makes this function cancellable.
-                }
                 val expansion = ruleEntry.first
                 val allNewConstraints = ruleEntry.second
                 var expansionIsGood = true
@@ -119,6 +114,9 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 val newChildren : List<GenericGrammarNode> = expansion.makeChildren()
                 //Now, just expand the children trees.
                 node.withExpansionTemporary(expansion, newChildren, {
+                    if(!scope.isActive) {
+                        throw TimeoutException()
+                    }
                     for(i in it.rhs.indices){
                         val child = it.rhs[i]
                         //Expand each unexpanded child with all it's new constraints.
@@ -156,12 +154,14 @@ class ProgramGenerator(val ag: AttributeGrammar,
             withTimeout(timeMillis = timeoutMs) {
                 success = expandNode(program, rootConstraints, scope = this)
             }
-        } catch (ex: TimeoutCancellationException) {
+        } catch (ex: TimeoutException) {
             // We ran out of time.
-            println("Ran out of time. Program so far: ")
-            println(program)
-            println(ProgramStringifier().stringify(program))
-            throw ex
+            if(returnPartialOnTimeout) {
+                return@runBlocking program
+            }
+            else {
+                success = false
+            }
         }
         if(!success) {
             program = RootGrammarNode(UnexpandedAPR(ag.start))
