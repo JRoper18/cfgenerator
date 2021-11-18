@@ -1,6 +1,5 @@
 package grammars.common.interpreters
 
-import grammar.GenericGrammarNode
 import grammar.constraints.ConstraintGenerator
 import grammar.constraints.EqualAttributeValueConstraintGenerator
 import grammars.common.mappers.SingleAttributeMapper
@@ -15,7 +14,7 @@ class ConsFunction(val listType : String, val listTypeMapper : SingleAttributeMa
             language.flattenedComplexTypes[listType]!!)
         )
     }
-    override fun execute(interpreter: (GenericGrammarNode, List<Any>) -> Any, args: List<Any>): Any {
+    override fun execute(interpreter: (Any, List<Any>) -> Any, args: List<Any>): Any {
         val single = args[0]
         val list = castToType<List<Any>>(args[1], listType)
         list.forEach {

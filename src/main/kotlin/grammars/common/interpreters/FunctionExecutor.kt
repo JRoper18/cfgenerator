@@ -53,5 +53,9 @@ abstract class FunctionExecutor(val numArgs : Int) {
     }
     abstract fun makeConstraints(language : TypedFunctionalLanguage) : ConstraintGenerator
     abstract fun makeReturnTypeAPR(language: TypedFunctionalLanguage, pr: ProductionRule) : KeyedAttributesProductionRule
-    abstract fun execute(interpreter: (GenericGrammarNode, List<Any>) -> Any, args: List<Any>) : Any
+
+    /** Takes an interpreter function, which will interpret a program (type Any) and args (list Any) and return something,
+     * Plus some list of args.
+     */
+    abstract fun execute(interpreter: (Any, List<Any>) -> Any, args: List<Any>) : Any
 }

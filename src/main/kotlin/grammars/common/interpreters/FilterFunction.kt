@@ -18,11 +18,10 @@ class FilterFunction(val listType : String, val boolType : String, val lambdaTyp
         return SynthesizeAttributeProductionRule(mapOf(language.typeAttr to language.argIdxToChild(1)), pr)
     }
 
-    override fun execute(interpreter: (GenericGrammarNode, List<Any>) -> Any, args: List<Any>): Any {
-        val lambdaProgNode = castToType<GenericGrammarNode>(args[0], lambdaType)
+    override fun execute(interpreter: (Any, List<Any>) -> Any, args: List<Any>): Any {
         val inList = castToType<List<Any>>(args[1], listType)
         return inList.filter {
-            interpreter(lambdaProgNode, listOf(it)) as Boolean
+            interpreter(args[0], listOf(it)) as Boolean
         }
     }
 

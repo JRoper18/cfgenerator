@@ -1,5 +1,6 @@
 package grammars.common.interpreters
 
+import generators.ProgramStringifier
 import grammar.*
 import grammar.constraints.*
 import grammars.common.mappers.SingleAttributeMapper
@@ -9,7 +10,7 @@ import utils.combinationsTo
 import utils.duplicates
 import kotlin.random.Random
 
-class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
+abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
                               val complexTypes : Map<String, SingleAttributeMapper>,
                               val varName : StringsetSymbol,
                               val functions : Map<String, FunctionExecutor>,
@@ -70,7 +71,7 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
     }.toMap(),
         PR(
             lambdaSym, listOf(
-                StringSymbol("lambda"),
+                StringSymbol(lambdaType),
                 lambdaArgs, COLON,
                 stmtSym
             )),
@@ -126,30 +127,13 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
         )
     )
 
-    private fun makeFunctionPR(headerSymbol : StringSymbol, numArgs : Int, lambdaIdx : Int? = null) : ProductionRule {
-        val pr = ProductionRule(stmtSym, listOf(headerSymbol, LP) + (0 until numArgs).flatMapIndexed { index, s ->
-            val argSym = if(index == lambdaIdx) lambdaSym else stmtSym
-            if(index != 0){
-                listOf(COMMA, argSym)
-            }
-            else {
-                listOf(argSym)
-            }
-        } + listOf(RP))
-        return pr
-    }
+    abstract fun makeFunctionPR(headerSymbol : StringSymbol, numArgs : Int, lambdaIdx : Int? = null) : ProductionRule
 
-    fun argIdxToChild(argIdx : Int) : Int {
-        return (2 * argIdx) + 2
-    }
+    abstract fun argIdxToChild(argIdx : Int) : Int
 
-    fun ithChildTypeKey(argIdx : Int) : String {
-        return "${argIdx}.${typeAttr}"
-    }
+    abstract fun ithChildTypeKey(argIdx : Int) : String
 
-    fun ithLambdaArgTypeToKey(argIdx: Int) : String {
-        return OrderedListAttributeRule.toAttrKey(argIdx, typeAttr)
-    }
+    abstract fun ithLambdaArgTypeToKey(argIdx: Int) : String
 
     private fun makeFunctionAPR(headerSymbol: StringSymbol, numArgs: Int, lambdaIdx : Int?, returnTypeAttrRuleMaker : (ProductionRule) -> (KeyedAttributesProductionRule)) : AttributedProductionRule{
         val pr = makeFunctionPR(headerSymbol = headerSymbol, numArgs = numArgs, lambdaIdx=lambdaIdx)
@@ -169,6 +153,8 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
     class ParseError(msg : String) : IllegalStateException(msg)
     {
         constructor(msg : String, node : GenericGrammarNode, state : ProgramState) : this("Node:\n$node\n with program state: \n$state\n has error: \n$msg\n")
+
+        constructor(msg : String, tokens : List<String>, state : ProgramState) : this("At program: ${tokens.joinToString(" ")} and state \n$state\n parse error with msg \n$msg\n")
     }
 
     class TypeError(val wantedType : String) : IllegalArgumentException(
@@ -231,8 +217,7 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
             }
             var output : Any? = null
             try {
-                println(inputs)
-                output = interp(progNode, args = inputs)
+                output = interp(stringifier.stringify(progNode), args = argsToStr(inputs))
             } catch (ex: Exception)  {
                 when(ex) {
                     is InterpretError, is ParseError, is TypeError -> {
@@ -255,73 +240,72 @@ class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
         return goodExamples
     }
 
-    fun interp(node : GenericGrammarNode, args : List<Any>, programState: ProgramState = ProgramState()) : Any {
-        require(node.productionRule.rule == lambdaRule.rule) {
-            "Must be a lambda rule: \n$node"
-        }
-        val stmtNode = node.rhs[3]
-        // Update the program state.
-        val lambdaData = getLambdaData(node)
-        lambdaData.forEachIndexed { index, argPair ->
-            val varname = argPair.first
-            val vartype = argPair.second
-            programState.setVar(varname, vartype, args[index])
-        }
-        val dupVarnames = lambdaData.map {
-            it.first
-        }.duplicates()
-        if(dupVarnames.isNotEmpty()) {
-            throw ParseError("Duplicate varnames $dupVarnames", node, programState)
-        }
-//        val numInputs = lambdaArgsNode.attributes().getStringAttribute("length")!!.toInt()
-        val stmtResult = interpStmt(stmtNode, programState)
-        lambdaData.forEach {
-            programState.unsetVar(it.first)
-        }
-        return stmtResult
+    val stringifier = ProgramStringifier(" ")
+    fun areTokensLambda(tokens : List<String>) : Boolean {
+        return tokens[0] == lambdaType
     }
-    fun interpStmt(node : GenericGrammarNode, programState : ProgramState) : Any {
-        var cidx = 2
-        var argidx = 0
-        require(node.lhsSymbol() == stmtSym) {
-            "Non statement node $node"
-        }
-        if(node.productionRule.rule == stmtIsDeclaredVarRule.rule) {
-            // It's a variable, just fetch the value of the variable.
-            val varname = node.rhs[0].attributes().getStringAttribute(varName.attributeName)!!
-            return programState.getVar(varname)!!
-        }
-        else if(constantRules.contains(node.productionRule.rule)){
-            // It's a constant.
-            val constantAttr = node.attributes().getStringAttribute(constantAttr)!!
-            return strsToConstants[constantAttr]!!
-        }
+    abstract fun lambdaVarnames(tokens : List<String>) : List<String>
+    abstract fun getStmtFromLambda(tokens : List<String>) : List<String>
+    /**
+     * Returns the function names and the tokens for each of it's args.
+     */
+    abstract fun extractStmtData(tokens : List<String>) : Pair<String, List<List<String>>>
 
-        val funcName = (node.rhs[0].productionRule.rule.lhs as StringSymbol).name
-        val args = mutableListOf<Any>()
-        while(cidx < node.rhs.size){
-            val argTree = node.rhs[cidx]
-            when(argTree.lhsSymbol()) {
-                stmtSym -> {
-                    args.add(interpStmt(argTree, programState)) //Eval the stmt and pass it in.
+    abstract fun argsFromStr(args : String) : List<Any>
+    abstract fun argsToStr(args : List<Any>) : String
+
+    fun interp(progStr : String, args : String) : Any {
+        return interpTokens(progStr.split(" ").map {
+           it.trim()
+        }.filter { it.isNotBlank() }, argsFromStr(args))
+    }
+    fun interpTokens(tokens : List<String>, args : List<Any>, programState : ProgramState = ProgramState()) : Any {
+        // Our language has two super-simple types of expressions: Statements and lambdas.
+        if(areTokensLambda(tokens)) {
+            val varnames = lambdaVarnames(tokens)
+            if(varnames.size != args.size) {
+                throw ParseError("Args $args don't match lambda $tokens")
+            }
+            val dupVarnames = varnames.duplicates()
+            if(dupVarnames.isNotEmpty()) {
+                throw ParseError("Duplicate varnames $dupVarnames", tokens, programState)
+            }
+            varnames.forEachIndexed { index, name ->
+                // Type is any if we don't know.
+                programState.setVar(name, "any", args[index])
+            }
+            val internalStmt = getStmtFromLambda(tokens)
+            val stmtResult = interpTokens(internalStmt, listOf(), programState = programState)
+            varnames.forEach {
+                programState.unsetVar(it)
+            }
+            return stmtResult
+        }
+        else {
+            // It's a statement. Either a variable, a constant, or a function call.
+            if(tokens.size == 1) {
+                // Variable, or constant?
+                return strsToConstants[tokens[0]] ?: programState.getVar(tokens[0]) ?: throw ParseError("Unknown token ${tokens[0]}")
+            }
+            // Else, it's a function call.
+            val stmtData = extractStmtData(tokens)
+            val funcName = stmtData.first
+            val executor = functions[funcName] ?: throw ParseError("Unknown function name $funcName")
+
+            val interpedArgs = stmtData.second.mapIndexed { index, argTokens ->
+                if((index == 0) && executor is HigherOrderFunctionExecutor) {
+                    // Lambda index at zero, just return the tokens unmodified.
+                    argTokens
                 }
-                lambdaSym -> {
-                    // Send in the program itself
-                    args.add(argTree)
-                }
-                else -> {
-                    throw IllegalArgumentException("Unknown node $node")
+                else {
+                    interpTokens(argTokens, listOf(), programState = programState)
                 }
             }
-            argidx += 1
-            cidx = argIdxToChild(argidx)
-        }
-        // Now we have all the args. Apply the function.
-        val executor = functions[funcName]!!
-        try {
-            return executor.execute({ prog, args -> this.interp(prog, args, programState) }, args)
-        } catch (ex : Exception) {
-            throw InterpretError(ex.localizedMessage ?: ex.stackTraceToString())
+            try {
+                return executor.execute({ prog, theirArgs -> this.interpTokens(prog as List<String>, theirArgs, programState) }, interpedArgs)
+            } catch (ex : Exception) {
+                throw InterpretError(ex.stackTraceToString())
+            }
         }
     }
 }

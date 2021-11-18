@@ -3,7 +3,6 @@ package grammars.common.interpreters
 import kotlin.reflect.KClass
 
 class ProgramState {
-    val classesToTypes = mutableMapOf<KClass<*>, String>()
     val variableTypes = mutableMapOf<String, String>()
     val variables = mutableMapOf<String, MutableMap<String, Any>>()
 

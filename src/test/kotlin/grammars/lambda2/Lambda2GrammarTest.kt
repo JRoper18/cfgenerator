@@ -10,7 +10,7 @@ import kotlin.random.Random
 internal class Lambda2GrammarTest {
 
     val strfier = ProgramStringifier(tokenSeperator = " ")
-    val grammar = Lambda2FunctionalLanguage.language.grammar
+    val grammar = Lambda2.language.grammar
     @Test
     fun testGenerate() {
         val generator = ProgramGenerator(grammar, random = Random(40L), numRandomTries = 5)
@@ -19,7 +19,7 @@ internal class Lambda2GrammarTest {
             val progStr = strfier.stringify(prog)
             println(progStr)
             println(prog)
-            println(Lambda2FunctionalLanguage.language.makeExamples(prog, 3).map {
+            println(Lambda2.language.makeExamples(prog, 3).map {
                 "${it.first} \t ${it.second} : ${it.second.javaClass.name}"
             }.joinToString ("\n"))
         }
