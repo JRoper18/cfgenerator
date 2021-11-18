@@ -1,5 +1,6 @@
 package grammars.lambda2
 
+import interpreters.simplepython.PythonInterpreter
 import languages.TypedFunctionalLanguage
 import languages.lambda2.Lambda2
 import org.junit.jupiter.api.Test
@@ -94,11 +95,14 @@ internal class Lambda2FunctionalInterpreterTest {
     @Test
     fun testInsert() {
         val prog1 = "lambda x , y , z : insert ( x , y , z ) "
-        testIO(prog1, "0, 42, [1, 2, 3]", "[42, 1, 2, 3]")
-        testIO(prog1, "1, 42, [1, 2, 3]", "[1, 42, 2, 3]")
-        testIO(prog1, "4, 42, [1, 2, 3]", "[1, 2, 3, 42]")
+        testIO(prog1, "[1, 2, 3], 0, 5", listOf(5, 1, 2, 3))
+        testIO(prog1, "[1, 2, 3], 1, 5", listOf(1, 5, 2, 3))
+        testIO(prog1, "[1, 2, 3], 3, 5", listOf(1, 2, 3, 5))
+        assertThrows<TypedFunctionalLanguage.TypeError>() {
+            interp.interp(prog1, "[1, 2, 3], 0, true")
+        }
         assertThrows<TypedFunctionalLanguage.InterpretError>() {
-            interp.interp(prog1, "4, True, [1, 2, 3]")
+            interp.interp(prog1, "[1, 2, 3], 4, 4")
         }
     }
 

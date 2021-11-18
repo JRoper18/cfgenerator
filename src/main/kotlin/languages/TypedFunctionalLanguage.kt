@@ -310,7 +310,14 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
             try {
                 return executor.execute({ prog, theirArgs -> this.interpTokens(prog as List<String>, theirArgs, programState) }, interpedArgs)
             } catch (ex : Exception) {
-                throw InterpretError(ex.stackTraceToString())
+                when(ex) {
+                    is TypeError, is ParseError -> {
+                        throw ex
+                    }
+                    else -> {
+                        throw InterpretError(ex.stackTraceToString())
+                    }
+                }
             }
         }
     }

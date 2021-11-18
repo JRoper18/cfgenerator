@@ -5,7 +5,7 @@ import grammars.common.rules.KeyedAttributesProductionRule
 import grammars.common.rules.SynthesizeAttributeProductionRule
 import languages.TypedFunctionalLanguage
 
-class FoldrExecutor(val listType : String) : HigherOrderFunctionExecutor(listOf(anyType), listOf(anyType, listType)) {
+class FoldrExecutor(val listType : String) : HigherOrderFunctionExecutor(listOf(anyType, anyType), listOf(anyType, listType)) {
     override fun makeLambdaReturnTypeAPR(
         language: TypedFunctionalLanguage,
         pr: ProductionRule

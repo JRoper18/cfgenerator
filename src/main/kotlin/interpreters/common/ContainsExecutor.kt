@@ -1,6 +1,6 @@
 package interpreters.common
 
-class ContainsRule(val listType : String, val boolType : String) : BasicFunctionExecutor(
+class ContainsExecutor(val listType : String, val boolType : String) : BasicFunctionExecutor(
     inTypes = listOf(listType, anyType),
     outType = boolType
 ) {

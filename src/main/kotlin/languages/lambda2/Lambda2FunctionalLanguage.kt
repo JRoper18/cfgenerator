@@ -27,6 +27,8 @@ class Lambda2FunctionalLanguage() : TypedFunctionalLanguage(
         "filter" to FilterFunction(Lambda2.listType, Lambda2.boolType),
         "foldl" to FoldlExecutor(Lambda2.listType),
         "foldr" to FoldrExecutor(Lambda2.listType),
+        "recl" to ReclExecutor(Lambda2.listType),
+        "insert" to InsertExecutor(Lambda2.listType, Lambda2.intType, listTypeMapper = Lambda2.listTypeMapper),
         "plus" to BinaryInt2IntExecutor(BinaryInt2IntExecutor.Operation.PLUS, Lambda2.intType),
         "minus" to BinaryInt2IntExecutor(BinaryInt2IntExecutor.Operation.MINUS, Lambda2.intType),
         "times" to BinaryInt2IntExecutor(BinaryInt2IntExecutor.Operation.TIMES, Lambda2.intType),
@@ -34,7 +36,7 @@ class Lambda2FunctionalLanguage() : TypedFunctionalLanguage(
         "gt" to BinaryInt2BoolExecutor(BinaryInt2BoolExecutor.Operation.GT, Lambda2.intType, Lambda2.boolType),
         "neg" to NegationExecutor(Lambda2.boolType),
         "equals" to EqualsExecutor(),
-        "contains" to ContainsRule(Lambda2.listType, Lambda2.boolType),
+        "contains" to ContainsExecutor(Lambda2.listType, Lambda2.boolType),
         "or" to BinaryBool2BoolExecutor(BinaryBool2BoolExecutor.Operation.OR, Lambda2.boolType),
         "and" to BinaryBool2BoolExecutor(BinaryBool2BoolExecutor.Operation.AND, Lambda2.boolType),
     )
