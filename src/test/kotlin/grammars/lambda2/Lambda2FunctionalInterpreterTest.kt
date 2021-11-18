@@ -1,8 +1,7 @@
 package grammars.lambda2
 
-import grammar.RootGrammarNode
-import grammars.common.interpreters.TypedFunctionalLanguage
-import grammars.deepcoder.DeepCoderInterpreter
+import languages.TypedFunctionalLanguage
+import languages.lambda2.Lambda2
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*

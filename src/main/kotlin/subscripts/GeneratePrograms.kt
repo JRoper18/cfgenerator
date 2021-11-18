@@ -1,8 +1,8 @@
 package subscripts
 
-import grammars.ProgramGenerationResult
-import grammars.ProgramGenerationResult.PROGRAM_STATUS
-import grammars.Language
+import languages.ProgramGenerationResult
+import languages.ProgramGenerationResult.PROGRAM_STATUS
+import languages.Language
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -25,15 +25,15 @@ import kotlin.system.measureTimeMillis
  * logOutputStream is where to put the log statements.
  * Returns a list of generated programs, filtered by your canSave function.
  */
-suspend fun generatePrograms(
-    language : Language,
+suspend fun <I, O> generatePrograms(
+    language : Language<I, O>,
     makeUseful : Boolean,
     numToMake : Int,
     outputFileName: String = "/dev/null",
-    canSaveToReturnMemory : (ProgramGenerationResult) -> Boolean = { false },
+    canSaveToReturnMemory : (ProgramGenerationResult<*, *>) -> Boolean = { false },
     logOutputStream: PrintWriter = PrintWriter(System.out, true)
-) : List<ProgramGenerationResult> {
-    val savedResults = java.util.Collections.synchronizedList(mutableListOf<ProgramGenerationResult>())
+) : List<ProgramGenerationResult<I, O>> {
+    val savedResults = java.util.Collections.synchronizedList(mutableListOf<ProgramGenerationResult<I, O>>())
     val numBad = AtomicInteger(0)
     val numRunnable = AtomicInteger(0)
     val numUseful = AtomicInteger(0)
@@ -106,6 +106,7 @@ suspend fun generateProgramsCmd(args: Array<String>) {
     val numToMake by parser.option(ArgType.Int, shortName = "n", description = "Number of examples to make").default(1)
     val makeUseful by parser.option(ArgType.Boolean, fullName = "useful", description = "If true, we'll only count useful problems in the total count.").default(false)
     parser.parse(args)
-    generatePrograms(argsToLanguage(lanChoice), outputFileName = outputFileName, makeUseful = makeUseful, numToMake = numToMake)
+    val lan = argsToLanguage(lanChoice)
+    generatePrograms(lan, outputFileName = outputFileName, makeUseful = makeUseful, numToMake = numToMake)
 
 }

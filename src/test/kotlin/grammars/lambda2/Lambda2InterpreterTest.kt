@@ -1,7 +1,6 @@
 package grammars.lambda2
 
-import grammar.RootGrammarNode
-import grammars.deepcoder.DeepCoderInterpreter
+import interpreters.simplepython.PythonInterpreter
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.assertThrows
 
 internal class Lambda2InterpreterTest {
 
-    val interp = Lambda2Interpreter()
+    val interp = PythonInterpreter()
 
     internal fun testIO(prog : String, input : String, output : String) {
         val actual = interp.interp(prog, input)
@@ -48,7 +47,7 @@ internal class Lambda2InterpreterTest {
     fun testCons() {
         val prog1 = "lambda x : cons ( 1 , x ) "
         testIO(prog1, "[2, 3]", "[1, 2, 3]")
-        assertThrows<Lambda2Interpreter.InterpretError>() {
+        assertThrows<PythonInterpreter.InterpretError>() {
             interp.interp(prog1, "[True, False]")
         }
     }
@@ -57,7 +56,7 @@ internal class Lambda2InterpreterTest {
     fun testConcat() {
         val prog1 = "lambda x , y : concat ( x , y ) "
         testIO(prog1, "[2, 3],[1, 4]", "[2, 3, 1, 4]")
-        assertThrows<Lambda2Interpreter.InterpretError>() {
+        assertThrows<PythonInterpreter.InterpretError>() {
             interp.interp(prog1, "[True, False], [1, 3]")
         }
     }
@@ -68,7 +67,7 @@ internal class Lambda2InterpreterTest {
         testIO(prog1, "0, 42, [1, 2, 3]", "[42, 1, 2, 3]")
         testIO(prog1, "1, 42, [1, 2, 3]", "[1, 42, 2, 3]")
         testIO(prog1, "4, 42, [1, 2, 3]", "[1, 2, 3, 42]")
-        assertThrows<Lambda2Interpreter.InterpretError>() {
+        assertThrows<PythonInterpreter.InterpretError>() {
             interp.interp(prog1, "4, True, [1, 2, 3]")
         }
     }

@@ -1,11 +1,7 @@
 package subscripts
 
-import generators.ProgramGenerator
-import generators.ProgramStringifier
-import grammars.Language
-import grammars.deepcoder.*
-import grammar.ProductionRule
-import grammars.ProgramRunResult
+import languages.Language
+import languages.ProgramRunResult
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
@@ -16,7 +12,6 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.random.Random
 
 suspend fun evaluateProgramsCmd(args: Array<String>) {
     // Given a program, see if it satisfies the input/output example.
@@ -67,7 +62,7 @@ suspend fun evaluateProgramsCmd(args: Array<String>) {
 }
 
 
-fun analyzeRuleFrequency(program : String, language : Language, frequencies : MutableMap<String, Int>) {
+fun analyzeRuleFrequency(program : String, language : Language<*, *>, frequencies : MutableMap<String, Int>) {
     language.grammar().rules.forEachIndexed { idx, rule ->
         val toFind = "$idx {"
         val key = rule.rule.toString()
@@ -75,7 +70,7 @@ fun analyzeRuleFrequency(program : String, language : Language, frequencies : Mu
         frequencies[key] = (frequencies[key] ?: 0) + numOccurances
     }
 }
-fun analyzeSymbolFrequency(program : String, language : Language, frequencies: MutableMap<String, Int>) {
+fun analyzeSymbolFrequency(program : String, language : Language<*, *>, frequencies: MutableMap<String, Int>) {
     val stringsToFind = language.grammar().symbols.map {
         it.name
     }
@@ -85,7 +80,7 @@ fun analyzeSymbolFrequency(program : String, language : Language, frequencies: M
     }
 }
 
-suspend fun evaluatePrograms(language : Language, evalExamples : List<String>, logWriter : PrintWriter, exampleWriter : PrintWriter){
+suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<String>, logWriter : PrintWriter, exampleWriter : PrintWriter){
     val numProgramsWithExamples = AtomicInteger(0)
     val numFullyCorrectPrograms = AtomicInteger(0)
     val numTotalExamples = AtomicInteger(0)

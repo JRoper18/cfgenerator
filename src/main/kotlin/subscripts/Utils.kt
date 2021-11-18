@@ -1,13 +1,13 @@
 package subscripts
 
-import grammars.CfgLanguage
-import grammars.ProgramGenerationResult
-import grammars.Language
-import grammars.deepcoder.DeepcoderLanguage
-import grammars.lambda2.Lambda2Language
+import languages.CfgLanguage
+import languages.ProgramGenerationResult
+import languages.Language
+import languages.deepcoder.DeepcoderLanguage
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import languages.lambda2.Lambda2FunctionalLanguage
 
 
 suspend fun <A> Iterable<A>.pforall(f: suspend (A) -> Unit) = coroutineScope {
@@ -28,21 +28,21 @@ enum class LanguageRef {
     LAMBDA2CFG,
 }
 
-fun argsToLanguage(lan : LanguageRef) : Language {
+fun argsToLanguage(lan : LanguageRef) : Language<*, *> {
     when(lan){
         LanguageRef.DEEPCODER -> return DeepcoderLanguage()
-        LanguageRef.LAMBDA2 -> return Lambda2Language()
-        LanguageRef.LAMBDA2CFG -> return CfgLanguage(Lambda2Language())
+        LanguageRef.LAMBDA2 -> return Lambda2FunctionalLanguage()
+        LanguageRef.LAMBDA2CFG -> return CfgLanguage(Lambda2FunctionalLanguage())
     }
 }
-fun generationResultToString(language : Language, result: ProgramGenerationResult) : String {
+fun generationResultToString(language : Language<*, *>, result: ProgramGenerationResult<*, *>) : String {
     val build = StringBuilder()
     build.append("Examples:\n")
     result.examples.forEach {
         build.append("Inputs: \n")
-        build.append(it.first + "\n")
+        build.append(it.first.toString() + "\n")
         build.append("Output: \n")
-        build.append(it.second + "\n")
+        build.append(it.second.toString() + "\n")
     }
     build.append("\nProgram: \n")
     build.append(language.programToString(result.program) + "\n")
