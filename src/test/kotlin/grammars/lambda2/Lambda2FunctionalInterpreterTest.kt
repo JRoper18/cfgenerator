@@ -65,6 +65,35 @@ internal class Lambda2FunctionalInterpreterTest {
     }
 
     @Test
+    fun testOps() {
+        val boolAnd = "lambda x , y : and ( x , y ) "
+        val boolOr = "lambda x , y : or ( x , y ) "
+        testIO(boolAnd, "false, true", false)
+        testIO(boolAnd, "true, true", true)
+        testIO(boolOr, "false, true", true)
+        testIO(boolOr, "true, true", true)
+    }
+
+    @Test
+    fun testLen() {
+        val prog = "lambda x : len ( x ) "
+        testIO(prog, "[1, 1, 1]", 3)
+    }
+
+    @Test
+    fun testIndexInto() {
+        val prog = "lambda x , y : indexinto ( x , y ) "
+        testIO(prog, "[3, 4, 5], 0", 3)
+        testIO(prog, "[3, 4, 5], 2", 5)
+    }
+
+    @Test
+    fun testBigInts() {
+        val prog = "lambda x : times ( x , times ( x , x ) )"
+        testIO(prog, "5", 125)
+    }
+
+    @Test
     fun testInsert() {
         val prog1 = "lambda x , y , z : insert ( x , y , z ) "
         testIO(prog1, "0, 42, [1, 2, 3]", "[42, 1, 2, 3]")
@@ -79,6 +108,9 @@ internal class Lambda2FunctionalInterpreterTest {
     fun testSanity() {
         val prog1 = "lambda r    : r  "
         testIO(prog1, "true", true)
+        testIO(prog1, "[]", listOf<Any>())
+        testIO(prog1, "[ ]", listOf<Any>())
+
     }
 
 }

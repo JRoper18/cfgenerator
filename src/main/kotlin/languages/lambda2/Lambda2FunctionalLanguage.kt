@@ -75,9 +75,16 @@ class Lambda2FunctionalLanguage() : TypedFunctionalLanguage(
     }
 
     override fun argsFromStr(args: String): List<Any> {
-        val subArgs = args.toList().splitRecursive('[', ']', ',')
+        val subArgs = args.toList().splitRecursive('[', ']', ',').map {
+            it.joinToString("").trim()
+        }.filter {
+            it.isNotBlank()
+        }
+        if(subArgs.isEmpty()) {
+            return listOf()
+        }
         return subArgs.map {
-            argFromStr(it.joinToString("").trim())
+            argFromStr(it)
         }
     }
 
