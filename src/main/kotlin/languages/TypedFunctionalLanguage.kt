@@ -6,20 +6,20 @@ import grammar.*
 import grammar.constraints.*
 import grammars.common.mappers.SingleAttributeMapper
 import grammars.common.rules.*
-import interpreters.common.FunctionExecutor
-import interpreters.common.HigherOrderFunctionExecutor
+import interpreters.common.executors.FunctionExecutor
+import interpreters.common.executors.HigherOrderFunctionExecutor
 import interpreters.common.ProgramState
-import interpreters.simplepython.PythonInterpreter
+import interpreters.common.signatures.PropertySignature
 import utils.cartesian
 import utils.combinationsTo
 import utils.duplicates
 import kotlin.random.Random
-
 abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
                                        val complexTypes : Map<String, SingleAttributeMapper>,
                                        val varName : StringsetSymbol,
                                        val functions : Map<String, FunctionExecutor>,
                                        val typeAttr : String,
+                                       val signatures : Set<PropertySignature<Any, Any>> = setOf(),
                                        val random : Random = Random,
                                        val maxComplexTypeDepth : Int = 2,
 ) : Language<List<Any>, Any> {
@@ -41,10 +41,18 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         }.toSet())
     }.toMap()
 
+    private val flattenedComplexToSpecificTypes = flattenedComplexTypes.flatMap { complexEntry ->
+        val generic = complexEntry.key
+        complexEntry.value.map { specific ->
+            Pair(specific, generic)
+        }
+    }.toMap()
 
+    fun genericTypeFromSpecific(specific : String) : String? {
+        return flattenedComplexToSpecificTypes[specific]
+    }
     val constantAttr : String = "constant"
     val lambdaType : String = "lambda"
-    val lambdaRetType : String = "retType"
     // Grammar stuff on the top
 
     protected val stmtSym : NtSym = NtSym("stmt")
@@ -190,7 +198,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         }
         throw IllegalArgumentException("Unknown type $type!")
     }
-    // Returns a list of names and types of lambda arguments
+    // Returns a list of names and types of lambda arrunProgramguments
     fun getLambdaData(node : GenericGrammarNode) : List<Pair<String, String>> {
         val lambdaArgsNode = node.rhs[1]
         val inputsNodeList : List<GenericGrammarNode>
@@ -244,6 +252,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         }
         return goodExamples
     }
+
 
     val stringifier = ProgramStringifier(" ")
     fun areTokensLambda(tokens : List<String>) : Boolean {

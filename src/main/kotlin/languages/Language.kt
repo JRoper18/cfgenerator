@@ -1,7 +1,10 @@
 package languages
 
 import grammar.AttributeGrammar
+import grammar.GenericGrammarNode
 import grammar.RootGrammarNode
+import interpreters.common.ProgramState
+import interpreters.common.signatures.PropertySignature
 
 interface Language<I, O> {
     fun generateProgramAndExamples(numExamples : Int) : ProgramGenerationResult<I, O>

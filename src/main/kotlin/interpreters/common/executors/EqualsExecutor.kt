@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 class EqualsExecutor() : BasicFunctionExecutor(listOf(anyType, anyType), anyType) {
 

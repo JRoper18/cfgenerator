@@ -1,16 +1,16 @@
-package interpreters.common
+package interpreters.common.executors
 
 import grammar.ProductionRule
 import grammars.common.rules.KeyedAttributesProductionRule
 import grammars.common.rules.SynthesizeAttributeProductionRule
 import languages.TypedFunctionalLanguage
 
-class FoldlExecutor(val listType : String) : HigherOrderFunctionExecutor(listOf(anyType, anyType), listOf(anyType, listType)) {
+class FoldrExecutor(val listType : String) : HigherOrderFunctionExecutor(listOf(anyType, anyType), listOf(anyType, listType)) {
     override fun makeLambdaReturnTypeAPR(
         language: TypedFunctionalLanguage,
         pr: ProductionRule
     ): KeyedAttributesProductionRule {
-        // for Foldl (f e list) return e
+        // for Foldr (f e list) return e
         return SynthesizeAttributeProductionRule(mapOf(language.typeAttr to language.argIdxToChild(1)), pr)
     }
 
@@ -21,12 +21,13 @@ class FoldlExecutor(val listType : String) : HigherOrderFunctionExecutor(listOf(
             return acc
         }
         else {
-            // foldl f e cons(x, y) = foldl f (f e x) y
-            val folded = interpreter(args[0], listOf(acc, inList[0]))
-            return FoldlExecutor(listType).execute(interpreter, listOf(
+            // foldr f e cons(x, y) = f (foldr f e y) x
+            val inner = FoldrExecutor(listType).execute(interpreter, listOf(
                 args[0],
-                folded,
+                acc,
                 inList.subList(1, inList.size)))
+            return interpreter(args[0], listOf(inner, inList[0]))
+
         }
     }
 }

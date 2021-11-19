@@ -2,11 +2,11 @@ package languages.lambda2
 
 import grammar.ProductionRule
 import grammar.StringSymbol
-import interpreters.common.*
 import grammars.common.rules.COMMA
 import grammars.common.rules.LP
 import grammars.common.rules.OrderedListAttributeRule
 import grammars.common.rules.RP
+import interpreters.common.executors.*
 import languages.ProgramGenerationResult
 import languages.TypedFunctionalLanguage
 import utils.splitRecursive

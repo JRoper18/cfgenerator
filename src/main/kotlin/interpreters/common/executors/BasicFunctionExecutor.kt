@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 import grammar.ProductionRule
 import grammar.constraints.BasicConstraintGenerator

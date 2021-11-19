@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 class ContainsExecutor(val listType : String, val boolType : String) : BasicFunctionExecutor(
     inTypes = listOf(listType, anyType),

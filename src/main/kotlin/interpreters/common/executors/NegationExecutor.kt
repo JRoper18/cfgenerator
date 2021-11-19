@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 class NegationExecutor(val boolType : String) : BasicFunctionExecutor(listOf(boolType), boolType) {
 

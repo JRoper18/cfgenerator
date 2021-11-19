@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 class BinaryBool2BoolExecutor(val op : Operation, val boolType : String) : BasicFunctionExecutor(listOf(boolType, boolType), boolType) {
     enum class Operation {

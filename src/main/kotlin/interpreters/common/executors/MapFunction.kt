@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 import grammar.ProductionRule
 import grammars.common.mappers.SingleAttributeMapper
@@ -7,7 +7,8 @@ import grammars.common.rules.KeyedAttributesProductionRule
 import languages.TypedFunctionalLanguage
 
 class MapFunction(val lambdaType : String, val listType : String, val listTypeMapper: SingleAttributeMapper) : HigherOrderFunctionExecutor(listOf(
-    anyType), listOf(listType)) {
+    anyType
+), listOf(listType)) {
     override fun execute(interpreter: (Any, List<Any>) -> Any, args: List<Any>): Any {
         val inList = castToType<List<Any>>(args[1], listType)
         return inList.map {

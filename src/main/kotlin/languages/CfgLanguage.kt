@@ -1,7 +1,10 @@
 package languages
 
 import grammar.AttributeGrammar
+import grammar.GenericGrammarNode
 import grammar.RootGrammarNode
+import interpreters.common.ProgramState
+import interpreters.common.signatures.PropertySignature
 
 // By default, print all attributes. 
 class CfgLanguage<I, O>(val language: Language<I, O>, val attrReg : Regex = Regex("(.*?)")) : Language<I, O> {

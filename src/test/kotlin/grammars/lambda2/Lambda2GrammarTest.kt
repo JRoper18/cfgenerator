@@ -14,7 +14,7 @@ internal class Lambda2GrammarTest {
     val grammar = Lambda2.language.grammar
     @Test
     fun testGenerate() {
-        val generator = ProgramGenerator(grammar, random = Random(40L), numRandomTries = 5)
+        val generator = ProgramGenerator(grammar, random = Random(40L), numRandomTries = 5, maxProgramDepth = 5)
         repeat(5){
             val prog = generator.generate()
             val progStr = strfier.stringify(prog)

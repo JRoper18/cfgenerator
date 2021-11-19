@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 import grammar.constraints.BasicConstraintGenerator
 import grammar.constraints.ConstraintGenerator

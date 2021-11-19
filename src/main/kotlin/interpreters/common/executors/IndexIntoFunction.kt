@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 import grammars.common.mappers.SingleAttributeMapper
 

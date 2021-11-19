@@ -1,11 +1,12 @@
-package interpreters.common
+package interpreters.common.executors
 
 import grammar.constraints.ConstraintGenerator
 import grammar.constraints.EqualAttributeValueConstraintGenerator
 import grammars.common.mappers.SingleAttributeMapper
 import languages.TypedFunctionalLanguage
 
-class ConsFunction(val listType : String, val listTypeMapper : SingleAttributeMapper): TypeMutatingFunctionExecutor(listOf(anyType, listType), listTypeMapper, 0) {
+class ConsFunction(val listType : String, val listTypeMapper : SingleAttributeMapper): TypeMutatingFunctionExecutor(listOf(
+    anyType, listType), listTypeMapper, 0) {
 
     override fun makeConstraints(
         language: TypedFunctionalLanguage,

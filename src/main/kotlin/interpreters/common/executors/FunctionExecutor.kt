@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 import grammar.NodeAttribute
 import grammar.ProductionRule
@@ -8,7 +8,7 @@ import languages.TypedFunctionalLanguage
 
 abstract class FunctionExecutor(val numArgs : Int) {
     companion object {
-        const val anyType = "any"
+        const val anyType : String = "any"
     }
     inline fun <reified T> castToType(arg : Any, wantedType : String) : T {
         if(!(arg is T)) {

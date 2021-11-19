@@ -1,8 +1,7 @@
-package interpreters.common
+package interpreters.common.executors
 
 import grammar.constraints.ConstraintGenerator
 import grammar.constraints.EqualAttributeValueConstraintGenerator
-import grammars.common.mappers.IdentityMapper
 import grammars.common.mappers.SingleAttributeMapper
 import languages.TypedFunctionalLanguage
 

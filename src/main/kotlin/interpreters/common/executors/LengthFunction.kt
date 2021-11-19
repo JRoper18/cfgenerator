@@ -1,4 +1,4 @@
-package interpreters.common
+package interpreters.common.executors
 
 class LengthFunction(val listType : String, intType : String) : BasicFunctionExecutor(listOf(listType), intType) {
     override fun execute(interpreter: (Any, List<Any>) -> Any, args: List<Any>): Any {
