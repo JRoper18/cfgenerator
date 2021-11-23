@@ -21,7 +21,7 @@ internal class Lambda2GrammarTest {
             println(progStr)
             println(prog)
             println(Lambda2.language.makeExamples(prog, 3).map {
-                "${it.first} \t ${it.second} : ${it.second.javaClass.name}"
+                "${it.input} \t ${it.output} : ${it.output.javaClass.name}"
             }.joinToString ("\n"))
         }
     }

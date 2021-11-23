@@ -19,7 +19,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
                                        val varName : StringsetSymbol,
                                        val functions : Map<String, FunctionExecutor>,
                                        val typeAttr : String,
-                                       val signatures : Set<PropertySignature<Any, Any>> = setOf(),
+                                       val properties : Set<PropertySignature<Any, Any>> = setOf(),
                                        val random : Random = Random,
                                        val maxComplexTypeDepth : Int = 2,
 ) : Language<List<Any>, Any> {
@@ -199,7 +199,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         throw IllegalArgumentException("Unknown type $type!")
     }
     // Returns a list of names and types of lambda arrunProgramguments
-    fun getLambdaData(node : GenericGrammarNode) : List<Pair<String, String>> {
+    private fun getLambdaData(node : GenericGrammarNode) : List<Pair<String, String>> {
         val lambdaArgsNode = node.rhs[1]
         val inputsNodeList : List<GenericGrammarNode>
         if(lambdaArgsNode.productionRule.rule  == lambdaArgsRule.rule) {
@@ -219,18 +219,21 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         }
         return inputVarnames.zip(inputTypeList)
     }
-    fun makeExamples(progNode : RootGrammarNode, num : Int) : List<Pair<List<Any>, Any>> {
+
+    // The subprogram examples map is a map from the arg idx of the argument to the run data of that argument.
+    data class ExampleRunData(val input : List<Any>, val output : Any, val state : ProgramState, val subprogramExamples : Map<Int, MutableCollection<ExampleRunData>>)
+    fun makeExamples(progNode : RootGrammarNode, num : Int) : List<ExampleRunData> {
         val lambdaData = getLambdaData(progNode)
         var numFails = 0
-        val goodExamples = mutableListOf<Pair<List<Any>, Any>>()
+        val goodExamples = mutableListOf<ExampleRunData>()
         val maxFailedExamples = 5
         for(i in 0 until num + maxFailedExamples) {
             val inputs = List<Any>(lambdaData.size) {
                 makeInput(lambdaData[it].second)
             }
-            var output : Any? = null
+            var totalOutput : ExampleRunData? = null
             try {
-                output = interp(stringifier.stringify(progNode), args = argsToStr(inputs))
+                totalOutput = interpFull(stringifier.stringify(progNode), args = argsToStr(inputs))
             } catch (ex: Exception)  {
                 when(ex) {
                     is InterpretError, is ParseError, is TypeError -> {
@@ -245,7 +248,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
                 }
             }
             // If we're here the input worked.
-            goodExamples.add(Pair(inputs, output))
+            goodExamples.add(totalOutput)
             if(goodExamples.size >= num){
                 return goodExamples;
             }
@@ -255,27 +258,33 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
 
 
     val stringifier = ProgramStringifier(" ")
-    fun areTokensLambda(tokens : List<String>) : Boolean {
+    private fun areTokensLambda(tokens : List<String>) : Boolean {
         return tokens[0] == lambdaType
     }
     abstract fun lambdaVarnames(tokens : List<String>) : List<String>
     abstract fun getStmtFromLambda(tokens : List<String>) : List<String>
 
     /**
-     * Returns the function names and the tokens for each of it's args.
+     * Returns the function names and the spans for each of it's args.
      */
     abstract fun extractStmtData(tokens : List<String>) : Pair<String, List<List<String>>>
 
     abstract fun argsFromStr(args : String) : List<Any>
     abstract fun argsToStr(args : List<Any>) : String
 
-    fun interp(progStr : String, args : String) : Any {
-        return interpTokens(progStr.split(" ").map {
-           it.trim()
+    private fun interpFull(progStr : String, args : String) : ExampleRunData {
+        val exampleRunData = interpTokens(progStr.split(" ").map {
+            it.trim()
         }.filter { it.isNotBlank() }, argsFromStr(args))
+        return exampleRunData
     }
-    fun interpTokens(tokens : List<String>, args : List<Any>, programState : ProgramState = ProgramState()) : Any {
+    fun interp(progStr : String, args : String) : Any {
+        return interpFull(progStr, args).output
+    }
+    private fun interpTokens(tokens : List<String>, args : List<Any>, programState : ProgramState = ProgramState()) : ExampleRunData {
         // Our language has two super-simple types of expressions: Statements and lambdas.
+        val output : Any
+        val subruns = mutableMapOf<Int, MutableCollection<ExampleRunData>>()
         if(areTokensLambda(tokens)) {
             val varnames = lambdaVarnames(tokens)
             if(varnames.size != args.size) {
@@ -294,46 +303,66 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
             varnames.forEach {
                 programState.unsetVar(it)
             }
-            return stmtResult
+            output = stmtResult
         }
         else {
             // It's a statement. Either a variable, a constant, or a function call.
             if(tokens.size == 1) {
                 // Variable, or constant?
-                return strsToConstants[tokens[0]] ?: programState.getVar(tokens[0]) ?: throw ParseError("Unknown token ${tokens[0]}")
+                output = strsToConstants[tokens[0]] ?: programState.getVar(tokens[0]) ?: throw ParseError("Unknown token ${tokens[0]}")
             }
-            // Else, it's a function call.
-            val stmtData = extractStmtData(tokens)
-            val funcName = stmtData.first
-            val executor = functions[funcName] ?: throw ParseError("Unknown function name $funcName")
-
-            val interpedArgs = stmtData.second.mapIndexed { index, argTokens ->
-                if((index == 0) && executor is HigherOrderFunctionExecutor) {
-                    // Lambda index at zero, just return the tokens unmodified.
-                    argTokens
-                }
-                else {
-                    interpTokens(argTokens, listOf(), programState = programState)
-                }
-            }
-            try {
-                return executor.execute({ prog, theirArgs -> this.interpTokens(prog as List<String>, theirArgs, programState) }, interpedArgs)
-            } catch (ex : Exception) {
-                when(ex) {
-                    is TypeError, is ParseError -> {
-                        throw ex
+            else {
+                // Else, it's a function call.
+                val stmtData = extractStmtData(tokens)
+                val funcName = stmtData.first
+                val executor = functions[funcName] ?: throw ParseError("Unknown function name $funcName")
+                val lambdaIdx = 0
+                // Lambda index at zero, just return the tokens unmodified.
+                // Again, assuming lambdas are always the first arg.
+                // This will totally bite me in the butt, but only if this actually works and I want to generalize to haskell.
+                // Or higher-order functions that take more than one function as input.
+                // If this approach doesn't work, then I won't have to worry about generalizing :/
+                val interpedArgs = stmtData.second.mapIndexed { index, argTokens ->
+                    if((index == lambdaIdx) && executor is HigherOrderFunctionExecutor) {
+                        argTokens
                     }
-                    else -> {
-                        throw InterpretError(ex.stackTraceToString())
+                    else {
+                        val runData = interpTokens(argTokens, listOf(), programState = programState)
+                        // Add the run data to our current map of runs
+                        val dataCollection = subruns.getOrPut(index){
+                            mutableListOf()
+                        }
+                        dataCollection.add(runData)
+                        runData.output
+                    }
+                }
+                try {
+                    output = executor.execute({ prog, theirArgs ->
+                        val runResult = this.interpTokens(prog as List<String>, theirArgs, programState)
+                        // Every time this is run, we want to record it.
+                        val dataCollection = subruns.getOrPut(lambdaIdx){
+                            mutableListOf()
+                        }
+                        dataCollection.add(runResult)
+                        runResult.output
+                    }, interpedArgs)
+                } catch (ex : Exception) {
+                    when(ex) {
+                        is TypeError, is ParseError -> {
+                            throw ex
+                        }
+                        else -> {
+                            throw InterpretError(ex.stackTraceToString())
+                        }
                     }
                 }
             }
         }
+        return ExampleRunData(args, output, programState, subruns)
     }
 
 
     // Finally, some language stuff.
-
     val generator = ProgramGenerator(this.grammar)
     override fun grammar(): AttributeGrammar {
         return grammar
@@ -363,11 +392,49 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         }
     }
 
+    private fun exampleDataToNodePropertyMap(node : GenericGrammarNode, exs : Collection<ExampleRunData>) : Map<GenericGrammarNode, Map<PropertySignature<Any, Any>, PropertySignature.Result>> {
+        val attrs = node.attributes()
+        val thisOutputType = attrs.getStringAttribute(typeAttr)
+        val theseInputTypes = mutableListOf<String>()
+        var argIdx = 0;
+        while(true) {
+            val ithType = attrs.getStringAttribute(ithChildTypeKey(argIdx)) ?: break
+            theseInputTypes.add(ithType)
+            argIdx += 1
+        }
+        val rawExamples = exs.map {
+            Pair(it.input, it.output)
+        }
+        val thisNodeSignatures = mutableMapOf<PropertySignature<Any, Any>, PropertySignature.Result>()
+        this.properties.forEach {
+            try {
+                val sig = it.computeSignature(rawExamples)
+                thisNodeSignatures[it] = sig
+            } catch (ex : TypeCastException) {
+                // Not a good property.
+                // TODO filter properties on types
+            }
+        }
+        // Now calculate the children's property maps.
+        val mergedChildrenPropMaps = exs.flatMap { example ->
+            example.subprogramExamples.flatMap {
+                val subChild = node.rhs[argIdxToChild(it.key)]
+                val subPropMap = exampleDataToNodePropertyMap(node, it.value)
+                subPropMap.toList()
+            }
+        }.toMap()
+        return mergedChildrenPropMaps + mapOf(node to thisNodeSignatures)
+    }
+
     override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult<List<Any>, Any> {
         val prog = generator.generate()
-        val examples = makeExamples(prog, numExamples)
+        val exampleDatas = makeExamples(prog, numExamples)
+        val examples = exampleDatas.map {
+            Pair(it.input, it.output)
+        }
         val status = if(examples.isEmpty()) ProgramGenerationResult.PROGRAM_STATUS.BAD else ProgramGenerationResult.PROGRAM_STATUS.RUNNABLE
-        return ProgramGenerationResult(prog, examples, status)
+        val sigMap = exampleDataToNodePropertyMap(prog, exampleDatas)
+        return ProgramGenerationResult(prog, examples, status, properties = sigMap)
     }
 
     override fun runProgramWithExample(program: String, input: String): String {

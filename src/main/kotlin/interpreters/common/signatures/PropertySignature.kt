@@ -6,7 +6,7 @@ import interpreters.common.executors.FunctionExecutor
  * As described in this paper: https://arxiv.org/pdf/2002.09030.pdf
  * This is a property of some program's input/output examples, assuming those examples are inputted as I and outputted as O
  */
-abstract class PropertySignature<I, O>(val inTypeName : String, val outTypeName : String){
+abstract class PropertySignature<I, O>(val inTypeNames : List<String>, val outTypeName : String){
     abstract fun computeProperty(inputs : I, output : O) : Boolean
     companion object {
         const val anyType = FunctionExecutor.anyType
