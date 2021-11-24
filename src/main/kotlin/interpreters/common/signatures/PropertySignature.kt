@@ -1,6 +1,7 @@
 package interpreters.common.signatures
 
 import interpreters.common.executors.FunctionExecutor
+import languages.TypedFunctionalLanguage
 
 /**
  * As described in this paper: https://arxiv.org/pdf/2002.09030.pdf

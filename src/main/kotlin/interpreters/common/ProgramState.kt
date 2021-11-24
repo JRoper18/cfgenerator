@@ -1,8 +1,9 @@
 package interpreters.common
 
-class ProgramState {
-    val variableTypes = mutableMapOf<String, String>()
-    val variables = mutableMapOf<String, MutableMap<String, Any>>()
+data class ProgramState(
+    val variableTypes: MutableMap<String, String> = mutableMapOf() ,
+    val variables: MutableMap<String, MutableMap<String, Any>> = mutableMapOf()
+){
 
     fun getVars(type : String) : MutableMap<String, Any> {
         val vars = variables.getOrPut(type) {
@@ -32,6 +33,22 @@ class ProgramState {
     fun unsetVar(name : String) {
         val existingVarType = variableTypes[name]
         variables[existingVarType]!!.remove(name)
+        if(variables[existingVarType]!!.isEmpty()) {
+            variables.remove(existingVarType)
+        }
         variableTypes.remove(name)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ProgramState
+
+        if (variableTypes != other.variableTypes) return false
+        if (variables != other.variables) return false
+
+        return true
+    }
+
 }

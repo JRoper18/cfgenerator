@@ -220,8 +220,8 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         return inputVarnames.zip(inputTypeList)
     }
 
-    // The subprogram examples map is a map from the arg idx of the argument to the run data of that argument.
-    data class ExampleRunData(val input : List<Any>, val output : Any, val state : ProgramState, val subprogramExamples : Map<Int, MutableCollection<ExampleRunData>>)
+    // The subprogram examples map is a list of each arg's exampleRunData, empty if it's a constant/atomic.
+    data class ExampleRunData(val input : List<Any>, val output : Any, val state : ProgramState = ProgramState(), val subprogramExamples : List<List<ExampleRunData>> = listOf())
     fun makeExamples(progNode : RootGrammarNode, num : Int) : List<ExampleRunData> {
         val lambdaData = getLambdaData(progNode)
         var numFails = 0
@@ -272,7 +272,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
     abstract fun argsFromStr(args : String) : List<Any>
     abstract fun argsToStr(args : List<Any>) : String
 
-    private fun interpFull(progStr : String, args : String) : ExampleRunData {
+    fun interpFull(progStr : String, args : String) : ExampleRunData {
         val exampleRunData = interpTokens(progStr.split(" ").map {
             it.trim()
         }.filter { it.isNotBlank() }, argsFromStr(args))
@@ -284,7 +284,6 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
     private fun interpTokens(tokens : List<String>, args : List<Any>, programState : ProgramState = ProgramState()) : ExampleRunData {
         // Our language has two super-simple types of expressions: Statements and lambdas.
         val output : Any
-        val subruns = mutableMapOf<Int, MutableCollection<ExampleRunData>>()
         if(areTokensLambda(tokens)) {
             val varnames = lambdaVarnames(tokens)
             if(varnames.size != args.size) {
@@ -303,13 +302,14 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
             varnames.forEach {
                 programState.unsetVar(it)
             }
-            output = stmtResult
+            return ExampleRunData(input = args, output = stmtResult.output, state = programState, subprogramExamples = stmtResult.subprogramExamples)
         }
         else {
             // It's a statement. Either a variable, a constant, or a function call.
             if(tokens.size == 1) {
                 // Variable, or constant?
                 output = strsToConstants[tokens[0]] ?: programState.getVar(tokens[0]) ?: throw ParseError("Unknown token ${tokens[0]}")
+                return ExampleRunData(args, output, programState, subprogramExamples = listOf())
             }
             else {
                 // Else, it's a function call.
@@ -322,6 +322,9 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
                 // This will totally bite me in the butt, but only if this actually works and I want to generalize to haskell.
                 // Or higher-order functions that take more than one function as input.
                 // If this approach doesn't work, then I won't have to worry about generalizing :/
+                val subprogramExamples = MutableList<MutableList<ExampleRunData>>(stmtData.second.size) {
+                    mutableListOf()
+                }
                 val interpedArgs = stmtData.second.mapIndexed { index, argTokens ->
                     if((index == lambdaIdx) && executor is HigherOrderFunctionExecutor) {
                         argTokens
@@ -329,10 +332,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
                     else {
                         val runData = interpTokens(argTokens, listOf(), programState = programState)
                         // Add the run data to our current map of runs
-                        val dataCollection = subruns.getOrPut(index){
-                            mutableListOf()
-                        }
-                        dataCollection.add(runData)
+                        subprogramExamples[index].add(runData)
                         runData.output
                     }
                 }
@@ -340,10 +340,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
                     output = executor.execute({ prog, theirArgs ->
                         val runResult = this.interpTokens(prog as List<String>, theirArgs, programState)
                         // Every time this is run, we want to record it.
-                        val dataCollection = subruns.getOrPut(lambdaIdx){
-                            mutableListOf()
-                        }
-                        dataCollection.add(runResult)
+                        subprogramExamples[lambdaIdx].add(runResult)
                         runResult.output
                     }, interpedArgs)
                 } catch (ex : Exception) {
@@ -356,9 +353,9 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
                         }
                     }
                 }
+                return ExampleRunData(args, output, programState, subprogramExamples = subprogramExamples)
             }
         }
-        return ExampleRunData(args, output, programState, subruns)
     }
 
 
@@ -417,9 +414,9 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         }
         // Now calculate the children's property maps.
         val mergedChildrenPropMaps = exs.flatMap { example ->
-            example.subprogramExamples.flatMap {
-                val subChild = node.rhs[argIdxToChild(it.key)]
-                val subPropMap = exampleDataToNodePropertyMap(node, it.value)
+            example.subprogramExamples.flatMapIndexed { argIdx, examples ->
+                val subChild = node.rhs[argIdxToChild(argIdx)]
+                val subPropMap = exampleDataToNodePropertyMap(subChild, examples)
                 subPropMap.toList()
             }
         }.toMap()
