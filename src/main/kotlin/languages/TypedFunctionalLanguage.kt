@@ -9,19 +9,21 @@ import grammars.common.rules.*
 import interpreters.common.executors.FunctionExecutor
 import interpreters.common.executors.HigherOrderFunctionExecutor
 import interpreters.common.ProgramState
+import interpreters.common.signatures.FunctionalPropertySignature
 import interpreters.common.signatures.PropertySignature
 import utils.cartesian
 import utils.combinationsTo
 import utils.duplicates
 import kotlin.random.Random
-abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<Any>>,
-                                       val complexTypes : Map<String, SingleAttributeMapper>,
-                                       val varName : StringsetSymbol,
-                                       val functions : Map<String, FunctionExecutor>,
-                                       val typeAttr : String,
-                                       val properties : Set<PropertySignature<Any, Any>> = setOf(),
-                                       val random : Random = Random,
-                                       val maxComplexTypeDepth : Int = 2,
+abstract class TypedFunctionalLanguage(
+    val basicTypesToValues: Map<String, Set<Any>>,
+    val complexTypes: Map<String, SingleAttributeMapper>,
+    val varName: StringsetSymbol,
+    val functions: Map<String, FunctionExecutor>,
+    val typeAttr: String,
+    val properties: Set<FunctionalPropertySignature> = setOf(),
+    val random: Random = Random,
+    val maxComplexTypeDepth: Int = 2,
 ) : Language<List<Any>, Any> {
 
     val flattenedComplexTypes = complexTypes.entries.combinationsTo(maxComplexTypeDepth).cartesian(basicTypesToValues.keys).map {
@@ -389,7 +391,10 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         }
     }
 
-    private fun exampleDataToNodePropertyMap(node : GenericGrammarNode, exs : Collection<ExampleRunData>) : Map<GenericGrammarNode, Map<PropertySignature<Any, Any>, PropertySignature.Result>> {
+    private fun exampleDataToNodePropertyMap(node : GenericGrammarNode, exs : Collection<ExampleRunData>) : Map<GenericGrammarNode, Map<FunctionalPropertySignature, PropertySignature.Result>> {
+        if(exs.isEmpty()) {
+            return mapOf()
+        }
         val attrs = node.attributes()
         val thisOutputType = attrs.getStringAttribute(typeAttr)
         val theseInputTypes = mutableListOf<String>()
@@ -402,12 +407,12 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
         val rawExamples = exs.map {
             Pair(it.input, it.output)
         }
-        val thisNodeSignatures = mutableMapOf<PropertySignature<Any, Any>, PropertySignature.Result>()
+        val thisNodeSignatures = mutableMapOf<FunctionalPropertySignature, PropertySignature.Result>()
         this.properties.forEach {
             try {
                 val sig = it.computeSignature(rawExamples)
                 thisNodeSignatures[it] = sig
-            } catch (ex : TypeCastException) {
+            } catch (ex : ClassCastException) {
                 // Not a good property.
                 // TODO filter properties on types
             }
@@ -420,7 +425,7 @@ abstract class TypedFunctionalLanguage(val basicTypesToValues : Map<String, Set<
                 subPropMap.toList()
             }
         }.toMap()
-        return mergedChildrenPropMaps + mapOf(node to thisNodeSignatures)
+        return (mergedChildrenPropMaps + mapOf(node to thisNodeSignatures)).toMap()
     }
 
     override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult<List<Any>, Any> {

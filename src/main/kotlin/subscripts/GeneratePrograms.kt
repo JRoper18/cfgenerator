@@ -82,7 +82,7 @@ suspend fun <I, O> generatePrograms(
                                 logOutputStream.println("Found useful ${usefulNow}!")
                                 // Lock the file writing.
                                 outF.println("<|splitter|>")
-                                outF.print(generationResultToString(language, generationResult))
+                                outF.print(language.generationResultToString(generationResult))
                             }
                         }
                     }

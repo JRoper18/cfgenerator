@@ -35,22 +35,6 @@ fun argsToLanguage(lan : LanguageRef) : Language<*, *> {
         LanguageRef.LAMBDA2CFG -> return CfgLanguage(Lambda2FunctionalLanguage())
     }
 }
-fun <I, O> generationResultToString(language : Language<I, O> , result: ProgramGenerationResult<I, O>) : String {
-    val build = StringBuilder()
-    build.append("Examples:\n")
-    result.examples.map {
-        language.exampleToString(it)
-    }.forEach {
-        build.append("Inputs: \n")
-        build.append(it.first + "\n")
-        build.append("Output: \n")
-        build.append(it.second + "\n")
-    }
-    build.append("\nProgram: \n")
-    build.append(language.programToString(result.program) + "\n")
-    return build.toString()
-
-}
 
 class FrequencyCounter(val counts : Map<String, Int>, 
     val include : Set<String>? = null,
@@ -74,7 +58,7 @@ class FrequencyCounter(val counts : Map<String, Int>,
             else {
                 Pair(it.key, scaledDiff)
             }
-        }.toMap<String, Int>()
+        }.toMap()
         return FrequencyCounter(newCounts, include, topK)
     }
 

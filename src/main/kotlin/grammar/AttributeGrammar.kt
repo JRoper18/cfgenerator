@@ -98,9 +98,9 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
         }
     }
 
-    fun encode(prog : GenericGrammarNode, attrRegex : Regex = Regex(".*?")) : String {
+    fun encode(prog : GenericGrammarNode, attrRegex : Regex = Regex(".*?"), extraAttrs : Map<GenericGrammarNode, NodeAttributes> = mapOf()) : String {
         var progStr = prog.toString(printAttrs = true, printAPR = false, prettyLines = false, splitAttrs = false,
-        onlyPrintAttrs = attrRegex)
+        onlyPrintAttrs = attrRegex, extraAttrs = extraAttrs)
         rules.forEachIndexed { index, apr ->
             progStr = progStr.replace(apr.rule.toString(), index.toString())
         }

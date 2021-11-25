@@ -38,7 +38,6 @@ class GrammarNode(
 
     override fun hashCode(): Int {
         var result = super.hashCode()
-        result = 31 * result + parent.hashCode()
         result = 31 * result + idx
         return result
     }

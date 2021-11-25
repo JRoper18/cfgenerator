@@ -7,6 +7,9 @@ import grammars.common.rules.LP
 import grammars.common.rules.OrderedListAttributeRule
 import grammars.common.rules.RP
 import interpreters.common.executors.*
+import interpreters.common.signatures.NonEmptyInputListProperty
+import interpreters.common.signatures.NonEmptyOutputListProperty
+import interpreters.common.signatures.PropertySignature
 import languages.ProgramGenerationResult
 import languages.TypedFunctionalLanguage
 import utils.splitRecursive
@@ -16,6 +19,7 @@ class Lambda2FunctionalLanguage() : TypedFunctionalLanguage(
     complexTypes = mapOf(Lambda2.listType to Lambda2.listTypeMapper),
     varName = Lambda2.varnames,
     typeAttr = Lambda2.typeAttr,
+    properties = setOf(NonEmptyInputListProperty(Lambda2.listType), NonEmptyOutputListProperty(Lambda2.listType)),
     functions = mapOf(
         "min" to MinFunction(Lambda2.intType, Lambda2.intListType),
         "max" to MaxFunction(Lambda2.intType, Lambda2.intListType),

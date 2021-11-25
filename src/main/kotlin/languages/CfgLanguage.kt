@@ -1,8 +1,6 @@
 package languages
 
-import grammar.AttributeGrammar
-import grammar.GenericGrammarNode
-import grammar.RootGrammarNode
+import grammar.*
 import interpreters.common.ProgramState
 import interpreters.common.signatures.PropertySignature
 
@@ -51,5 +49,20 @@ class CfgLanguage<I, O>(val language: Language<I, O>, val attrReg : Regex = Rege
 
     override fun grammar(): AttributeGrammar {
         return language.grammar()
+    }
+
+    override fun generationResultToString(result : ProgramGenerationResult<I, O>) : String {
+        val build = StringBuilder()
+        build.append(examplesToString(result.examples))
+        build.append("\nProgram: \n")
+        val propsToAttrs = result.properties.mapValues { nodePropEntry ->
+            val propMap = nodePropEntry.value
+            val attrs = propMap.map { sigToResult ->
+                NodeAttribute(sigToResult.key::class.simpleName!!, sigToResult.value.toString())
+            }
+            NodeAttributes.fromList(attrs)
+        }
+        build.append(grammar().encode(result.program, attrRegex = attrReg, extraAttrs = propsToAttrs) + "\n")
+        return build.toString()
     }
 }

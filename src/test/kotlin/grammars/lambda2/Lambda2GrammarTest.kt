@@ -3,6 +3,7 @@ package grammars.lambda2
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.ProductionRule
+import languages.CfgLanguage
 import languages.lambda2.Lambda2
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -16,13 +17,17 @@ internal class Lambda2GrammarTest {
     fun testGenerate() {
         val generator = ProgramGenerator(grammar, random = Random(40L), numRandomTries = 5, maxProgramDepth = 5)
         repeat(5){
-            val prog = generator.generate()
-            val progStr = strfier.stringify(prog)
-            println(progStr)
-            println(prog)
-            println(Lambda2.language.makeExamples(prog, 3).map {
-                "${it.input} \t ${it.output} : ${it.output.javaClass.name}"
-            }.joinToString ("\n"))
+//            val prog = generator.generate()
+//            val progStr = strfier.stringify(prog)
+//            println(progStr)
+//            println(prog)
+//            println(Lambda2.language.makeExamples(prog, 3).map {
+//                "${it.input} \t ${it.output} : ${it.output.javaClass.name}"
+//            }.joinToString ("\n"))
+
+
+            val genRes = Lambda2.language.generateProgramAndExamples(3)
+            println(CfgLanguage(Lambda2.language).generationResultToString(genRes))
         }
     }
 

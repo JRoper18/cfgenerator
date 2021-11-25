@@ -93,11 +93,17 @@ sealed class GenericGrammarNode(
     }
 
     override fun toString(): String {
-        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false, prettyLines = true, onlyPrintAttrs = Regex(".*?"))
+        return this.toString(printAttrs = true, printAPR = false, splitAttrs = false, prettyLines = true, onlyPrintAttrs = Regex(".*?"),
+        extraAttrs = mapOf())
     }
-    fun toString(printAttrs: Boolean = true, printAPR : Boolean = false, splitAttrs : Boolean = false, prettyLines : Boolean = true, onlyPrintAttrs : Regex = Regex(".*?")): String {
+    fun toString(printAttrs: Boolean = true,
+                 printAPR : Boolean = false,
+                 splitAttrs : Boolean = false,
+                 prettyLines : Boolean = true,
+                 onlyPrintAttrs : Regex = Regex(".*?"),
+                 extraAttrs : Map<GenericGrammarNode, NodeAttributes> = mapOf()): String {
         val buffer = StringBuilder(50)
-        print(buffer, "", "", printAttrs, printAPR, splitAttrs, prettyLines, onlyPrintAttrs)
+        print(buffer, "", "", printAttrs, printAPR, splitAttrs, prettyLines, onlyPrintAttrs, extraAttrs)
         return buffer.toString()
     }
 
@@ -106,7 +112,8 @@ sealed class GenericGrammarNode(
                         printAPR: Boolean = false,
                         splitAttrs : Boolean = false,
                         prettyLines : Boolean = true,
-    onlyPrintAttrs : Regex = Regex(".*?")) {
+                        onlyPrintAttrs : Regex = Regex(".*?"),
+                        extraAttrs : Map<GenericGrammarNode, NodeAttributes> = mapOf()) {
         buffer.append(prefix)
         if(printAPR) {
             buffer.append(this.productionRule.toString())
@@ -119,9 +126,10 @@ sealed class GenericGrammarNode(
             if(splitAttrs) {
                 buffer.append(this.synthesizedAttributes().filterRegex(onlyPrintAttrs))
                 buffer.append(" I ${this.inheritedAttributes().filterRegex(onlyPrintAttrs)}")
+                buffer.append(" E ${extraAttrs[this] ?: ""}")
             }
             else {
-                buffer.append(this.attributes().filterRegex(onlyPrintAttrs))
+                buffer.append(this.attributes().filterRegex(onlyPrintAttrs).union(extraAttrs[this] ?: NodeAttributes()))
             }
         }
         buffer.append('\n')
@@ -131,20 +139,22 @@ sealed class GenericGrammarNode(
             if (it.hasNext()) {
                 if(prettyLines) {
                     next.print(buffer, "$childrenPrefix├── ", "$childrenPrefix│   ",
-                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs)
+                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs,
+                    extraAttrs = extraAttrs)
                 }
                 else {
                     next.print(buffer, "$childrenPrefix\t", "$childrenPrefix\t",
-                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs)
+                        printAttrs = printAttrs, printAPR = printAPR, splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs,
+                        extraAttrs = extraAttrs)
                 }
             } else {
                 if(prettyLines) {
                     next.print(buffer, "$childrenPrefix└── ", "$childrenPrefix    ", printAttrs = printAttrs, printAPR = printAPR,
-                        splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs)
+                        splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs, extraAttrs = extraAttrs)
                 }
                 else {
                     next.print(buffer, "$childrenPrefix\t", "$childrenPrefix\t", printAttrs = printAttrs, printAPR = printAPR,
-                        splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs)
+                        splitAttrs, prettyLines, onlyPrintAttrs = onlyPrintAttrs, extraAttrs = extraAttrs)
 
                 }
             }
