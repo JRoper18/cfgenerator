@@ -1,4 +1,4 @@
-package grammars.lambda2
+package languages
 
 import interpreters.simplepython.PythonInterpreter
 import languages.TypedFunctionalLanguage

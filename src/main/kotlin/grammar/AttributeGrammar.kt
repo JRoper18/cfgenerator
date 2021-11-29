@@ -34,20 +34,12 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
         it.rule.rhs + it.rule.lhs
     }.distinct()
 
-    val rules : List<AttributedProductionRule> = (givenRules + givenSymbols.flatMap { symbol ->
-        var ret = listOf<AttributedProductionRule>()
-        when(symbol) {
-            is StringsetSymbol -> {
-                ret = makeStringsetRules(symbol)
-            }
-            is NonterminalSymbol -> {
-                //Ignore
-            }
-            is StringSymbol -> {
-                //Ignore too
-            }
-        }
-        ret
+    val stringsetRules : Map<StringsetSymbol, Map<String, APR>> = givenSymbols.filterIsInstance<StringsetSymbol>().map {
+        Pair(it, makeStringsetRules(it).toMap())
+    }.toMap()
+
+    val rules : List<AttributedProductionRule> = (givenRules + stringsetRules.values.flatMap {
+        it.values
     }).distinct().map { apr ->
         GlobalCombinedAttributeRule(this.globalAttributeRegexes, apr, apr.rule in scopeCloserRules)
     }

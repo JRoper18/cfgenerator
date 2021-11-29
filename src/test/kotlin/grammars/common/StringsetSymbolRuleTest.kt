@@ -24,7 +24,7 @@ class StringsetSymbolRuleTest {
         ))
         val rules = makeStringsetRules(STRINGSET)
         assertEquals(rules.size, STRINGSET.stringset.size)
-        rules.forEach {
+        rules.map { it.second }.forEach {
             assertEquals(it.rule.rhs.size, 1)
             val canMakeData = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("chosenSymbol", it.rule.rhs[0].name))))
             assert(canMakeData.first)
@@ -42,7 +42,7 @@ class StringsetSymbolRuleTest {
         ), attributeName = "attrName")
         val rules = makeStringsetRules(STRINGSET)
         assertEquals(rules.size, STRINGSET.stringset.size)
-        rules.forEach {
+        rules.map { it.second }.forEach {
             assertEquals(it.rule.rhs.size, 1)
             val canMakeData = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("attrName", it.rule.rhs[0].name))))
             assert(canMakeData.first)
@@ -60,7 +60,7 @@ class StringsetSymbolRuleTest {
         ), attributeName = "attrName")
         val rules = makeStringsetRules(STRINGSET)
         assertEquals(rules.size, STRINGSET.stringset.size)
-        rules.forEachIndexed { idx, it ->
+        rules.map { it.second }.forEachIndexed { idx, it ->
             assertEquals(it.rule.rhs.size, 1)
             val canMakeData = it.canMakeProgramWithAttributes(NodeAttributes.fromList(listOf(Pair("attrName", it.rule.rhs[0].name))))
             assert(canMakeData.first)

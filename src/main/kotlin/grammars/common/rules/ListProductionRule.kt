@@ -16,4 +16,19 @@ class ListProductionRule(val listName: NtSym, val unitName: Symbol, val separato
             return listOf(list.rhs[0], unit)
         }
     }
+    fun roll(units : List<GenericGrammarNode>, listInitRule : APR, parentAPR : APR) : GenericGrammarNode {
+        require(parentAPR.rule == this) {
+            "Parent APR must be a list production rule!"
+        }
+        if(units.size == 1) {
+            return RootGrammarNode(listInitRule).withChildren(units)
+        }
+        val unitNode = units.last()
+        val listNode = roll(units.subList(0, units.size - 1), listInitRule, parentAPR)
+        return RootGrammarNode(parentAPR).withChildren(listOf(
+            listNode,
+            RootGrammarNode(TerminalAPR(this.rhs[1])),
+            unitNode
+        ))
+    }
 }

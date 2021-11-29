@@ -21,9 +21,6 @@ abstract class TypeMutatingFunctionExecutor(val inTypes : List<String>,
             if(type == anyType) {
                 listOf()
             }
-            else if(index == argTypeIdx) {
-                listOf()
-            }
             else {
                 listOf(makeConstraintFromType(language, index, type))
             }

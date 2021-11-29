@@ -21,9 +21,9 @@ fun TerminalAPR(lsh: Symbol) : APR {
 fun UnexpandedAPR(lsh: Symbol) : APR {
     return APR(PR(lsh, listOf(UNEXPANDED)))
 }
-fun makeStringsetRules(symbol: StringsetSymbol) : List<AttributedProductionRule> {
+fun makeStringsetRules(symbol: StringsetSymbol) : List<Pair<String, AttributedProductionRule>> {
     return symbol.stringset.map {
-        StringsetSymbolRule(symbol, StringSymbol(it))
+        Pair(it, StringsetSymbolRule(symbol, StringSymbol(it)))
     }
 }
 val lowercaseASCII = "qwertyuiopasdfghjklzxcvbnm".split("").filter {

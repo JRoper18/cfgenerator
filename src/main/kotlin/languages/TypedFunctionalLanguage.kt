@@ -18,7 +18,7 @@ import kotlin.random.Random
 abstract class TypedFunctionalLanguage(
     val basicTypesToValues: Map<String, Set<Any>>,
     val complexTypes: Map<String, SingleAttributeMapper>,
-    val varName: StringsetSymbol,
+    val varNameStringSet: StringsetSymbol,
     val functions: Map<String, FunctionExecutor>,
     val typeAttr: String,
     val properties: Set<FunctionalPropertySignature> = setOf(),
@@ -60,16 +60,17 @@ abstract class TypedFunctionalLanguage(
     protected val stmtSym : NtSym = NtSym("stmt")
     protected val varInit = NtSym("varInit")
     protected val declaredVar = NtSym("declared")
-    protected val newVarRule = VariableDeclarationRule(varInit, varName, varName.attributeName)
+    protected val newVarRule = VariableDeclarationRule(varInit, varNameStringSet, varNameStringSet.attributeName)
     protected val typedNewVarRule = VariableChildValueRule(
         varInit,
-        varName, newVarRule.subruleVarnameAttributeKey, "_type",
+        varNameStringSet, newVarRule.subruleVarnameAttributeKey, "_type",
         typeAttr
     ).withOtherRule {
         SynthesizeAttributeProductionRule(mapOf(typeAttr to 0), it) // Bring up the ret type
     }
-    protected val declaredRule = SynthesizeAttributeProductionRule(mapOf(varName.attributeName to 0, typeAttr to 0), (PR(
-        declaredVar, listOf(varName))))
+    protected val totalNewVarRule = newVarRule.withOtherRule(typedNewVarRule)
+    protected val declaredRule = SynthesizeAttributeProductionRule(mapOf(varNameStringSet.attributeName to 0, typeAttr to 0), (PR(
+        declaredVar, listOf(varNameStringSet))))
 
     protected val stmtIsDeclaredVarRule = SynthesizeAttributeProductionRule(
         mapOf(
@@ -123,14 +124,14 @@ abstract class TypedFunctionalLanguage(
     val grammar : AttributeGrammar = AttributeGrammar(
         givenRules = listOf(
             stmtIsDeclaredVarRule,
-            newVarRule.withOtherRule(typedNewVarRule),
+            totalNewVarRule,
             declaredRule,
             lambdaRule,
             lambdaArgsRule,
             lambdaArgsInitRule,
             ) + basicTypeConstantRules.values + functionNamesToRules.values,
         constraints = mapOf(
-                declaredRule.rule to VariableConstraintGenerator(varName.attributeName, newVarRule),
+                declaredRule.rule to VariableConstraintGenerator(varNameStringSet.attributeName, newVarRule),
             ) + functions.map {
                 Pair(functionNamesToRules[it.key]!!.rule, it.value.makeConstraints(
                     this,
@@ -141,6 +142,36 @@ abstract class TypedFunctionalLanguage(
                 lambdaRule.rule
         )
     )
+
+    fun makeNewVariableNode(varname : String) : GenericGrammarNode {
+        val varNameRules = grammar.stringsetRules[varNameStringSet]!!
+        val apr = varNameRules[varname]!!
+        return RootGrammarNode(totalNewVarRule).withChildren(listOf(
+            RootGrammarNode(apr).withChildren(listOf(
+                RootGrammarNode(TerminalAPR(StringSymbol(varname)))
+            ))
+        ))
+    }
+
+    /**
+     * Returns a lambda with the varnames as arguments and a list of unexpanded statement args.
+     */
+    fun makeUnexpandedLambda(varnames : List<String>, functionName : String) : Pair<GenericGrammarNode, List<GenericGrammarNode>> {
+        val newVarNodes = varnames.map {
+            makeNewVariableNode(it)
+        }
+        val lambdaArgsNode = (lambdaArgsRule.rule as ListProductionRule).roll(newVarNodes, lambdaArgsInitRule, lambdaArgsRule)
+        val stmtRule = functionNamesToRules[functionName]!!
+        val stmtChildren = stmtRule.makeChildren()
+        val unexpandedStmtNode = RootGrammarNode(stmtRule).withChildren(stmtChildren)
+        val progNode = RootGrammarNode(lambdaRule).withChildren(listOf(
+            RootGrammarNode(TerminalAPR(StringSymbol(lambdaType))),
+            lambdaArgsNode,
+            RootGrammarNode(TerminalAPR(COLON)),
+            unexpandedStmtNode
+        ))
+        return Pair(progNode, progNode.rhs[3].rhs)
+    }
 
     abstract fun makeFunctionPR(headerSymbol : StringSymbol, numArgs : Int, lambdaIdx : Int? = null) : ProductionRule
 
@@ -217,7 +248,7 @@ abstract class TypedFunctionalLanguage(
             it.attributes().getStringAttribute(typeAttr)!!
         }
         val inputVarnames = inputsNodeList.map {
-            it.attributes().getStringAttribute(varName.attributeName)!!
+            it.attributes().getStringAttribute(varNameStringSet.attributeName)!!
         }
         return inputVarnames.zip(inputTypeList)
     }
@@ -362,7 +393,7 @@ abstract class TypedFunctionalLanguage(
 
 
     // Finally, some language stuff.
-    val generator = ProgramGenerator(this.grammar)
+    val generator = ProgramGenerator(this.grammar, random = this.random, maxProgramDepth = 5)
     override fun grammar(): AttributeGrammar {
         return grammar
     }
