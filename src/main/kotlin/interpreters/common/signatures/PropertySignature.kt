@@ -43,4 +43,7 @@ abstract class PropertySignature<I, O>(val inTypeNames : List<String>, val outTy
         }
         return Result.MIXED
     }
+    open fun name() : String {
+        return this::class.simpleName!!
+    }
 }

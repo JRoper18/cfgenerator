@@ -7,7 +7,7 @@ import grammars.common.rules.LP
 import grammars.common.rules.OrderedListAttributeRule
 import grammars.common.rules.RP
 import interpreters.common.executors.*
-import interpreters.common.signatures.IsInputDivisibleSignature
+import interpreters.common.signatures.IsInputDivisibleProperty
 import interpreters.common.signatures.NonEmptyInputListProperty
 import interpreters.common.signatures.NonEmptyOutputListProperty
 import languages.ProgramGenerationResult
@@ -16,11 +16,11 @@ import utils.splitRecursive
 import kotlin.random.Random
 
 class Lambda2FunctionalLanguage(random : Random = Random) : TypedFunctionalLanguage(
-    basicTypesToValues = mapOf(Lambda2.intType to IntRange(-1, 5).toSet(), Lambda2.boolType to setOf(true, false)),
+    basicTypesToValues = mapOf(Lambda2.intType to IntRange(-5, 15).toSet(), Lambda2.boolType to setOf(true, false)),
     complexTypes = mapOf(Lambda2.listType to Lambda2.listTypeMapper),
     varNameStringSet = Lambda2.varnames,
     typeAttr = Lambda2.typeAttr,
-    properties = setOf(NonEmptyInputListProperty(Lambda2.listType), NonEmptyOutputListProperty(Lambda2.listType), IsInputDivisibleSignature(Lambda2.intType, 2)),
+    properties = setOf(NonEmptyInputListProperty(Lambda2.listType), NonEmptyOutputListProperty(Lambda2.listType), IsInputDivisibleProperty(Lambda2.intType, 2)),
     functions = mapOf(
         "min" to MinFunction(Lambda2.intType, Lambda2.intListType),
         "max" to MaxFunction(Lambda2.intType, Lambda2.intListType),

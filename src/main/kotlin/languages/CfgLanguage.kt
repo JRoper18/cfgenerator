@@ -57,8 +57,10 @@ class CfgLanguage<I, O>(val language: Language<I, O>, val attrReg : Regex = Rege
         build.append("\nProgram: \n")
         val propsToAttrs = result.properties.mapValues { nodePropEntry ->
             val propMap = nodePropEntry.value
-            val attrs = propMap.map { sigToResult ->
-                NodeAttribute(sigToResult.key::class.simpleName!!, sigToResult.value.toString())
+            val attrs = propMap.filter{ sigToResult-> 
+                sigToResult.value != PropertySignature.Result.MIXED
+            }.map { sigToResult ->
+                NodeAttribute(sigToResult.key.name(), sigToResult.value.toString())
             }
             NodeAttributes.fromList(attrs)
         }
