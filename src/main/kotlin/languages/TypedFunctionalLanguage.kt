@@ -63,7 +63,7 @@ abstract class TypedFunctionalLanguage(
     protected val newVarRule = VariableDeclarationRule(varInit, varNameStringSet, varNameStringSet.attributeName)
     protected val typedNewVarRule = VariableChildValueRule(
         varInit,
-        varNameStringSet, newVarRule.subruleVarnameAttributeKey, "_type",
+        varNameStringSet, newVarRule.subruleVarnameAttributeKey, "_typevar",
         typeAttr
     ).withOtherRule {
         SynthesizeAttributeProductionRule(mapOf(typeAttr to 0), it) // Bring up the ret type
@@ -412,7 +412,7 @@ abstract class TypedFunctionalLanguage(
         try {
             val actual = runProgramWithExample(program, input).trim()
             return ProgramRunDetailedResult.fromInputOutput(input, actual, output.trim())
-        } catch (iex : InterpretError) {
+        } catch (iex : Exception) {
             val localMsg = iex.localizedMessage
             val rrs : ProgramRunResult;
             if(localMsg.contains("TypeError")) {
