@@ -166,6 +166,7 @@ class Lambda2FunctionalLanguage(random : Random = Random) : TypedFunctionalLangu
             it != ","
         }
     }
+
     override fun getStmtFromLambda(tokens : List<String>) : List<String> {
         return tokens.subList(tokens.indexOf(":") + 1, tokens.size)
     }

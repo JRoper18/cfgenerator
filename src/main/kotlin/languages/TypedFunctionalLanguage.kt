@@ -257,7 +257,7 @@ abstract class TypedFunctionalLanguage(
     }
 
     // The subprogram examples map is a list of each arg's exampleRunData, empty if it's a constant/atomic.
-    data class ExampleRunData(val input : List<Any>, val output : Any, val state : ProgramState = ProgramState(), val subprogramExamples : List<List<ExampleRunData>> = listOf())
+    data class ExampleRunData(val input : List<Any>, val output : Any, val state : ProgramState = ProgramState(), val subprogramExamples : List<List<ExampleRunData>> = listOf(), val isLambdaRun : Boolean = false)
     fun makeExamples(progNode : RootGrammarNode, num : Int) : List<ExampleRunData> {
         val lambdaData = getLambdaData(progNode)
         var numFails = 0
@@ -298,6 +298,9 @@ abstract class TypedFunctionalLanguage(
         return tokens[0] == lambdaType
     }
     abstract fun lambdaVarnames(tokens : List<String>) : List<String>
+    fun getStmtChildIdxFromLambda() : Int {
+        return 3
+    }
     abstract fun getStmtFromLambda(tokens : List<String>) : List<String>
 
     /**
@@ -338,14 +341,14 @@ abstract class TypedFunctionalLanguage(
             varnames.forEach {
                 programState.unsetVar(it)
             }
-            return ExampleRunData(input = args, output = stmtResult.output, state = programState, subprogramExamples = stmtResult.subprogramExamples)
+            return ExampleRunData(input = args, output = stmtResult.output, state = programState, subprogramExamples = listOf(listOf(stmtResult)), isLambdaRun = true)
         }
         else {
             // It's a statement. Either a variable, a constant, or a function call.
             if(tokens.size == 1) {
                 // Variable, or constant?
                 output = strsToConstants[tokens[0]] ?: programState.getVar(tokens[0]) ?: throw ParseError("Unknown token ${tokens[0]}")
-                return ExampleRunData(args, output, programState, subprogramExamples = listOf())
+                return ExampleRunData(args, output, programState, subprogramExamples = listOf(), isLambdaRun = false)
             }
             else {
                 // Else, it's a function call.
@@ -389,7 +392,7 @@ abstract class TypedFunctionalLanguage(
                         }
                     }
                 }
-                return ExampleRunData(args, output, programState, subprogramExamples = subprogramExamples)
+                return ExampleRunData(args, output, programState, subprogramExamples = subprogramExamples, isLambdaRun = false)
             }
         }
     }
@@ -446,7 +449,7 @@ abstract class TypedFunctionalLanguage(
             try {
                 val sig = it.computeSignature(rawExamples)
                 thisNodeSignatures[it] = sig
-            } catch (ex : ClassCastException) {
+            } catch (ex : Exception) {
                 // Not a good property.
                 // TODO filter properties on types
             }
@@ -454,7 +457,12 @@ abstract class TypedFunctionalLanguage(
         // Now calculate the children's property maps.
         val mergedChildrenPropMaps = exs.flatMap { example ->
             example.subprogramExamples.flatMapIndexed { argIdx, examples ->
-                val subChild = node.rhs[argIdxToChild(argIdx)]
+                val subChild : GenericGrammarNode
+                if(example.isLambdaRun) {
+                    subChild = node.rhs[getStmtChildIdxFromLambda()]
+                } else {
+                    subChild = node.rhs[argIdxToChild(argIdx)]
+                }
                 val subPropMap = exampleDataToNodePropertyMap(subChild, examples)
                 subPropMap.toList()
             }
