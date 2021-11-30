@@ -446,7 +446,7 @@ abstract class TypedFunctionalLanguage(
             try {
                 val sig = it.computeSignature(rawExamples)
                 thisNodeSignatures[it] = sig
-            } catch (ex : ClassCastException) {
+            } catch (ex : Exception) {
                 // Not a good property.
                 // TODO filter properties on types
             }
