@@ -18,11 +18,8 @@ internal class TypedFunctionalLanguageTest {
     fun testMakeUnexpandedStmtNode() {
         val varnames = listOf("a", "b")
         val lan = Lambda2FunctionalLanguage()
-        val res = lan.makeUnexpandedLambda(varnames, "equals")
-        res.second.forEach {
-            val expandSuccess = lan.generator.expandNode(it)
-            assertTrue(expandSuccess)
-        }
-        res.first.verify()
+        val prog = lan.makeLambdaWithStmt(varnames, "equals")
+        println(lan.programToString(prog))
+        prog.verify()
     }
 }

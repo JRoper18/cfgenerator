@@ -37,12 +37,13 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
     val stringsetRules : Map<StringsetSymbol, Map<String, APR>> = givenSymbols.filterIsInstance<StringsetSymbol>().map {
         Pair(it, makeStringsetRules(it).toMap())
     }.toMap()
-
-    val rules : List<AttributedProductionRule> = (givenRules + stringsetRules.values.flatMap {
+    val givenRulesToGlobalRules : Map<AttributedProductionRule, AttributedProductionRule> = (givenRules + stringsetRules.values.flatMap {
         it.values
     }).distinct().map { apr ->
-        GlobalCombinedAttributeRule(this.globalAttributeRegexes, apr, apr.rule in scopeCloserRules)
-    }
+        Pair(apr, GlobalCombinedAttributeRule(this.globalAttributeRegexes, apr, apr.rule in scopeCloserRules))
+    }.toMap()
+
+    val rules : List<AttributedProductionRule> = givenRulesToGlobalRules.values.toList()
 
     val symbols : List<Symbol> = rules.flatMap {
         it.rule.rhs + it.rule.lhs
@@ -75,6 +76,10 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
 
     fun getPossibleExpansions(lhs: Symbol): List<AttributedProductionRule>{
         return this.expansions.getOrDefault(lhs, listOf())
+    }
+
+    fun nodeRuleFromGivenRule(apr : APR) : APR {
+        return givenRulesToGlobalRules[apr]!!
     }
 
     fun satisfies(prog : GenericGrammarNode) {

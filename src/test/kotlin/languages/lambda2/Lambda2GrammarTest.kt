@@ -1,9 +1,9 @@
-package grammars.lambda2
+package languages.lambda2
 
 import generators.ProgramGenerator
 import generators.ProgramStringifier
+import grammar.NodeAttribute
 import grammar.ProductionRule
-import languages.lambda2.Lambda2
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
@@ -67,6 +67,34 @@ internal class Lambda2GrammarTest {
             it.rule.toString()
         }.sorted().joinToString("\n")
         assertEquals(expectedRulesStr, generatedStr)
+    }
+
+    @Test
+    fun testCanMakeAllFunctions() {
+        val lan = Lambda2FunctionalLanguage(random = Random(31L))
+        val fnames = lan.functions.keys
+        val maxTries = 10
+        val numEx = 3
+        fnames.forEach { functionName ->
+            var couldMake = false
+            println(functionName)
+            for(i in 0 until maxTries) {
+                val prog = lan.makeLambdaWithStmt(varnames = listOf("a", "q", "v"), functionName)
+                println(lan.programToString(prog))
+                try {
+                    prog.verify()
+                } catch (ex : Exception) {
+                    // Try again.
+                    continue
+                }
+                val ex = lan.makeExamples(prog, numEx)
+                if(ex.size == numEx) {
+                    couldMake = true
+                    break
+                }
+            }
+            assertTrue(couldMake)
+        }
     }
 
 }

@@ -114,6 +114,9 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 val newChildren : List<GenericGrammarNode> = expansion.makeChildren()
                 //Now, just expand the children trees.
                 node.withExpansionTemporary(expansion, newChildren, {
+                    if(expansion.rule.lhs.name == "stmt") {
+//                        println("here")
+                    }
                     if(!scope.isActive) {
                         throw TimeoutException()
                     }

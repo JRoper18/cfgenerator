@@ -1,4 +1,4 @@
-package grammars.lambda2
+package languages.lambda2
 
 import interpreters.common.ProgramState
 import languages.TypedFunctionalLanguage

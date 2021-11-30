@@ -31,7 +31,7 @@ data class ProgramState(
         getVars(type)[name] = value
     }
     fun unsetVar(name : String) {
-        val existingVarType = variableTypes[name]
+        val existingVarType = variableTypes[name] ?: return
         variables[existingVarType]!!.remove(name)
         if(variables[existingVarType]!!.isEmpty()) {
             variables.remove(existingVarType)

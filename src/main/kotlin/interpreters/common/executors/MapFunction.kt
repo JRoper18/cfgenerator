@@ -1,6 +1,8 @@
 package interpreters.common.executors
 
 import grammar.ProductionRule
+import grammar.constraints.BasicConstraintGenerator
+import grammar.constraints.ConstraintGenerator
 import grammars.common.mappers.SingleAttributeMapper
 import grammars.common.rules.AttributeMappingProductionRule
 import grammars.common.rules.KeyedAttributesProductionRule
@@ -16,11 +18,12 @@ class MapFunction(val lambdaType : String, val listType : String, val listTypeMa
         }
     }
 
-    override fun makeLambdaReturnTypeAPR(
+    override fun makeHigherOrderReturnTypeAPR(
         language: TypedFunctionalLanguage,
         pr: ProductionRule
     ): KeyedAttributesProductionRule {
         // Returns a list of the lambda's output
         return AttributeMappingProductionRule(pr, language.typeAttr, language.argIdxToChild(0), listTypeMapper)
     }
+
 }

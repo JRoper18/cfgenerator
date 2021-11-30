@@ -56,7 +56,7 @@ abstract class TypedFunctionalLanguage(
     val constantAttr : String = "constant"
     val lambdaType : String = "lambda"
     // Grammar stuff on the top
-
+    val rootFunctionNameAttrKey = "rootStmtFunctionName"
     protected val stmtSym : NtSym = NtSym("stmt")
     protected val varInit = NtSym("varInit")
     protected val declaredVar = NtSym("declared")
@@ -146,8 +146,8 @@ abstract class TypedFunctionalLanguage(
     fun makeNewVariableNode(varname : String) : GenericGrammarNode {
         val varNameRules = grammar.stringsetRules[varNameStringSet]!!
         val apr = varNameRules[varname]!!
-        return RootGrammarNode(totalNewVarRule).withChildren(listOf(
-            RootGrammarNode(apr).withChildren(listOf(
+        return RootGrammarNode(grammar.nodeRuleFromGivenRule(totalNewVarRule)).withChildren(listOf(
+            RootGrammarNode(grammar.nodeRuleFromGivenRule(apr)).withChildren(listOf(
                 RootGrammarNode(TerminalAPR(StringSymbol(varname)))
             ))
         ))
@@ -156,21 +156,23 @@ abstract class TypedFunctionalLanguage(
     /**
      * Returns a lambda with the varnames as arguments and a list of unexpanded statement args.
      */
-    fun makeUnexpandedLambda(varnames : List<String>, functionName : String) : Pair<GenericGrammarNode, List<GenericGrammarNode>> {
+    fun makeLambdaWithStmt(varnames : List<String>, functionName : String) : RootGrammarNode {
         val newVarNodes = varnames.map {
             makeNewVariableNode(it)
         }
-        val lambdaArgsNode = (lambdaArgsRule.rule as ListProductionRule).roll(newVarNodes, lambdaArgsInitRule, lambdaArgsRule)
+        val lambdaArgsNode = (lambdaArgsRule.rule as ListProductionRule).roll(newVarNodes,
+            grammar.nodeRuleFromGivenRule(lambdaArgsInitRule), grammar.nodeRuleFromGivenRule(lambdaArgsRule))
         val stmtRule = functionNamesToRules[functionName]!!
-        val stmtChildren = stmtRule.makeChildren()
-        val unexpandedStmtNode = RootGrammarNode(stmtRule).withChildren(stmtChildren)
-        val progNode = RootGrammarNode(lambdaRule).withChildren(listOf(
+        val stmtNode = RootGrammarNode(grammar.nodeRuleFromGivenRule(stmtRule))
+        val nameCons = BasicRuleConstraint(NodeAttribute(rootFunctionNameAttrKey, functionName))
+        val progNode = RootGrammarNode(grammar.nodeRuleFromGivenRule(lambdaRule)).withChildren(listOf(
             RootGrammarNode(TerminalAPR(StringSymbol(lambdaType))),
             lambdaArgsNode,
             RootGrammarNode(TerminalAPR(COLON)),
-            unexpandedStmtNode
-        ))
-        return Pair(progNode, progNode.rhs[3].rhs)
+            stmtNode
+        )) as RootGrammarNode
+        generator.expandNode(progNode.rhs[3], listOf(nameCons))
+        return progNode
     }
 
     abstract fun makeFunctionPR(headerSymbol : StringSymbol, numArgs : Int, lambdaIdx : Int? = null) : ProductionRule
@@ -193,6 +195,7 @@ abstract class TypedFunctionalLanguage(
             val cidx = argIdxToChild(i)
             apr = apr.withOtherRule(KeyChangeAttributeRule(pr, typeAttr, cidx, ithChildTypeKey(i)))
         }
+        apr = apr.withOtherRule(InitAttributeProductionRule(pr, rootFunctionNameAttrKey, headerSymbol.name))
         return apr
     }
     // Then, the interpret stuff.
@@ -393,7 +396,7 @@ abstract class TypedFunctionalLanguage(
 
 
     // Finally, some language stuff.
-    val generator = ProgramGenerator(this.grammar, random = this.random, maxProgramDepth = 5)
+    val generator = ProgramGenerator(this.grammar, random = this.random, maxProgramDepth = 5, numRandomTries = 5)
     override fun grammar(): AttributeGrammar {
         return grammar
     }

@@ -6,7 +6,7 @@ import grammars.common.rules.SynthesizeAttributeProductionRule
 import languages.TypedFunctionalLanguage
 
 class ReclExecutor(val listType : String) : HigherOrderFunctionExecutor(listOf(anyType, anyType), listOf(anyType, listType)) {
-    override fun makeLambdaReturnTypeAPR(
+    override fun makeHigherOrderReturnTypeAPR(
         language: TypedFunctionalLanguage,
         pr: ProductionRule
     ): KeyedAttributesProductionRule {

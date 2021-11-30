@@ -8,7 +8,7 @@ import grammars.common.rules.SynthesizeAttributeProductionRule
 import languages.TypedFunctionalLanguage
 
 class FilterFunction(val listType : String, val boolType : String) : HigherOrderFunctionExecutor(listOf(anyType), listOf(listType)) {
-    override fun makeLambdaReturnTypeAPR(
+    override fun makeHigherOrderReturnTypeAPR(
         language: TypedFunctionalLanguage,
         pr: ProductionRule
     ): KeyedAttributesProductionRule {
@@ -24,7 +24,7 @@ class FilterFunction(val listType : String, val boolType : String) : HigherOrder
 
     override fun makeConstraints(language: TypedFunctionalLanguage): ConstraintGenerator {
         return super.makeConstraints(language).and(
-            BasicConstraintGenerator(makeConstraintFromType(language.typeAttr, boolType, language)) // The lambda needs to return a bool
+            BasicConstraintGenerator(makeConstraintFromType(language, 0, boolType)) // The lambda needs to return a bool
         )
     }
 }

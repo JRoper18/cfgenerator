@@ -20,13 +20,13 @@ abstract class HigherOrderFunctionExecutor(val lambdaArgTypes : List<String>, va
         return "lambdaArgs.length"
     }
 
-    abstract fun makeLambdaReturnTypeAPR(language : TypedFunctionalLanguage, pr : ProductionRule) : KeyedAttributesProductionRule
+    abstract fun makeHigherOrderReturnTypeAPR(language : TypedFunctionalLanguage, pr : ProductionRule) : KeyedAttributesProductionRule
 
     override fun makeReturnTypeAPR(
         language: TypedFunctionalLanguage,
         pr: ProductionRule,
     ): KeyedAttributesProductionRule {
-        var apr = makeLambdaReturnTypeAPR(language, pr).withOtherRule {
+        var apr = makeHigherOrderReturnTypeAPR(language, pr).withOtherRule {
             KeyChangeAttributeRule(pr, "length", language.argIdxToChild(0), lambdaNumArgsAttrKey())
         }
         lambdaArgTypes.forEachIndexed { index, argType ->
@@ -37,7 +37,7 @@ abstract class HigherOrderFunctionExecutor(val lambdaArgTypes : List<String>, va
     }
     override fun makeConstraints(language: TypedFunctionalLanguage): ConstraintGenerator {
         val constraints = otherArgs.flatMapIndexed { index, type ->
-            if(type == anyType || index == 0) {
+            if(type == anyType) {
                 listOf() // Ignore 0 index, that's the lambda
             }
             else {
