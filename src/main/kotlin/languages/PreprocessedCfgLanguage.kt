@@ -38,15 +38,20 @@ class PreprocessedCfgLanguage<I, O>(val language: CfgLanguage<I, O>) : Language<
         return language.language.generationResultToString(result)
     }
 
-    override suspend fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
+    override fun bareMinimumPreprocessing(program: String, examples: Collection<Pair<String, String>>): String {
+        val progTree : RootGrammarNode
         try {
             val progs = this.grammar().decode(program)
-            val normalProgTree = progs[0]
-            val progStr = language.language.programToString(normalProgTree)
-            return language.language.preprocessOnExamples(progStr, examples)
+            progTree = progs[0]
         } catch (ex : Exception) {
             // Probably a decode error, in which case...
-            return "PREPROCESS ERROR on prog $program:\n ${ex.stackTraceToString()}" 
+            return "PREPROCESS ERROR on prog $program:\n ${ex.stackTraceToString()}"
         }
+        return language.language.programToString(progTree)
+    }
+
+    override suspend fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
+        val progStr = bareMinimumPreprocessing(program, examples)
+        return language.language.preprocessOnExamples(progStr, examples)
     }
 }

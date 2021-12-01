@@ -130,7 +130,7 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
                 language.preprocessOnExamples(initialProgramStr, finalExamples)
             } ?: if(true) {
                 println(initialProgramStr)
-                initialProgramStr
+                language.bareMinimumPreprocessing(initialProgramStr, finalExamples)
             } else {
                 initialProgramStr
             }

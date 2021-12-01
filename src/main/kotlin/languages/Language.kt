@@ -34,5 +34,8 @@ interface Language<I, O> {
         build.append(this.programToString(result.program) + "\n")
         return build.toString()
     }
+    fun bareMinimumPreprocessing(program: String, examples : Collection<Pair<String, String>>) : String {
+        return program
+    }
     suspend fun preprocessOnExamples(program: String, examples : Collection<Pair<String, String>>) : String
 }
