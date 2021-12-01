@@ -13,5 +13,7 @@ internal class ExtensionsKtTest {
         assertEquals(c1.cartesian(c1).map {
             listOf(it.first, it.second)
         }, c1.combinationsLazy(2).toList())
+
+        assertEquals(c1.combinations(3), c1.combinationsLazy(3).toList())
     }
 }

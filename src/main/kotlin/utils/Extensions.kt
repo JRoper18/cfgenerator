@@ -1,5 +1,6 @@
 package utils
 
+import java.util.stream.Collectors
 import java.util.stream.Stream
 
 fun <T> List<T>.duplicates() : List<T> {
@@ -74,5 +75,5 @@ fun <T> Collection<T>.combinationsLazy(size : Int) : Stream<List<T>> {
 
 }
 fun <T> Collection<T>.combinations(size : Int) : Collection<List<T>> {
-    return combinationsLazy(size).toList()
+    return combinationsLazy(size).collect(Collectors.toList())
 }

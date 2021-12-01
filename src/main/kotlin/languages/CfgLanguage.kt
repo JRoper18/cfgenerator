@@ -68,7 +68,7 @@ class CfgLanguage<I, O>(val language: Language<I, O>, val attrReg : Regex = Rege
         return build.toString()
     }
 
-    override fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
+    override suspend fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
         return program;
     }
 }

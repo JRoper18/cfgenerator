@@ -38,7 +38,7 @@ class PreprocessedCfgLanguage<I, O>(val language: CfgLanguage<I, O>) : Language<
         return language.language.generationResultToString(result)
     }
 
-    override fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
+    override suspend fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
         try {
             val progs = this.grammar().decode(program)
             val normalProgTree = progs[0]

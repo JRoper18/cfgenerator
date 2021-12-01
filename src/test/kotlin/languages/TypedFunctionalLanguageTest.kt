@@ -1,5 +1,6 @@
 package languages
 
+import kotlinx.coroutines.runBlocking
 import languages.lambda2.Lambda2FunctionalLanguage
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -30,14 +31,14 @@ internal class TypedFunctionalLanguageTest {
         val wantedProg = "lambda x : times ( x , 3 )"
         // We're going to give it examples that are x times 3 and see if it can get that, instead.
         val examples = listOf(Pair("1", "3"), Pair("2", "6"))
-        val sketched = lan.preprocessOnExamples(needsHolesProg, examples)
+        val sketched = runBlocking { lan.preprocessOnExamples(needsHolesProg, examples) }
         assertNotEquals(sketched, needsHolesProg)
         for(example in examples) {
             assertTrue(lan.runProgramAgainstExample(sketched, example.first, example.second).result.isGood())
         }
         // There shouldn't be any such program that works with addition.
         val unfillableProg = "lambda x : plus ( x , 3 )"
-        val unsketched = lan.preprocessOnExamples(unfillableProg, examples)
+        val unsketched = runBlocking { lan.preprocessOnExamples(unfillableProg, examples) }
         assertEquals(unsketched, unfillableProg)
     }
 }

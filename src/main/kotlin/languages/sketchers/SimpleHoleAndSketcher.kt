@@ -9,7 +9,7 @@ interface SimpleHoleAndSketcher {
     /**
      * Returns a list of what each hole should be replaced with to fit the examples. Null if not found/not possible.
      */
-    fun makeFills(tokens : List<String>, holes : List<Int>, examples : Collection<Pair<String, String>>) : List<List<String>>?
+    suspend fun makeFills(tokens : List<String>, holes : List<Int>, examples : Collection<Pair<String, String>>) : List<List<String>>?
 
     fun fill(tokens : List<String>, holes : List<Int>, fills : List<List<String>>) : List<String> {
         var holeIdx = 0

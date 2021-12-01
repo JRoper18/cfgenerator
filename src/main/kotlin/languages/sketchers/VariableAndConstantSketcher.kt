@@ -1,5 +1,6 @@
 package languages.sketchers
 
+import kotlinx.coroutines.yield
 import languages.Language
 import languages.TypedFunctionalLanguage
 import utils.combinations
@@ -28,7 +29,7 @@ class VariableAndConstantSketcher(val language : TypedFunctionalLanguage, val st
         }
         return success
     }
-    override fun makeFills(
+    override suspend fun makeFills(
         tokens: List<String>,
         holes: List<Int>,
         examples: Collection<Pair<String, String>>
@@ -42,6 +43,7 @@ class VariableAndConstantSketcher(val language : TypedFunctionalLanguage, val st
         }
         val possibleFills = stringset.combinationsLazy(holes.size)
         for(fill in possibleFills) {
+            yield()
             val expandedFill = fill.map {
                 listOf(it)
             }

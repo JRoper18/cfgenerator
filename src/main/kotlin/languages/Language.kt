@@ -34,5 +34,5 @@ interface Language<I, O> {
         build.append(this.programToString(result.program) + "\n")
         return build.toString()
     }
-    fun preprocessOnExamples(program: String, examples : Collection<Pair<String, String>>) : String
+    suspend fun preprocessOnExamples(program: String, examples : Collection<Pair<String, String>>) : String
 }

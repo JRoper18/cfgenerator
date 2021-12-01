@@ -494,7 +494,7 @@ abstract class TypedFunctionalLanguage(
         return interp(program, input).toString()
     }
 
-    override fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
+    override suspend fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
         if(!doSketch) {
             return program
         }

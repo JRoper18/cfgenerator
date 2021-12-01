@@ -128,7 +128,12 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
             val preprocessTimeoutMs = 10 * 1000L
             val programStr = withTimeoutOrNull(preprocessTimeoutMs) {
                 language.preprocessOnExamples(initialProgramStr, finalExamples)
-            } ?: initialProgramStr
+            } ?: if(true) {
+                println(initialProgramStr)
+                initialProgramStr
+            } else {
+                initialProgramStr
+            }
             finalExamples.forEach {
                 val input = it.first
                 val expectedOutput = it.second
