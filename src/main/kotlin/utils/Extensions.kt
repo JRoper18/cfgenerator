@@ -1,5 +1,7 @@
 package utils
 
+import java.util.stream.Stream
+
 fun <T> List<T>.duplicates() : List<T> {
     val found = mutableSetOf<T>()
     val dups = mutableListOf<T>()
@@ -52,20 +54,25 @@ fun <T> Collection<T>.combinationsTo(size : Int) : Collection<List<T>> {
         this.combinations(it)
     }
 }
-fun <T> Collection<T>.combinations(size : Int) : Collection<List<T>> {
+
+fun <T> Collection<T>.combinationsLazy(size : Int) : Stream<List<T>> {
     require(size >= 1) {
         "Size must be >= 1!"
     }
     if(size == 1) {
-        return this.map {
+        return this.stream().map {
             listOf(it)
         }
     }
     else {
-        return combinations(size - 1).flatMap { l ->
-            this.map { single ->
+        return combinationsLazy(size - 1).flatMap { l ->
+            this.stream().map { single ->
                 l + single
             }
         }
     }
+
+}
+fun <T> Collection<T>.combinations(size : Int) : Collection<List<T>> {
+    return combinationsLazy(size).toList()
 }

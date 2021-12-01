@@ -7,6 +7,8 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.required
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -123,7 +125,10 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
                 val expectedOutput = ioSplit[1].trim()
                 Pair(input, expectedOutput)
             }
-            val programStr = language.preprocessOnExamples(initialProgramStr, finalExamples)
+            val preprocessTimeoutMs = 10 * 1000L
+            val programStr = withTimeoutOrNull(preprocessTimeoutMs) {
+                language.preprocessOnExamples(initialProgramStr, finalExamples)
+            } ?: initialProgramStr
             finalExamples.forEach {
                 val input = it.first
                 val expectedOutput = it.second
