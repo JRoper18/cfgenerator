@@ -73,7 +73,7 @@ internal class Lambda2GrammarTest {
     fun testCanMakeAllFunctions() {
         val lan = Lambda2FunctionalLanguage(random = Random(31L))
         val fnames = lan.functions.keys
-        val maxTries = 10
+        val maxTries = 20
         val numEx = 3
         fnames.forEach { functionName ->
             var couldMake = false

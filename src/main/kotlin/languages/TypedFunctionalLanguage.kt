@@ -11,6 +11,8 @@ import interpreters.common.executors.HigherOrderFunctionExecutor
 import interpreters.common.ProgramState
 import interpreters.common.signatures.FunctionalPropertySignature
 import interpreters.common.signatures.PropertySignature
+import languages.sketchers.SimpleHoleAndSketcher
+import languages.sketchers.VariableAndConstantSketcher
 import utils.cartesian
 import utils.combinationsTo
 import utils.duplicates
@@ -24,6 +26,7 @@ abstract class TypedFunctionalLanguage(
     val properties: Set<FunctionalPropertySignature> = setOf(),
     val random: Random = Random,
     val maxComplexTypeDepth: Int = 2,
+    val doSketch: Boolean = false
 ) : Language<List<Any>, Any> {
 
     val flattenedComplexTypes = complexTypes.entries.combinationsTo(maxComplexTypeDepth).cartesian(basicTypesToValues.keys).map {
@@ -311,10 +314,16 @@ abstract class TypedFunctionalLanguage(
     abstract fun argsFromStr(args : String) : List<Any>
     abstract fun argsToStr(args : List<Any>) : String
 
-    fun interpFull(progStr : String, args : String) : ExampleRunData {
-        val exampleRunData = interpTokens(progStr.split(" ").map {
+    fun tokenize(progStr : String) : List<String> {
+        return progStr.split(" ").map {
             it.trim()
-        }.filter { it.isNotBlank() }, argsFromStr(args))
+        }.filter { it.isNotBlank() }
+    }
+    fun detokenize(tokens : List<String>) : String {
+        return tokens.joinToString(" ")
+    }
+    fun interpFull(progStr : String, args : String) : ExampleRunData {
+        val exampleRunData = interpTokens(tokenize(progStr), argsFromStr(args))
         return exampleRunData
     }
     fun interp(progStr : String, args : String) : Any {
@@ -483,5 +492,17 @@ abstract class TypedFunctionalLanguage(
 
     override fun runProgramWithExample(program: String, input: String): String {
         return interp(program, input).toString()
+    }
+
+    override fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
+        if(!doSketch) {
+            return program
+        }
+        val tokens = tokenize(program)
+        val sketcher = VariableAndConstantSketcher(this, (this.strsToConstants.keys + varNameStringSet.stringset).toSet())
+        val holes = sketcher.punchHoles(tokens).sorted().distinct()
+        val fills = sketcher.makeFills(tokens, holes, examples) ?: return program
+        val filled = sketcher.fill(tokens, holes, fills)
+        return detokenize(filled)
     }
 }

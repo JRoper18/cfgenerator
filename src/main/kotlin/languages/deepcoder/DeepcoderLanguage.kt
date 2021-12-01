@@ -77,4 +77,8 @@ class DeepcoderLanguage(val progLength : Int = 5) : Language<DeepCoderVariables,
         return Pair(example.first.toString(), example.second)
     }
 
+    override fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>): String {
+        return program
+    }
+
 }

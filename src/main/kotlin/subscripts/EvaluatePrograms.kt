@@ -104,7 +104,7 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
             name = "\n"
         }
         val splitExample = example.split("Program:")
-        val programStr = splitExample[1].trim()
+        val initialProgramStr = splitExample[1].trim()
         var inputOutputExamples = splitExample[0].trim().removePrefix("Examples:").trim().split("Inputs:").filter {
             it.isNotBlank()
         }
@@ -115,18 +115,26 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
         var hitsAllExamples = true
         numTotalExamples.addAndGet(inputOutputExamples.size)
         if(inputOutputExamples.isNotEmpty()) {
-            programExampleStr.append(name ?: "")
+            programExampleStr.append(name)
             numProgramsWithExamples.incrementAndGet()
-            inputOutputExamples.subList(1, inputOutputExamples.size).forEach {
+            val finalExamples = inputOutputExamples.subList(1, inputOutputExamples.size).map {
                 val ioSplit = it.split("Output:")
                 val input = ioSplit[0].trim()
                 val expectedOutput = ioSplit[1].trim()
+                Pair(input, expectedOutput)
+            }
+            val programStr = language.preprocessOnExamples(initialProgramStr, finalExamples)
+            finalExamples.forEach {
+                val input = it.first
+                val expectedOutput = it.second
                 val runResult = language.runProgramAgainstExample(programStr, input, expectedOutput)
                 gotOneRun = gotOneRun || runResult.result.finishedRun()
                 hitsAllExamples = hitsAllExamples && runResult.result.isGood()
                 runResultCounts[runResult.result]!!.incrementAndGet()
                 programExampleStr.append("Inputs :\n")
-                programExampleStr.append(it.trim().replace("Output", "Expected Output"))
+                programExampleStr.append(input)
+                programExampleStr.append("Expected Output: \n")
+                programExampleStr.append(expectedOutput)
                 programExampleStr.append("\nResult: ${runResult.result}\n")
                 val resMsg = runResult.message.trim()
                 if(resMsg.isNotBlank()) {

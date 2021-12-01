@@ -12,10 +12,11 @@ import interpreters.common.signatures.NonEmptyInputListProperty
 import interpreters.common.signatures.NonEmptyOutputListProperty
 import languages.ProgramGenerationResult
 import languages.TypedFunctionalLanguage
+import languages.sketchers.SimpleHoleAndSketcher
 import utils.splitRecursive
 import kotlin.random.Random
 
-class Lambda2FunctionalLanguage(random : Random = Random) : TypedFunctionalLanguage(
+class Lambda2FunctionalLanguage(doSketch : Boolean = false, random : Random = Random) : TypedFunctionalLanguage(
     basicTypesToValues = mapOf(Lambda2.intType to IntRange(-5, 15).toSet(), Lambda2.boolType to setOf(true, false)),
     complexTypes = mapOf(Lambda2.listType to Lambda2.listTypeMapper),
     varNameStringSet = Lambda2.varnames,
@@ -46,6 +47,7 @@ class Lambda2FunctionalLanguage(random : Random = Random) : TypedFunctionalLangu
         "and" to BinaryBool2BoolExecutor(BinaryBool2BoolExecutor.Operation.AND, Lambda2.boolType),
     ),
     random = random,
+    doSketch = doSketch,
 ) {
     override fun makeFunctionPR(headerSymbol : StringSymbol, numArgs : Int, lambdaIdx : Int?) : ProductionRule {
         val pr = ProductionRule(stmtSym, listOf(headerSymbol, LP) + (0 until numArgs).flatMapIndexed { index, s ->

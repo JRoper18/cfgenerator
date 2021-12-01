@@ -67,4 +67,8 @@ class CfgLanguage<I, O>(val language: Language<I, O>, val attrReg : Regex = Rege
         build.append(grammar().encode(result.program, attrRegex = attrReg, extraAttrs = propsToAttrs) + "\n")
         return build.toString()
     }
+
+    override fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
+        return language.preprocessOnExamples(program, examples)
+    }
 }
