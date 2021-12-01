@@ -69,6 +69,6 @@ class CfgLanguage<I, O>(val language: Language<I, O>, val attrReg : Regex = Rege
     }
 
     override fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
-        return language.preprocessOnExamples(program, examples)
+        return program;
     }
 }

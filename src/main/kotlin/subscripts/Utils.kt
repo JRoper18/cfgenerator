@@ -1,6 +1,7 @@
 package subscripts
 
 import languages.CfgLanguage
+import languages.PreprocessedCfgLanguage
 import languages.ProgramGenerationResult
 import languages.Language
 import languages.deepcoder.DeepcoderLanguage
@@ -26,6 +27,7 @@ enum class LanguageRef {
     DEEPCODER,
     LAMBDA2,
     LAMBDA2CFG,
+    LAMBDA2CFGSKETCH
 }
 
 fun argsToLanguage(lan : LanguageRef) : Language<*, *> {
@@ -33,6 +35,7 @@ fun argsToLanguage(lan : LanguageRef) : Language<*, *> {
         LanguageRef.DEEPCODER -> return DeepcoderLanguage()
         LanguageRef.LAMBDA2 -> return Lambda2FunctionalLanguage()
         LanguageRef.LAMBDA2CFG -> return CfgLanguage(Lambda2FunctionalLanguage())
+        LanguageRef.LAMBDA2CFGSKETCH -> return PreprocessedCfgLanguage(CfgLanguage(Lambda2FunctionalLanguage(doSketch = true)))
     }
 }
 

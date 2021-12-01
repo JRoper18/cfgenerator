@@ -21,7 +21,11 @@ class VariableAndConstantSketcher(val language : TypedFunctionalLanguage, val st
         examples: Collection<Pair<String, String>>
     ): List<List<String>>? {
         val possibleFills = stringset.combinations(holes.size).toList()
-        for(fill in possibleFills) {
+        val identityFill = holes.map {
+            tokens[it]
+        } 
+        // Try the program without any holes first: Maybe it's good enough at the start. 
+        for(fill in (listOf(identityFill) + possibleFills)) {
             val expandedFill = fill.map {
                 listOf(it)
             }

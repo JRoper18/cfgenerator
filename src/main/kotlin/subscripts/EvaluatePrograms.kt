@@ -133,7 +133,7 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
                 runResultCounts[runResult.result]!!.incrementAndGet()
                 programExampleStr.append("Inputs :\n")
                 programExampleStr.append(input)
-                programExampleStr.append("Expected Output: \n")
+                programExampleStr.append("\nExpected Output: \n")
                 programExampleStr.append(expectedOutput)
                 programExampleStr.append("\nResult: ${runResult.result}\n")
                 val resMsg = runResult.message.trim()

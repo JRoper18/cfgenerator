@@ -13,6 +13,9 @@ interface SimpleHoleAndSketcher {
 
     fun fill(tokens : List<String>, holes : List<Int>, fills : List<List<String>>) : List<String> {
         var holeIdx = 0
+        require(fills.size == holes.size) {
+            "Holes size ${holes.size} but given ${fills.size} fills!"
+        }
         val newTokens = tokens.flatMapIndexed { index: Int, s: String ->
             if(holeIdx < holes.size && index == holes[holeIdx]) {
                 val fill = fills[holeIdx]
