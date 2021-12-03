@@ -56,24 +56,15 @@ fun <T> Collection<T>.combinationsTo(size : Int) : Collection<List<T>> {
     }
 }
 
-fun <T> Collection<T>.combinationsLazy(size : Int) : Stream<List<T>> {
-    require(size >= 1) {
-        "Size must be >= 1!"
-    }
+
+
+fun <T> Collection<T>.combinationsLazy(size : Int) : Iterator<List<T>> {
     if(size == 1) {
-        return this.stream().map {
-            listOf(it)
-        }
+        return CombinationIterator.ListWrapIterator(this)
     }
-    else {
-        return combinationsLazy(size - 1).flatMap { l ->
-            this.stream().map { single ->
-                l + single
-            }
-        }
-    }
+    return CombinationIterator(this, size)
 
 }
 fun <T> Collection<T>.combinations(size : Int) : Collection<List<T>> {
-    return combinationsLazy(size).collect(Collectors.toList())
+    return combinationsLazy(size).asSequence().toList()
 }

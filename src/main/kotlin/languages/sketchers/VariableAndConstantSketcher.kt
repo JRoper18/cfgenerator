@@ -1,9 +1,7 @@
 package languages.sketchers
 
 import kotlinx.coroutines.yield
-import languages.Language
 import languages.TypedFunctionalLanguage
-import utils.combinations
 import utils.combinationsLazy
 
 class VariableAndConstantSketcher(val language : TypedFunctionalLanguage, val stringset : Set<String>) : SimpleHoleAndSketcher {
