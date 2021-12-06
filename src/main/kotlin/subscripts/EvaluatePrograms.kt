@@ -114,7 +114,7 @@ suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramE
     val symbolCounts = mutableMapOf<String, Int>()
     if(inputOutputExamples.isNotEmpty()) {
         programExampleStr.append(name)
-        val finalExamples = inputOutputExamples.subList(1, inputOutputExamples.size).map {
+        val finalExamples = inputOutputExamples.map {
             val ioSplit = it.split("Output:")
             val input = ioSplit[0].trim()
             val expectedOutput = ioSplit[1].trim()
@@ -164,7 +164,9 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
     val badRuleFreqs = mutableMapOf<String, Int>()
     val mutex = Mutex()
     evalExamples.pforall { example ->
-        val attempts = example.split("<|attempt|>")
+        val attempts = example.split("<|attempt|>").filter {
+            it.isNotBlank()
+        }
         val attemptEvalResults = attempts.map { gradeAttempt(language, it) }
         val bestResult = attemptEvalResults.reduce { acc, programEvaluationResult ->
             val newSuccessRatio = programEvaluationResult.successRatio()
@@ -191,7 +193,7 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
         }
         else {
             bestResult.symbolCounts.forEach {
-                goodSymFreqs.compute(it.key) { oldKey, oldVal ->
+                badSymFreqs.compute(it.key) { oldKey, oldVal ->
                     (oldVal ?: 0) + it.value
                 }
             }

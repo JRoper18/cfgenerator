@@ -37,12 +37,12 @@ class CfgLanguage<I, O>(val language: Language<I, O>, val attrReg : Regex = Rege
             val progs = this.grammar().decode(program)
             progTree = progs[0]
         } catch (ex : Exception) {
-            return ProgramRunDetailedResult(ProgramRunResult.DECODEERROR, ex.localizedMessage)
+            return ProgramRunDetailedResult(ProgramRunResult.DECODEERROR, ex.localizedMessage ?: ex.stackTraceToString())
         }
         try {
             progTree.verify()
         } catch (ex : Exception) {
-            return ProgramRunDetailedResult(ProgramRunResult.VERIFYERROR, ex.localizedMessage)
+            return ProgramRunDetailedResult(ProgramRunResult.VERIFYERROR, ex.localizedMessage ?: ex.stackTraceToString())
         }
         return language.runProgramAgainstExample(language.programToString(progTree), input, output)
     }
