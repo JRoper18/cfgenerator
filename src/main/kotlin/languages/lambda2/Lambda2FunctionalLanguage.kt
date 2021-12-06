@@ -16,7 +16,7 @@ import languages.sketchers.SimpleHoleAndSketcher
 import utils.splitRecursive
 import kotlin.random.Random
 
-class Lambda2FunctionalLanguage(doSketch : Boolean = false, random : Random = Random) : TypedFunctionalLanguage(
+class Lambda2FunctionalLanguage(doSketch : Boolean = false, excludedFunctions : Set<String> = setOf(), random : Random = Random) : TypedFunctionalLanguage(
     basicTypesToValues = mapOf(Lambda2.intType to IntRange(-5, 15).toSet(), Lambda2.boolType to setOf(true, false)),
     complexTypes = mapOf(Lambda2.listType to Lambda2.listTypeMapper),
     varNameStringSet = Lambda2.varnames,

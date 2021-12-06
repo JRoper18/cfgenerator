@@ -37,5 +37,8 @@ interface Language<I, O> {
     fun bareMinimumPreprocessing(program: String, examples : Collection<Pair<String, String>>) : String {
         return program
     }
+    fun symbolsToAnalyse() : Set<String> {
+        return setOf()
+    }
     suspend fun preprocessOnExamples(program: String, examples : Collection<Pair<String, String>>) : String
 }

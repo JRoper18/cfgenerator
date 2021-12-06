@@ -50,6 +50,10 @@ class PreprocessedCfgLanguage<I, O>(val language: CfgLanguage<I, O>) : Language<
         return language.language.programToString(progTree)
     }
 
+    override fun symbolsToAnalyse() : Set<String> {
+        return language.language.symbolsToAnalyse()
+    }
+
     override suspend fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
         val progStr = bareMinimumPreprocessing(program, examples)
         return language.language.preprocessOnExamples(progStr, examples)

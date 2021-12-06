@@ -81,11 +81,80 @@ fun analyzeSymbolFrequency(program : String, language : Language<*, *>, frequenc
         frequencies[toFind] = (frequencies[toFind] ?: 0) + numOccurances
     }
 }
+data class ProgramEvaluationResult(val runResultCounts : Map<ProgramRunResult, Int>, val symbolCounts : Map<String, Int>, val programExampleString : String) {
+    fun successRatio(): Double {
+        val ratio = (runResultCounts[ProgramRunResult.SUCCESS] ?: 0).toDouble()/ runResultCounts.values.sum().toDouble()
+        return ratio
+    }
+}
+suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramEvaluationResult {
+    val exLines = attempt.lines()
+    val nameLines = exLines.filter {
+        it.contains("Name: ")
+    }
+    val name : String?
+    if(nameLines.isNotEmpty()) {
+        name = nameLines[0] + "\n"
+    } else {
+        name = "\n"
+    }
+    val splitExample = attempt.split("Program:")
+    val initialProgramStr = splitExample[1].trim()
+    var inputOutputExamples = splitExample[0].trim().removePrefix("Examples:").trim().split("Inputs:").filter {
+        it.isNotBlank()
+    }
+    val runResultCounts = ProgramRunResult.values().map {
+        Pair(it, 0)
+    }.toMap().toMutableMap()
+    val programExampleStr = StringBuilder()
+    // Remove the first -- it may have been trimmed by the GPT model, and it also may contain a "Name: <name>"
+    inputOutputExamples = inputOutputExamples.subList(1, inputOutputExamples.size)
+    var gotOneRun = false
+    var hitsAllExamples = true
+    val symbolCounts = mutableMapOf<String, Int>()
+    if(inputOutputExamples.isNotEmpty()) {
+        programExampleStr.append(name)
+        val finalExamples = inputOutputExamples.subList(1, inputOutputExamples.size).map {
+            val ioSplit = it.split("Output:")
+            val input = ioSplit[0].trim()
+            val expectedOutput = ioSplit[1].trim()
+            Pair(input, expectedOutput)
+        }
+        val preprocessTimeoutMs = 10 * 1000L
+        val programStr = withTimeoutOrNull(preprocessTimeoutMs) {
+            language.preprocessOnExamples(initialProgramStr, finalExamples)
+        } ?: if (true) {
+            println(initialProgramStr)
+            language.bareMinimumPreprocessing(initialProgramStr, finalExamples)
+        } else {
+            initialProgramStr
+        }
+        finalExamples.forEach {
+            val input = it.first
+            val expectedOutput = it.second
+            val runResult = language.runProgramAgainstExample(programStr, input, expectedOutput)
+            gotOneRun = gotOneRun || runResult.result.finishedRun()
+            hitsAllExamples = hitsAllExamples && runResult.result.isGood()
+            runResultCounts.computeIfPresent(runResult.result) { res, value ->
+                value + 1
+            }
+            programExampleStr.append("Inputs :\n")
+            programExampleStr.append(input)
+            programExampleStr.append("\nExpected Output: \n")
+            programExampleStr.append(expectedOutput)
+            programExampleStr.append("\nResult: ${runResult.result}\n")
+            val resMsg = runResult.message.trim()
+            if (resMsg.isNotBlank()) {
+                programExampleStr.append("${resMsg}\n")
+            }
+        }
+        analyzeSymbolFrequency(programStr, language, symbolCounts)
+    }
+    return ProgramEvaluationResult(runResultCounts = runResultCounts, symbolCounts = symbolCounts, programExampleString = programExampleStr.toString())
+}
 
 suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<String>, logWriter : PrintWriter, exampleWriter : PrintWriter){
-    val numProgramsWithExamples = AtomicInteger(0)
     val numFullyCorrectPrograms = AtomicInteger(0)
-    val numTotalExamples = AtomicInteger(0)
     val runResultCounts = ProgramRunResult.values().map {
         Pair(it, AtomicInteger(0))
     }.toMap()
@@ -95,77 +164,35 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
     val badRuleFreqs = mutableMapOf<String, Int>()
     val mutex = Mutex()
     evalExamples.pforall { example ->
-        val exLines = example.lines()
-        val nameLines = exLines.filter {
-            it.contains("Name: ")
-        }
-        val name : String?
-        if(nameLines.isNotEmpty()) {
-            name = nameLines[0] + "\n"
-        } else {
-            name = "\n"
-        }
-        val splitExample = example.split("Program:")
-        val initialProgramStr = splitExample[1].trim()
-        var inputOutputExamples = splitExample[0].trim().removePrefix("Examples:").trim().split("Inputs:").filter {
-            it.isNotBlank()
-        }
-        val programExampleStr = StringBuilder()
-        // Remove the first -- it may have been trimmed by the GPT model, and it also may contain a "Name: <name>"
-        inputOutputExamples = inputOutputExamples.subList(1, inputOutputExamples.size)
-        var gotOneRun = false
-        var hitsAllExamples = true
-        numTotalExamples.addAndGet(inputOutputExamples.size)
-        if(inputOutputExamples.isNotEmpty()) {
-            programExampleStr.append(name)
-            numProgramsWithExamples.incrementAndGet()
-            val finalExamples = inputOutputExamples.subList(1, inputOutputExamples.size).map {
-                val ioSplit = it.split("Output:")
-                val input = ioSplit[0].trim()
-                val expectedOutput = ioSplit[1].trim()
-                Pair(input, expectedOutput)
-            }
-            val preprocessTimeoutMs = 10 * 1000L
-            val programStr = withTimeoutOrNull(preprocessTimeoutMs) {
-                language.preprocessOnExamples(initialProgramStr, finalExamples)
-            } ?: if(true) {
-                println(initialProgramStr)
-                language.bareMinimumPreprocessing(initialProgramStr, finalExamples)
+        val attempts = example.split("<|attempt|>")
+        val attemptEvalResults = attempts.map { gradeAttempt(language, it) }
+        val bestResult = attemptEvalResults.reduce { acc, programEvaluationResult ->
+            val newSuccessRatio = programEvaluationResult.successRatio()
+            val oldSuccessRatio = acc.successRatio()
+            if(newSuccessRatio > oldSuccessRatio) {
+                programEvaluationResult
             } else {
-                initialProgramStr
+                acc
             }
-            finalExamples.forEach {
-                val input = it.first
-                val expectedOutput = it.second
-                val runResult = language.runProgramAgainstExample(programStr, input, expectedOutput)
-                gotOneRun = gotOneRun || runResult.result.finishedRun()
-                hitsAllExamples = hitsAllExamples && runResult.result.isGood()
-                runResultCounts[runResult.result]!!.incrementAndGet()
-                programExampleStr.append("Inputs :\n")
-                programExampleStr.append(input)
-                programExampleStr.append("\nExpected Output: \n")
-                programExampleStr.append(expectedOutput)
-                programExampleStr.append("\nResult: ${runResult.result}\n")
-                val resMsg = runResult.message.trim()
-                if(resMsg.isNotBlank()) {
-                    programExampleStr.append("${resMsg}\n")
+        }
+        bestResult.runResultCounts.forEach {
+            runResultCounts[it.key]!!.addAndGet(it.value)
+        }
+        mutex.withLock {
+            exampleWriter.println(bestResult.programExampleString)
+        }
+        if(bestResult.successRatio() == 1.0) {
+            numFullyCorrectPrograms.incrementAndGet()
+            bestResult.symbolCounts.forEach {
+                goodSymFreqs.compute(it.key) { oldKey, oldVal ->
+                    (oldVal ?: 0) + it.value
                 }
             }
-
-            programExampleStr.append("\nProgram:\n${programStr}")
-            programExampleStr.append("\n<|splitter|>")
-            mutex.withLock {
-                exampleWriter.println(programExampleStr.toString())
-            }
-            if(gotOneRun) {
-                if(hitsAllExamples) {
-                    numFullyCorrectPrograms.incrementAndGet()
-                    analyzeSymbolFrequency(programStr, language, goodSymFreqs)
-                    analyzeRuleFrequency(programStr, language, goodRuleFreqs)
-                }
-                else {
-                    analyzeSymbolFrequency(programStr, language, badSymFreqs)
-                    analyzeRuleFrequency(programStr, language, badRuleFreqs)
+        }
+        else {
+            bestResult.symbolCounts.forEach {
+                goodSymFreqs.compute(it.key) { oldKey, oldVal ->
+                    (oldVal ?: 0) + it.value
                 }
             }
         }
@@ -174,18 +201,22 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
     logWriter.println("NUM FULLY CORRECT PROGRAMS: ${numFullyCorrectPrograms.get()}")
     logWriter.println(runResultCounts)
     logWriter.println("Good frequencies: ")
-    val search4Symbols = setOf("cons", "foldl", "foldr", "map", "recl", "filter", "+", "-", "*", "/", ">", "<", "or", "and")
+    val search4Symbols = language.symbolsToAnalyse()
     val finalGoodRules = FrequencyCounter(goodRuleFreqs, topK = 20)
     val finalBadRules = FrequencyCounter(badRuleFreqs, topK = 20)
-    logWriter.println(FrequencyCounter(goodSymFreqs, search4Symbols))
+    val goodSymbolsFreq = FrequencyCounter(goodSymFreqs, search4Symbols)
+    val badSymbolsFreq = FrequencyCounter(badSymFreqs, search4Symbols)
+    logWriter.println(goodSymbolsFreq)
     logWriter.println(finalGoodRules)
     logWriter.println("Bad frequencies: ")
-    logWriter.println(FrequencyCounter(badSymFreqs, search4Symbols))
+    logWriter.println(badSymbolsFreq)
     logWriter.println(finalBadRules)
     logWriter.println("Biggest differences:")
     logWriter.println("Mostly in good: ")
+    logWriter.println(goodSymbolsFreq.freqDiff(badSymbolsFreq))
     logWriter.println(finalGoodRules.freqDiff(finalBadRules))
     logWriter.println("Mostly in bad: ")
+    logWriter.println(badSymbolsFreq.freqDiff(goodSymbolsFreq))
     logWriter.println(finalBadRules.freqDiff(finalGoodRules))
 
 //    println("Exception map values: ${weirdMap.values.first()[0].first.stackTraceToString()}")

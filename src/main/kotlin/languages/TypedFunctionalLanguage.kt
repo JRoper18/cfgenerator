@@ -494,6 +494,10 @@ abstract class TypedFunctionalLanguage(
         return interp(program, input).toString()
     }
 
+    override fun symbolsToAnalyse() : Set<String> {
+        return this.functions.keys
+    }
+
     override suspend fun preprocessOnExamples(program: String, examples: Collection<Pair<String, String>>) : String {
         if(!doSketch) {
             return program

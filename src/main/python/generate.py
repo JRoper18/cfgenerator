@@ -43,16 +43,18 @@ def generate_gpt(eval_generated_fname,
             outputs = fine_model.generate(
                 input_tensor, 
                 max_length=2048,  
-                # num_return_sequences=3,
+                num_return_sequences=10,
                 # no_repeat_ngram_size=2,
                 # repetition_penalty=1.5,
                 top_p=0.95,
-                temperature=.25,
+                temperature=.50,
                 do_sample=True,
                 top_k=50,
                 # early_stopping=True
             )
-            total_output = "<|splitter|>\n%s" % fine_tokenizer.decode(outputs[0])
+            total_output = "<|splitter|>\n"
+            for output in outputs:
+                total_output += "<|attempt|>\n" + fine_tokenizer.decode(output)
             total_output = total_output.replace("<|startoftext|>", "")
             total_output = total_output.replace("<|endoftext|>", "")
             file.write(total_output)
