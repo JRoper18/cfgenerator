@@ -64,7 +64,7 @@ def main():
     do_all = args.do_all
     attr_regex = args.attr_regex
     cfg_generated_train_path = '{}/cfg-generated-{}.txt'.format(gendir, genname)
-    cfg_generated_eval_path = '{}/cfg-generated-{}-eval.txt'.format(evaldir, evalname)
+    cfg_generated_eval_path = '{}/cfg-generated-{}-eval.txt'.format(gendir, genname)
     gpt_generated_eval_path = '{}/gpt-generated-{}-model-{}-eval.txt'.format(evaldir, evalname, modelname)
     eval_log_path = '{}/{}-model-{}-results.txt'.format(evaldir, evalname, modelname)
     examples_eval_path = '{}/{}-model-{}-examples.txt'.format(evaldir, evalname, modelname)

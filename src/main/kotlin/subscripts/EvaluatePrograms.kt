@@ -148,6 +148,7 @@ suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramE
                 programExampleStr.append("${resMsg}\n")
             }
         }
+        programExampleStr.append("Program:\n${programStr}\n")
         analyzeSymbolFrequency(programStr, language, symbolCounts)
     }
     return ProgramEvaluationResult(runResultCounts = runResultCounts, symbolCounts = symbolCounts, programExampleString = programExampleStr.toString())
@@ -182,19 +183,19 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
         }
         mutex.withLock {
             exampleWriter.println(bestResult.programExampleString)
-        }
-        if(bestResult.successRatio() == 1.0) {
-            numFullyCorrectPrograms.incrementAndGet()
-            bestResult.symbolCounts.forEach {
-                goodSymFreqs.compute(it.key) { oldKey, oldVal ->
-                    (oldVal ?: 0) + it.value
+            if(bestResult.successRatio() == 1.0) {
+                numFullyCorrectPrograms.incrementAndGet()
+                bestResult.symbolCounts.forEach {
+                    goodSymFreqs.compute(it.key) { oldKey, oldVal ->
+                        (oldVal ?: 0) + it.value
+                    }
                 }
             }
-        }
-        else {
-            bestResult.symbolCounts.forEach {
-                badSymFreqs.compute(it.key) { oldKey, oldVal ->
-                    (oldVal ?: 0) + it.value
+            else {
+                bestResult.symbolCounts.forEach {
+                    badSymFreqs.compute(it.key) { oldKey, oldVal ->
+                        (oldVal ?: 0) + it.value
+                    }
                 }
             }
         }

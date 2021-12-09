@@ -27,7 +27,8 @@ enum class LanguageRef {
     DEEPCODER,
     LAMBDA2,
     LAMBDA2CFG,
-    LAMBDA2CFGSKETCH
+    LAMBDA2CFGSKETCH,
+    LAMBDA2NOARITHCFG,
 }
 
 fun argsToLanguage(lan : LanguageRef) : Language<*, *> {
@@ -36,6 +37,7 @@ fun argsToLanguage(lan : LanguageRef) : Language<*, *> {
         LanguageRef.LAMBDA2 -> return Lambda2FunctionalLanguage()
         LanguageRef.LAMBDA2CFG -> return CfgLanguage(Lambda2FunctionalLanguage())
         LanguageRef.LAMBDA2CFGSKETCH -> return PreprocessedCfgLanguage(CfgLanguage(Lambda2FunctionalLanguage(doSketch = true)))
+        LanguageRef.LAMBDA2NOARITHCFG -> return CfgLanguage(Lambda2FunctionalLanguage(excludedFunctions = setOf("plus", "times", "minus")))
     }
 }
 

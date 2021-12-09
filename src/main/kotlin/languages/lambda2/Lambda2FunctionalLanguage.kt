@@ -45,7 +45,9 @@ class Lambda2FunctionalLanguage(doSketch : Boolean = false, excludedFunctions : 
         "contains" to ContainsExecutor(Lambda2.listType, Lambda2.boolType),
         "or" to BinaryBool2BoolExecutor(BinaryBool2BoolExecutor.Operation.OR, Lambda2.boolType),
         "and" to BinaryBool2BoolExecutor(BinaryBool2BoolExecutor.Operation.AND, Lambda2.boolType),
-    ),
+    ).filter {
+        !excludedFunctions.contains(it.key)
+    },
     random = random,
     doSketch = doSketch,
 ) {
