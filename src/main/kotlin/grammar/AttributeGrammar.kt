@@ -4,6 +4,7 @@ import grammar.constraints.ConstraintGenerator
 import grammars.common.rules.*
 import org.antlr.v4.runtime.*
 import org.antlr.v4.tool.Grammar
+import utils.DiscreteDistribution
 import utils.duplicates
 
 
@@ -11,6 +12,10 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
                        val constraints : Map<ProductionRule, ConstraintGenerator>,
                        val start : Symbol,
                        val scopeCloserRules : Set<ProductionRule> = setOf(),
+                       val givenRuleWeights : DiscreteDistribution<ProductionRule> = DiscreteDistribution(givenRules.map {
+                            Pair(it.rule, 1.0 / givenRules.size)
+                       }.toMap()),
+                        //The remaining weight of unspecified rules will be uniformly distributed among them.
                        val globalAttributeRegexes : Set<Regex> = givenRules.flatMap {
                            // By default, variable attributes are global.
                            if(it is VariableAttributeRule){
@@ -49,6 +54,10 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
         it.rule.rhs + it.rule.lhs
     }.distinct()
 
+    val ruleWeights = DiscreteDistribution<AttributedProductionRule>(rules.map {
+        Pair(it, givenRuleWeights.weights[it.rule]!!)
+    }.toMap())
+
     init {
         // Validate the grammar. Every non-terminal symbol should have an expansion.
         symbols.forEach {
@@ -76,6 +85,12 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
 
     fun getPossibleExpansions(lhs: Symbol): List<AttributedProductionRule>{
         return this.expansions.getOrDefault(lhs, listOf())
+    }
+
+    fun makeDistributionOverRules(rules : Collection<AttributedProductionRule>): DiscreteDistribution<AttributedProductionRule> {
+        return ruleWeights.filter {
+            it in rules
+        }
     }
 
     fun nodeRuleFromGivenRule(apr : APR) : APR {

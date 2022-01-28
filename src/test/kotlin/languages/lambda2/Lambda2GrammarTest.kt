@@ -89,6 +89,7 @@ internal class Lambda2GrammarTest {
                 }
                 val ex = lan.makeExamples(prog, numEx)
                 if(ex.size == numEx) {
+                    println(ex.joinToString("\n"))
                     couldMake = true
                     break
                 }
