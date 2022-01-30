@@ -41,6 +41,8 @@ def main():
                         help='number of examples to make for GPT to train on')
     parser.add_argument('--num_eval', type=int, default=1000, 
                         help='number of examples to make for GPT to generate/eval for')
+    parser.add_argument('--num_attempts', type=int, default=25,
+                        help='number of attempts GPT has to create a working program. ')
     parser.add_argument('--attr_regex', type=str, default=None,
                         help='If using a CFG-printing language, this is an attribute regex to filter the attributes that GPT sees. ')
     parser.add_argument('--randomize_weights', action='store_true', help="Use randomized, as opposed to pretrained EutherAI weights when training. ")
@@ -86,7 +88,7 @@ def main():
 
     if(args.do_gpt_gen or do_all):
         from src.main.python.generate import generate_gpt
-        generate_gpt(model_run_name = modelname, eval_output_generated_fname=gpt_generated_eval_path, eval_generated_fname=cfg_generated_eval_path, model_dir_base = modeldir)
+        generate_gpt(model_run_name = modelname, eval_output_generated_fname=gpt_generated_eval_path, eval_generated_fname=cfg_generated_eval_path, model_dir_base = modeldir, num_attempts=args.num_attempts)
 
     if(args.do_eval or do_all):
         cmd = 'echo -n | ./gradlew run --args="evaluate -i {} -l {} -o {} -e {}"'.format(gpt_generated_eval_path, language, eval_log_path, examples_eval_path)

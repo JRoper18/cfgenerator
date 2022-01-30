@@ -6,6 +6,7 @@ def generate_gpt(eval_generated_fname,
     model_run_name,
     model_dir_base,
     param_size = "125M",
+    num_attempts=25,
      
 ):
     model_dir = "%s/gpt-results-%s-%s" % (model_dir_base, param_size, model_run_name)
@@ -29,6 +30,7 @@ def generate_gpt(eval_generated_fname,
             dataset_strs.append("%s\nProgram:" % chopped_str[0]) # Before the program, aka only examples. 
     token_lengths = [len(fine_tokenizer.encode(ds_str)) for ds_str in dataset_strs]
     max_length = max(token_lengths)
+    max_num_attempts = 10
     avg_length = int(sum(token_lengths) / len(token_lengths))
     print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
     with open(eval_output_generated_fname, 'w') as file:
@@ -40,21 +42,25 @@ def generate_gpt(eval_generated_fname,
             if new_len < curr_len :
                 cutpoint = curr_len - new_len
             input_tensor = tokens[:, cutpoint:]
-            outputs = fine_model.generate(
-                input_tensor, 
-                max_length=2048,  
-                num_return_sequences=25,
-                # no_repeat_ngram_size=2,
-                # repetition_penalty=1.5,
-                top_p=0.95,
-                temperature=.75,
-                do_sample=True,
-                top_k=50,
-                # early_stopping=True
-            )
+            attempt_count = 0
             total_output = "<|splitter|>\n"
-            for output in outputs:
-                total_output += "<|attempt|>\n" + fine_tokenizer.decode(output)
+            while attempt_count < num_attempts:
+                current_num_attempts = min(num_attempts - attempt_count, max_num_attempts)
+                attempt_count += current_num_attempts
+                outputs = fine_model.generate(
+                    input_tensor, 
+                    max_length=2048,  
+                    num_return_sequences=current_num_attempts,
+                    # no_repeat_ngram_size=2,
+                    # repetition_penalty=1.5,
+                    top_p=0.95,
+                    temperature=.75,
+                    do_sample=True,
+                    top_k=50,
+                    # early_stopping=True
+                )
+                for output in outputs:
+                    total_output += "<|attempt|>\n" + fine_tokenizer.decode(output)
             total_output = total_output.replace("<|startoftext|>", "")
             total_output = total_output.replace("<|endoftext|>", "")
             file.write(total_output)

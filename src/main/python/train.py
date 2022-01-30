@@ -37,14 +37,18 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
     with open(generated_path, 'r') as data:
         split_ds = data.read().split("<|splitter|>")
         dataset_strs = [text for text in split_ds]
-    print("Getting largest token lengths from %d examples" % len(dataset_strs))
-    token_lengths = [len(tokenizer.encode(ds_str)) for ds_str in dataset_strs]
-    max_length = max(token_lengths)
-    avg_length = int(sum(token_lengths) / len(token_lengths))
-    print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
-
+    str_ds_size = len(dataset_strs)
+    if(str_ds_size < 100000):            
+        print("Getting largest token lengths from %d examples" % str_ds_size)
+        token_lengths = [len(tokenizer.encode(ds_str)) for ds_str in dataset_strs]
+        max_length = max(token_lengths)
+        avg_length = int(sum(token_lengths) / len(token_lengths))
+        print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
+    else:
+        # Just assume it's bad. 
+        max_length = 99999
     # Now, tokenize the datasets.
-    print("Str dataset size: %d" % len(dataset_strs))
+    print("Str dataset size: %d" % str_ds_size)
     # Sometimes our model has a max length
     ds_max_length = make_max_length(max_length, tokenizer)
     # if(ds_max_length != max_length):
@@ -64,7 +68,7 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
     # os.environ['CUDA_LAUNCH_BLOCKING'] = "1" 
     training_args = TrainingArguments(
         output_dir=output_dir,         # output directory
-        num_train_epochs=4,              # total # of training epochs
+        num_train_epochs=2,              # total # of training epochs
         per_device_train_batch_size=1,  # batch size per device during training
         per_device_eval_batch_size=1,   # batch size for evaluation
         warmup_steps=0,                # number of warmup steps for learning rate scheduler
