@@ -150,9 +150,10 @@ class Lambda2FunctionalLanguage(doSketch : Boolean = false, excludedFunctions : 
         // If we're the identity, that's not useful either.
         var isModifying = false
         for(example in examples) {
-            val inputs = example.first as List<Any>
+            val inputs = example.first
+            val output = example.second
             // No identities and no returning unmodified inputs
-            if(example.first != example.second && !inputs.contains(example.second)) {
+            if(inputs != output && !inputs.contains(output)) {
                 isModifying = true
                 break
             }
