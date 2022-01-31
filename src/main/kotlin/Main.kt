@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import subscripts.evaluateProgramsCmd
 import subscripts.generateProgramsCmd
 import kotlinx.coroutines.Dispatchers
+import subscripts.getMetadataCmd
 
 
 fun main(args: Array<String>) = runBlocking(Dispatchers.Default) {
@@ -15,6 +16,11 @@ fun main(args: Array<String>) = runBlocking(Dispatchers.Default) {
         "evaluate" to {
             this.launch {
                 evaluateProgramsCmd(it)
+            }
+        },
+        "metadata" to {
+            this.launch {
+                getMetadataCmd(it)
             }
         }
     )

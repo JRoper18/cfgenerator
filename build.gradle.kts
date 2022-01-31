@@ -18,7 +18,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.3")
     implementation("org.antlr:antlr4:4.7.1")
     implementation("org.antlr:antlr4-runtime:4.7.1")
-
+    implementation("com.google.code.gson:gson:2.8.5")
 }
 
 tasks.test {

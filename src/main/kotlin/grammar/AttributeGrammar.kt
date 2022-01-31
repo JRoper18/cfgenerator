@@ -55,7 +55,7 @@ class AttributeGrammar(val givenRules: List<AttributedProductionRule>,
     }.distinct()
 
     val ruleWeights = DiscreteDistribution<AttributedProductionRule>(rules.map {
-        Pair(it, givenRuleWeights.weights[it.rule]!!)
+        Pair(it, givenRuleWeights.weights[it.rule] ?: 0.1)
     }.toMap())
 
     init {
