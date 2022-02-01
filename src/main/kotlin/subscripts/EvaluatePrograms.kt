@@ -55,7 +55,7 @@ suspend fun evaluateProgramsCmd(args: Array<String>) {
         println("Examples file: $outputExampleDir")
         exampleWriter = PrintWriter(FileOutputStream(outputExampleDir), true)
     }
-    logWriter.println("Input file: $inputFileName")
+    println("Input file: $inputFileName")
     evaluatePrograms(argsToLanguage(lanChoice), File(inputFileName).readText().split("<|splitter|>").filter {
         it.isNotBlank()
     }, logWriter, exampleWriter)
