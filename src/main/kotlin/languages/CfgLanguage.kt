@@ -6,8 +6,8 @@ import interpreters.common.signatures.PropertySignature
 
 // By default, print all attributes. 
 class CfgLanguage<I, O>(val language: Language<I, O>, val attrReg : Regex = Regex("(.*?)")) : Language<I, O> {
-    override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult<I, O>{
-        return language.generateProgramAndExamples(numExamples)
+    override fun generateProgramAndExamples(numExamples: Int, config: GenerationConfig): ProgramGenerationResult<I, O>{
+        return language.generateProgramAndExamples(numExamples, config)
     }
 
     override fun exampleToString(example: Pair<I, O>): Pair<String, String> {

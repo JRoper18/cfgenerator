@@ -4,9 +4,11 @@ import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.NodeAttribute
 import grammar.ProductionRule
+import languages.GenerationConfig
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
+import kotlin.test.Ignore
 
 internal class Lambda2GrammarTest {
 
@@ -14,9 +16,9 @@ internal class Lambda2GrammarTest {
     val grammar = Lambda2.language.grammar
     @Test
     fun testGenerate() {
-        val generator = ProgramGenerator(grammar, random = Random(42L), numRandomTries = 5, maxProgramDepth = 5)
+        val generator = ProgramGenerator(grammar, random = Random(42L))
         repeat(5){
-            val prog = generator.generate()
+            val prog = generator.generate(config = GenerationConfig(grammar, numRandomTries = 5, maxProgramDepth = 5))
             val progStr = strfier.stringify(prog)
             println(progStr)
             println(prog)
@@ -33,7 +35,7 @@ internal class Lambda2GrammarTest {
 
     @Test
     fun testCanMakeAllRules() {
-        val generator = ProgramGenerator(grammar, timeoutMs = 1000L, returnPartialOnTimeout = true, random = Random(42L), numRandomTries = 5)
+        val generator = ProgramGenerator(grammar, timeoutMs = 1000L, returnPartialOnTimeout = true, random = Random(42L))
 
         // Can every rule be generated?
         val givenRulesSet = grammar.givenRules.map {

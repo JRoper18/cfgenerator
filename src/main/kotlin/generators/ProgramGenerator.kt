@@ -7,17 +7,17 @@ import grammars.common.rules.TerminalAPR
 import grammars.common.rules.UnexpandedAPR
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.*
+import languages.GenerationConfig
+import utils.DiscreteDistribution
 import kotlin.random.Random
 
 class ProgramGenerator(val ag: AttributeGrammar,
-                       val numRandomTries : Int = 3,
-                       val maxProgramDepth : Int = 10,
                        val random: Random = Random,
                        val timeoutMs : Long = 999999999999L,
                        val returnPartialOnTimeout : Boolean = false,
-                       ) {
+) {
 
-
+    private val defaultGenerationConfig : GenerationConfig = GenerationConfig(ag)
     private fun isValidAttributeList(attrList : List<NodeAttribute>) : Boolean {
         // No duplicate keys.
         return attrList.distinctBy {
@@ -83,9 +83,9 @@ class ProgramGenerator(val ag: AttributeGrammar,
      *  expand it out until valid.
      *  Returns true if we could expand, false if we couldn't.
      */
-    fun expandNode(node: GenericGrammarNode, additionalConstraints : List<RuleConstraint> = listOf(), depth : Int = 0, scope : CoroutineScope = GlobalScope) : Boolean {
+    fun expandNode(node: GenericGrammarNode, additionalConstraints : List<RuleConstraint> = listOf(), generationConfig : GenerationConfig = defaultGenerationConfig, depth : Int = 0, scope : CoroutineScope = GlobalScope) : Boolean {
         // First, create the program by expanding the start symbol.
-        if(depth > maxProgramDepth) {
+        if(depth > generationConfig.maxProgramDepth) {
             return false
         }
         val lhsSymbol = node.lhsSymbol()
@@ -102,14 +102,16 @@ class ProgramGenerator(val ag: AttributeGrammar,
         }
         val expansions = ag.getPossibleExpansions(lhsSymbol)
         var tryCount = 0
-        while ((tryCount < numRandomTries || numRandomTries == -1)) {
+        while ((tryCount < generationConfig.numRandomTries || generationConfig.numRandomTries == -1)) {
             tryCount += 1
             val substitutedConstraints = this.getConstraintSubstitutions(node, expansions, additionalConstraints)
             if(substitutedConstraints.size == 0) {
                 //Not possible to expand this.
                 return false;
             }
-            val ruleDistribution = this.ag.makeDistributionOverRules(substitutedConstraints.keys)
+            val ruleDistribution = generationConfig.ruleWeights.filter {
+                it in substitutedConstraints.keys
+            }
             val weighedOrderedPicks = ruleDistribution.sampledList(random)
             // For each rule + constraints, see if we can expand every node there.
             for(expansion in weighedOrderedPicks) {
@@ -126,7 +128,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
                         val child = it.rhs[i]
                         //Expand each unexpanded child with all it's new constraints.
                         if(child.isUnexpanded()) {
-                            val canExpand = expandNode(child, allNewConstraints[i], depth + 1, scope)
+                            val canExpand = expandNode(child, allNewConstraints[i], generationConfig, depth + 1, scope)
                             if(!canExpand){
                                 expansionIsGood = false
                                 break
@@ -152,12 +154,12 @@ class ProgramGenerator(val ag: AttributeGrammar,
         return false
     }
 
-    fun generate(rootConstraints: List<RuleConstraint> = listOf()): RootGrammarNode = runBlocking {
+    fun generate(rootConstraints: List<RuleConstraint> = listOf(), config: GenerationConfig = defaultGenerationConfig): RootGrammarNode = runBlocking {
         var program = RootGrammarNode(UnexpandedAPR(ag.start))
         var success: Boolean
         try {
             withTimeout(timeMillis = timeoutMs) {
-                success = expandNode(program, rootConstraints, scope = this)
+                success = expandNode(program, rootConstraints, config, scope = this)
             }
         } catch (ex: TimeoutException) {
             // We ran out of time.

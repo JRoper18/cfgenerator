@@ -5,8 +5,8 @@ import interpreters.common.ProgramState
 import interpreters.common.signatures.PropertySignature
 
 class PreprocessedCfgLanguage<I, O>(val language: CfgLanguage<I, O>) : Language<I, O> {
-    override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult<I, O>{
-        return language.generateProgramAndExamples(numExamples)
+    override fun generateProgramAndExamples(numExamples: Int, config: GenerationConfig): ProgramGenerationResult<I, O>{
+        return language.generateProgramAndExamples(numExamples, config)
     }
 
     override fun exampleToString(example: Pair<I, O>): Pair<String, String> {

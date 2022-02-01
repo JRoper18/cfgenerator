@@ -1,5 +1,6 @@
 package subscripts
 
+import com.google.gson.Gson
 import languages.ProgramGenerationResult
 import languages.ProgramGenerationResult.PROGRAM_STATUS
 import languages.Language
@@ -12,6 +13,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import languages.GenerationConfig
 import java.io.File
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicInteger
@@ -29,9 +31,10 @@ suspend fun <I, O> generatePrograms(
     language : Language<I, O>,
     makeUseful : Boolean,
     numToMake : Int,
+    generationConfig : GenerationConfig?,
     outputFileName: String = "/dev/null",
     canSaveToReturnMemory : (ProgramGenerationResult<*, *>) -> Boolean = { false },
-    logOutputStream: PrintWriter = PrintWriter(System.out, true)
+    logOutputStream: PrintWriter = PrintWriter(System.out, true),
 ) : List<ProgramGenerationResult<I, O>> {
     val savedResults = java.util.Collections.synchronizedList(mutableListOf<ProgramGenerationResult<I, O>>())
     val numBad = AtomicInteger(0)
@@ -50,8 +53,12 @@ suspend fun <I, O> generatePrograms(
                         var num = 0
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
-                            val generationResult = language.generateProgramAndExamples(7)
-
+                            val generationResult : ProgramGenerationResult<I, O>
+                            if(generationConfig == null) {
+                                generationResult = language.generateProgramAndExamples(7)
+                            } else {
+                                generationResult = language.generateProgramAndExamples(7, config = generationConfig)
+                            }
                             if(canSaveToReturnMemory(generationResult)) {
                                 savedResults.add(generationResult)
                             }
@@ -103,10 +110,20 @@ suspend fun generateProgramsCmd(args: Array<String>) {
     println(args.joinToString(" "))
     val lanChoice by parser.option(ArgType.Choice<LanguageRef>(), shortName = "l", description = "Input language to generate").required()
     val outputFileName by parser.option(ArgType.String, fullName = "output", shortName = "o", description = "Output file name").default("/dev/null")
+    val generationConfigFileName by parser.option(ArgType.String, fullName = "gconfig", shortName = "g", description = "Generation config path")
     val numToMake by parser.option(ArgType.Int, shortName = "n", description = "Number of examples to make").default(1)
     val makeUseful by parser.option(ArgType.Boolean, fullName = "useful", description = "If true, we'll only count useful problems in the total count.").default(false)
     parser.parse(args)
     val lan = argsToLanguage(lanChoice)
-    generatePrograms(lan, outputFileName = outputFileName, makeUseful = makeUseful, numToMake = numToMake)
+    val gson = Gson();
+    val genConfig : GenerationConfig?
+    if(generationConfigFileName != null) {
+        val genConfigStr = File(generationConfigFileName).readText()
+        genConfig = gson.fromJson(genConfigStr, GenerationConfig::class.java)
+    }
+    else {
+        genConfig = null
+    }
+    generatePrograms(lan, outputFileName = outputFileName, makeUseful = makeUseful, numToMake = numToMake, generationConfig = genConfig)
 
 }

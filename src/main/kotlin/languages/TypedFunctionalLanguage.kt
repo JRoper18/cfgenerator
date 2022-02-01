@@ -174,7 +174,9 @@ abstract class TypedFunctionalLanguage(
             RootGrammarNode(TerminalAPR(COLON)),
             stmtNode
         )) as RootGrammarNode
-        generator.expandNode(progNode.rhs[3], listOf(nameCons))
+        generator.expandNode(progNode.rhs[3], listOf(nameCons), generationConfig = GenerationConfig(
+            ag = this.grammar, numRandomTries = 5, maxProgramDepth = 5
+        ))
         return progNode
     }
 
@@ -408,7 +410,7 @@ abstract class TypedFunctionalLanguage(
 
 
     // Finally, some language stuff.
-    val generator = ProgramGenerator(this.grammar, random = this.random, maxProgramDepth = 5, numRandomTries = 5)
+    val generator = ProgramGenerator(this.grammar, random = this.random)
     override fun grammar(): AttributeGrammar {
         return grammar
     }
@@ -479,7 +481,7 @@ abstract class TypedFunctionalLanguage(
         return (mergedChildrenPropMaps + mapOf(node to thisNodeSignatures)).toMap()
     }
 
-    override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult<List<Any>, Any> {
+    override fun generateProgramAndExamples(numExamples: Int, config: GenerationConfig): ProgramGenerationResult<List<Any>, Any> {
         val prog = generator.generate()
         val exampleDatas = makeExamples(prog, numExamples)
         val examples = exampleDatas.map {

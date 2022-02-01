@@ -16,7 +16,7 @@ internal class DeepCoderInterpreterTest {
     @Test
     fun testInterpStmt() {
         //TODO: Get this to work in the case it creates a new variable.
-        val generator = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 5, random = Random(1234))
+        val generator = ProgramGenerator(DeepCoderGrammar.grammar, random = Random(1234))
         val stringifier = ProgramStringifier()
         repeat(100) {
             val interpreter = DeepCoderInterpreter()

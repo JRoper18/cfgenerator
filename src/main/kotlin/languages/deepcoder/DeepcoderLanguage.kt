@@ -1,6 +1,5 @@
 package languages.deepcoder
 
-import languages.ProgramGenerationResult
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.AttributeGrammar
@@ -10,16 +9,14 @@ import grammar.constraints.BasicRuleConstraint
 import grammars.deepcoder.DeepCoderGrammar
 import grammars.deepcoder.DeepCoderInterpreter
 import grammars.deepcoder.DeepCoderVariables
-import languages.Language
-import languages.ProgramRunDetailedResult
-import languages.ProgramRunResult
+import languages.*
 import kotlin.random.Random
 
 class DeepcoderLanguage(val progLength : Int = 5) : Language<DeepCoderVariables, String>{
     val generator = ProgramGenerator(DeepCoderGrammar.grammar, random = Random(System.currentTimeMillis()))
     val strfier = ProgramStringifier()
-    override fun generateProgramAndExamples(numExamples: Int): ProgramGenerationResult<DeepCoderVariables, String> {
-        val program = generator.generate(listOf(BasicRuleConstraint(NodeAttribute("length", "5"))))
+    override fun generateProgramAndExamples(numExamples: Int, config : GenerationConfig): ProgramGenerationResult<DeepCoderVariables, String> {
+        val program = generator.generate(listOf(BasicRuleConstraint(NodeAttribute("length", "5"))), config)
         val inputVars = DeepCoderInterpreter.getInputs(program)
         val ioExamples = mutableListOf<Pair<DeepCoderVariables, String>>()
         val errors : MutableMap<String, MutableList<Exception>> = mutableMapOf()

@@ -10,6 +10,7 @@ import grammars.common.rules.SynthesizeAttributeProductionRule
 import grammars.common.rules.TerminalProductionRule
 import grammars.deepcoder.DeepCoderGrammar
 import grammars.lambda2.Lambda2Grammar
+import languages.GenerationConfig
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
@@ -68,8 +69,8 @@ internal class ProgramGeneratorTest {
     @Test
     fun testDeterminism() {
         // Just use deepcoder, it's simple but not so simple that it's inherently deterministic.
-        val gen1 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1, random = Random(100))
-        val gen2 = ProgramGenerator(DeepCoderGrammar.grammar, numRandomTries = 1, random = Random(100))
+        val gen1 = ProgramGenerator(DeepCoderGrammar.grammar, random = Random(100))
+        val gen2 = ProgramGenerator(DeepCoderGrammar.grammar, random = Random(100))
         val stringifier = ProgramStringifier()
         repeat(3) {
             assertEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
@@ -78,8 +79,8 @@ internal class ProgramGeneratorTest {
 
     @Test
     fun testRandomness() {
-        val gen1 = ProgramGenerator(Lambda2Grammar.grammar, numRandomTries = 1)
-        val gen2 = ProgramGenerator(Lambda2Grammar.grammar, numRandomTries = 1)
+        val gen1 = ProgramGenerator(Lambda2Grammar.grammar)
+        val gen2 = ProgramGenerator(Lambda2Grammar.grammar)
         val stringifier = ProgramStringifier()
         repeat(3) {
             assertNotEquals(stringifier.stringify(gen1.generate(listOf())), stringifier.stringify(gen2.generate(listOf())))
@@ -97,7 +98,7 @@ internal class ProgramGeneratorTest {
             r1.rule to BasicConstraintGenerator(listOf(BasicRuleConstraint(NodeAttribute("attr", "b"))))
         ))
 
-        val gen = ProgramGenerator(gram1, numRandomTries = 1)
+        val gen = ProgramGenerator(gram1)
 
         repeat(20) {
             val prog = gen.generate()
@@ -115,7 +116,7 @@ internal class ProgramGeneratorTest {
                 BasicRuleConstraint(NodeAttribute("attr", "b")),
             )) //Impossible
         ))
-        val gen = ProgramGenerator(gram1, numRandomTries = 20)
+        val gen = ProgramGenerator(gram1)
 
         val prog = gen.generate()
         assert(prog.isUnexpanded())
