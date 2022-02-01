@@ -1,7 +1,7 @@
 package languages
 
+import generators.GenerationConfig
 import grammar.*
-import interpreters.common.ProgramState
 import interpreters.common.signatures.PropertySignature
 
 // By default, print all attributes. 

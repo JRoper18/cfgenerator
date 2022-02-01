@@ -1,5 +1,6 @@
 package languages.deepcoder
 
+import generators.GenerationConfig
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.AttributeGrammar

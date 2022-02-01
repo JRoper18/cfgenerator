@@ -2,13 +2,11 @@ package languages.lambda2
 
 import generators.ProgramGenerator
 import generators.ProgramStringifier
-import grammar.NodeAttribute
 import grammar.ProductionRule
-import languages.GenerationConfig
+import generators.GenerationConfig
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
-import kotlin.test.Ignore
 
 internal class Lambda2GrammarTest {
 

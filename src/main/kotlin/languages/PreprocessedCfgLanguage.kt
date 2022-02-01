@@ -1,8 +1,7 @@
 package languages
 
+import generators.GenerationConfig
 import grammar.*
-import interpreters.common.ProgramState
-import interpreters.common.signatures.PropertySignature
 
 class PreprocessedCfgLanguage<I, O>(val language: CfgLanguage<I, O>) : Language<I, O> {
     override fun generateProgramAndExamples(numExamples: Int, config: GenerationConfig): ProgramGenerationResult<I, O>{

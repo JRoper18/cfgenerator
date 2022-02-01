@@ -7,8 +7,6 @@ import grammars.common.rules.TerminalAPR
 import grammars.common.rules.UnexpandedAPR
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.*
-import languages.GenerationConfig
-import utils.DiscreteDistribution
 import kotlin.random.Random
 
 class ProgramGenerator(val ag: AttributeGrammar,

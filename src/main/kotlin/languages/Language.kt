@@ -1,17 +1,16 @@
 package languages
 
+import generators.GenerationConfig
 import grammar.AttributeGrammar
-import grammar.GenericGrammarNode
 import grammar.RootGrammarNode
-import interpreters.common.ProgramState
-import interpreters.common.signatures.PropertySignature
 
 interface Language<I, O> {
     fun generateProgramAndExamples(numExamples : Int, config : GenerationConfig = GenerationConfig(
         ruleWeights = GenerationConfig.weightsFromAG(grammar()),
         maxProgramDepth = 20,
         numRandomTries = 5,
-    )) : ProgramGenerationResult<I, O>
+    )
+    ) : ProgramGenerationResult<I, O>
     fun exampleToString(example : Pair<I, O>) : Pair<String, String>
     fun isProgramUseful(result : ProgramGenerationResult<I, O>) : Boolean
     fun programToString(program : RootGrammarNode) : String

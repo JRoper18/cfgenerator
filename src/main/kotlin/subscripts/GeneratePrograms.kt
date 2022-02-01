@@ -13,7 +13,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import languages.GenerationConfig
+import generators.GenerationConfig
 import java.io.File
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicInteger
@@ -115,11 +115,10 @@ suspend fun generateProgramsCmd(args: Array<String>) {
     val makeUseful by parser.option(ArgType.Boolean, fullName = "useful", description = "If true, we'll only count useful problems in the total count.").default(false)
     parser.parse(args)
     val lan = argsToLanguage(lanChoice)
-    val gson = Gson();
     val genConfig : GenerationConfig?
     if(generationConfigFileName != null) {
         val genConfigStr = File(generationConfigFileName).readText()
-        genConfig = gson.fromJson(genConfigStr, GenerationConfig::class.java)
+        genConfig = GenerationConfig.fromJson(genConfigStr, lan.grammar())
     }
     else {
         genConfig = null

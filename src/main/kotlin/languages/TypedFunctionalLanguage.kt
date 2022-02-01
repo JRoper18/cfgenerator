@@ -1,5 +1,6 @@
 package languages
 
+import generators.GenerationConfig
 import generators.ProgramGenerator
 import generators.ProgramStringifier
 import grammar.*
@@ -11,7 +12,6 @@ import interpreters.common.executors.HigherOrderFunctionExecutor
 import interpreters.common.ProgramState
 import interpreters.common.signatures.FunctionalPropertySignature
 import interpreters.common.signatures.PropertySignature
-import languages.sketchers.SimpleHoleAndSketcher
 import languages.sketchers.VariableAndConstantSketcher
 import utils.cartesian
 import utils.combinationsTo
@@ -176,7 +176,8 @@ abstract class TypedFunctionalLanguage(
         )) as RootGrammarNode
         generator.expandNode(progNode.rhs[3], listOf(nameCons), generationConfig = GenerationConfig(
             ag = this.grammar, numRandomTries = 5, maxProgramDepth = 5
-        ))
+        )
+        )
         return progNode
     }
 

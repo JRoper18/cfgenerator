@@ -10,7 +10,6 @@ import grammars.common.rules.SynthesizeAttributeProductionRule
 import grammars.common.rules.TerminalProductionRule
 import grammars.deepcoder.DeepCoderGrammar
 import grammars.lambda2.Lambda2Grammar
-import languages.GenerationConfig
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
