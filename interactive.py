@@ -19,6 +19,13 @@ def makedir(name):
 def override_default(current):
     assert current != None
 
+def make_gen_config(probs_vec, num_attempts, max_depth):
+    to_serial = dict()
+    to_serial["orderedWeights"] = probs_vec.tolist()
+    to_serial["numRandomTries"] = num_attempts
+    to_serial["maxProgramDepth"] = max_depth
+    return json.dumps(to_serial)    
+
 class ProbabilisticSynthesizerEnv(gym.Env):
     """Custom Environment that follows gym interface"""
     metadata = {'render.modes': ['human']}
@@ -37,21 +44,30 @@ class ProbabilisticSynthesizerEnv(gym.Env):
         self.eval_examples_path = "{}/gpt-generated-{}-eval.txt".format(makedir(evalname), evalname)
         self.evalname = evalname
         self.runname = runname
+        self.config_location = "{}/generation_config.txt".format(self.modeldir)
         self.attr_regex = attr_regex
         # Actions are a probability vector outputted, 1 for each NT-symbol.  
-        self.action_space = spaces.Box(low=0, high=100, shape=(num_rules,), dtype=np.float32)
+        self.action_space = spaces.Box(low=1, high=100, shape=(num_rules,), dtype=np.float32)
         # Using the frequencies of examples/errors as the observation space
-        self.observation_space = spaces.Box(low=0, high=10000,
-            shape=(num_run_types,), dtype=np.int16)
+        self.observation_space = spaces.Box(low=0, high=1000,
+        shape=(num_run_types,), dtype=np.int16)
 
     def step(self, action):
         # Make training data
-        synth_cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {}"'.format(self.num_train_gen, self.synth_tmp_path, self.language)
+        # First, normalize the probability vector
+        normalized_prob_vec = action / np.sum(action)
+        # Make the config json and pass it to the synthesizer
+        config_str = make_gen_config(normalized_prob_vec, 5, 15)
+        open(self.config_location, "w").write(config_str)
+        synth_cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {} -g {}"'.format(self.num_train_gen, self.synth_tmp_path, self.language, self.config_location)
         subprocess.call(synth_cmd, shell=True)
+        # Train gpt on the new batch
         train_gpt(run_name = self.runname, generated_path = self.synth_tmp_path, output_dir = self.modeldir, attr_regex=self.attr_regex, use_pretrained=True)
+        # And then evaluate the model by using it
         generate_gpt(model_run_name = self.runname, eval_output_generated_fname=self.gen_tmp_path, eval_generated_fname=self.eval_examples_path, model_dir_base = self.modeldir, num_attempts=self.num_eval_gen)
         eval_cmd = 'echo -n | ./gradlew run --args="evaluate -i {} -l {} -o {} -e {}"'.format(self.gen_tmp_path, self.language, self.results_tmp_path, "/dev/null")
         subprocess.call(eval_cmd, shell=True)
+        # Turn the evaluation results into a vector so we can do RL with it. 
         eval_res = json.loads(open(self.results_tmp_path, "r").read())
         rrc = eval_res["runResultCounts"]
         obs_vec = np.array([
