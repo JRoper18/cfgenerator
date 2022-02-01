@@ -1,5 +1,7 @@
 package subscripts
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import languages.Language
 import languages.ProgramRunResult
 import kotlinx.cli.ArgParser
@@ -9,10 +11,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
-import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
-import java.io.PrintWriter
+import java.io.*
 import java.util.concurrent.atomic.AtomicInteger
 
 suspend fun evaluateProgramsCmd(args: Array<String>) {
@@ -154,6 +153,35 @@ suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramE
     return ProgramEvaluationResult(runResultCounts = runResultCounts, symbolCounts = symbolCounts, programExampleString = programExampleStr.toString())
 }
 
+data class AggregateEvaluationResult(
+    val numPrograms: Int,
+    val numFullyCorrectPrograms: Int,
+    val runResultCounts : Map<ProgramRunResult, Int>,
+    val goodSymFreqs : Map<String, Int>,
+    val badSymFreqs : Map<String, Int>
+) {
+    override fun toString() : String {
+        val out = StringWriter()
+        val logWriter = PrintWriter(out)
+        logWriter.println("NUM PROGRAMS: ${numPrograms}")
+        logWriter.println("NUM FULLY CORRECT PROGRAMS: ${numFullyCorrectPrograms}")
+        logWriter.println(runResultCounts)
+        logWriter.println("Good frequencies: ")
+        val goodSymbolsFreq = FrequencyCounter(goodSymFreqs)
+        val badSymbolsFreq = FrequencyCounter(badSymFreqs)
+        logWriter.println(goodSymbolsFreq)
+        logWriter.println("Bad frequencies: ")
+        logWriter.println(badSymbolsFreq)
+        logWriter.println("Biggest differences:")
+        logWriter.println("Mostly in good: ")
+        logWriter.println(goodSymbolsFreq.freqDiff(badSymbolsFreq))
+        logWriter.println("Mostly in bad: ")
+        logWriter.println(badSymbolsFreq.freqDiff(goodSymbolsFreq))
+        logWriter.flush()
+        return out.toString()
+    }
+}
+
 suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<String>, logWriter : PrintWriter, exampleWriter : PrintWriter){
     val numFullyCorrectPrograms = AtomicInteger(0)
     val runResultCounts = ProgramRunResult.values().map {
@@ -200,27 +228,19 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
             }
         }
     }
-    logWriter.println("NUM PROGRAMS: ${evalExamples.size}")
-    logWriter.println("NUM FULLY CORRECT PROGRAMS: ${numFullyCorrectPrograms.get()}")
-    logWriter.println(runResultCounts)
-    logWriter.println("Good frequencies: ")
-    val search4Symbols = language.symbolsToAnalyse()
-    val finalGoodRules = FrequencyCounter(goodRuleFreqs, topK = 20)
-    val finalBadRules = FrequencyCounter(badRuleFreqs, topK = 20)
-    val goodSymbolsFreq = FrequencyCounter(goodSymFreqs, search4Symbols)
-    val badSymbolsFreq = FrequencyCounter(badSymFreqs, search4Symbols)
-    logWriter.println(goodSymbolsFreq)
-    logWriter.println(finalGoodRules)
-    logWriter.println("Bad frequencies: ")
-    logWriter.println(badSymbolsFreq)
-    logWriter.println(finalBadRules)
-    logWriter.println("Biggest differences:")
-    logWriter.println("Mostly in good: ")
-    logWriter.println(goodSymbolsFreq.freqDiff(badSymbolsFreq))
-    logWriter.println(finalGoodRules.freqDiff(finalBadRules))
-    logWriter.println("Mostly in bad: ")
-    logWriter.println(badSymbolsFreq.freqDiff(goodSymbolsFreq))
-    logWriter.println(finalBadRules.freqDiff(finalGoodRules))
+    val gson = GsonBuilder().setPrettyPrinting().create()
+    val aggResult = AggregateEvaluationResult(
+        numPrograms = evalExamples.size,
+        numFullyCorrectPrograms = numFullyCorrectPrograms.get(),
+        runResultCounts = runResultCounts.map {
+            Pair(it.key, it.value.get())
+        }.toMap(),
+        goodSymFreqs = goodSymFreqs,
+        badSymFreqs = badSymFreqs,
+    )
+    val jsonResultsStr = gson.toJson(aggResult)
+    logWriter.println(jsonResultsStr)
+
 
 //    println("Exception map values: ${weirdMap.values.first()[0].first.stackTraceToString()}")
 }

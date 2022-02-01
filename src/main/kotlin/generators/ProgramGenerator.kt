@@ -105,6 +105,10 @@ class ProgramGenerator(val ag: AttributeGrammar,
         while ((tryCount < numRandomTries || numRandomTries == -1)) {
             tryCount += 1
             val substitutedConstraints = this.getConstraintSubstitutions(node, expansions, additionalConstraints)
+            if(substitutedConstraints.size == 0) {
+                //Not possible to expand this.
+                return false;
+            }
             val ruleDistribution = this.ag.makeDistributionOverRules(substitutedConstraints.keys)
             val weighedOrderedPicks = ruleDistribution.sampledList(random)
             // For each rule + constraints, see if we can expand every node there.
