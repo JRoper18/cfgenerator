@@ -52,8 +52,8 @@ suspend fun <I, O> generatePrograms(
                         var num = 0
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
-                            val generationResult : ProgramGenerationResult<I, O>
-                            generationResult = language.generateProgramAndExamples(7, config = generationConfig)
+                            val generationResult : ProgramGenerationResult<I, O> =
+                                language.generateProgramAndExamples(7, config = generationConfig)
                             if(canSaveToReturnMemory(generationResult)) {
                                 savedResults.add(generationResult)
                             }
@@ -76,6 +76,7 @@ suspend fun <I, O> generatePrograms(
                                     continue
                                 }
                                 shouldSaveToFile = useful
+                                numUseful.incrementAndGet()
                             } else {
                                 shouldSaveToFile = (generationResult.status == PROGRAM_STATUS.RUNNABLE)
                             }

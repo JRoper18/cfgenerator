@@ -38,7 +38,7 @@ data class DiscreteDistribution<T>(val weights : Map<T, Double>){
         val excluded = mutableSetOf<T>()
         val toRet = mutableListOf<T>()
         val wList = weights.toList()
-        for(i in 0..size-1){
+        for(i in 0 until size){
             var wanted = random.nextDouble(0.0, sum)
             var cumProb = 0.0;
             for(weightPair in wList) {
