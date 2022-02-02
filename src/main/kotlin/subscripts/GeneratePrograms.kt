@@ -41,7 +41,7 @@ suspend fun <I, O> generatePrograms(
     val numUseful = AtomicInteger(0)
     val numExceptioned = AtomicInteger(0)
     val numPerCoroutine = Math.ceil(numToMake.toDouble() / MAX_COROUTINES.toDouble()).toInt()
-    val numCoroutines = if(makeUseful) MAX_COROUTINES else minOf(MAX_COROUTINES, numToMake)
+    val numCoroutines = minOf(MAX_COROUTINES, numToMake)
     var doneFlag = false // Set to true if we're creating only useful programs and we've reached all the useful programs.
     val time = measureTimeMillis {
         val mutex = Mutex()
@@ -52,12 +52,14 @@ suspend fun <I, O> generatePrograms(
                         var num = 0
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
+                            println("Start loop")
                             val generationResult : ProgramGenerationResult<I, O>
                             if(generationConfig == null) {
                                 generationResult = language.generateProgramAndExamples(7)
                             } else {
                                 generationResult = language.generateProgramAndExamples(7, config = generationConfig)
                             }
+                            println("Generated")
                             if(canSaveToReturnMemory(generationResult)) {
                                 savedResults.add(generationResult)
                             }

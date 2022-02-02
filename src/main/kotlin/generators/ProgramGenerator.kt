@@ -107,12 +107,12 @@ class ProgramGenerator(val ag: AttributeGrammar,
                 //Not possible to expand this.
                 return false;
             }
-            val ruleDistribution = generationConfig.ruleWeights.filter {
-                it in substitutedConstraints.keys
-            }
-            val weighedOrderedPicks = ruleDistribution.sampledList(random)
+            // val ruleDistribution = generationConfig.ruleWeights.filter {
+            //     it in substitutedConstraints.keys
+            // }
+            // val weighedOrderedPicks = ruleDistribution.sampledList(random, generationConfig.numRandomTries)
             // For each rule + constraints, see if we can expand every node there.
-            for(expansion in weighedOrderedPicks) {
+            for(expansion in substitutedConstraints.keys.shuffled()) {
                 val allNewConstraints = substitutedConstraints[expansion]!!
                 var expansionIsGood = true
                 //Make a set of unexpanded/terminal children
