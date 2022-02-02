@@ -30,18 +30,33 @@ data class DiscreteDistribution<T>(val weights : Map<T, Double>){
         return wList.last().first
     }
 
-    fun sampledList(random : Random): List<T> {
+    fun sampledList(random : Random, size : Int = this.weights.size): List<T> {
         if(this.weights.size == 1) {
             return listOf(this.weights.keys.first())
         }
-        // Pick an element,
-        val ele = sample(random)
-        // Sample from the rest
-        val remainingToPick = this.filter {
-            it != ele
+        var sum = 1.0
+        val excluded = mutableSetOf<T>()
+        val toRet = mutableListOf<T>()
+        val wList = weights.toList()
+        for(i in 0..size-1){
+            var wanted = random.nextDouble(0.0, sum)
+            var cumProb = 0.0;
+            for(weightPair in wList) {
+                val ele = weightPair.first
+                if (ele in excluded) {
+                    // Skip this.
+                    continue;
+                }
+                cumProb += weightPair.second
+                if (cumProb >= wanted) {
+                    toRet.add(ele)
+                    excluded.add(ele)
+                    sum -= weightPair.second
+                    break
+                }
+            }
         }
-        val remainingList = remainingToPick.sampledList(random)
-        return listOf(ele) + remainingList
+        return toRet.toList();
     }
 
     fun filter(f : (T) -> Boolean): DiscreteDistribution<T> {
