@@ -483,7 +483,7 @@ abstract class TypedFunctionalLanguage(
     }
 
     override fun generateProgramAndExamples(numExamples: Int, config: GenerationConfig): ProgramGenerationResult<List<Any>, Any> {
-        val prog = generator.generate()
+        val prog = generator.generate(config = config)
         val exampleDatas = makeExamples(prog, numExamples)
         val examples = exampleDatas.map {
             Pair(it.input, it.output)

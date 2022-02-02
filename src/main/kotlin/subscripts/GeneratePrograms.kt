@@ -1,6 +1,5 @@
 package subscripts
 
-import com.google.gson.Gson
 import languages.ProgramGenerationResult
 import languages.ProgramGenerationResult.PROGRAM_STATUS
 import languages.Language
@@ -73,23 +72,30 @@ suspend fun <I, O> generatePrograms(
                                     numExceptioned.incrementAndGet()
                                 }
                             }
-
-                            // Okay, now we have a good program. Is it useful?
-                            val useful = language.isProgramUseful(generationResult)
-                            if(!useful) {
-                                continue
+                            val shouldSaveToFile : Boolean;
+                            if(makeUseful) {
+                                // Okay, now we have a good program. Is it useful?
+                                val useful = language.isProgramUseful(generationResult)
+                                if(!useful) {
+                                    continue
+                                }
+                                shouldSaveToFile = useful
+                            } else {
+                                shouldSaveToFile = (generationResult.status == PROGRAM_STATUS.RUNNABLE)
                             }
-                            val usefulNow = numUseful.incrementAndGet()
-                            if(usefulNow >= numToMake && makeUseful) {
+                            val numMade = if(makeUseful) numUseful.get() else numRunnable.get();
+                            if(numMade >= numToMake) {
                                 doneFlag = true // This mechanism can occasionally cause us to generate a few extra examples.
                                 // That's fine, because that only happens if they're all generated at the same-ish time
                                 // So we're not waiting a while, anyways.
                             }
-                            mutex.withLock {
-                                logOutputStream.println("Found useful ${usefulNow}!")
-                                // Lock the file writing.
-                                outF.println("<|splitter|>")
-                                outF.print(language.generationResultToString(generationResult))
+                            if(shouldSaveToFile) {
+                                mutex.withLock {
+                                    logOutputStream.println("Found num ${numMade}!")
+                                    // Lock the file writing.
+                                    outF.println("<|splitter|>")
+                                    outF.print(language.generationResultToString(generationResult))
+                                }
                             }
                         }
                     }
