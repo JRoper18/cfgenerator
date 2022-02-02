@@ -103,7 +103,7 @@ class ProgramGenerator(val ag: AttributeGrammar,
         while ((tryCount < generationConfig.numRandomTries || generationConfig.numRandomTries == -1)) {
             tryCount += 1
             val substitutedConstraints = this.getConstraintSubstitutions(node, expansions, additionalConstraints)
-            if(substitutedConstraints.size == 0) {
+            if(substitutedConstraints.isEmpty()) {
                 //Not possible to expand this.
                 return false;
             }

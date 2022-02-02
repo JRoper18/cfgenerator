@@ -32,8 +32,8 @@ data class GenerationConfig(
             )
         }
 
-        val defaultMaxProgramDepth = 10
-        val defaultNumRandomTries = 3
+        val defaultMaxProgramDepth = 5
+        val defaultNumRandomTries = 5
     }
     private data class SerializableGenerationConfig(val orderedWeights : List<Double>, val numRandomTries: Int, val maxProgramDepth: Int)
     fun toJson(ag : AttributeGrammar) : String {
