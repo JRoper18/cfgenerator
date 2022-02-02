@@ -30,7 +30,7 @@ suspend fun <I, O> generatePrograms(
     language : Language<I, O>,
     makeUseful : Boolean,
     numToMake : Int,
-    generationConfig : GenerationConfig?,
+    generationConfig : GenerationConfig,
     outputFileName: String = "/dev/null",
     canSaveToReturnMemory : (ProgramGenerationResult<*, *>) -> Boolean = { false },
     logOutputStream: PrintWriter = PrintWriter(System.out, true),
@@ -53,11 +53,7 @@ suspend fun <I, O> generatePrograms(
                         while((num < numPerCoroutine || makeUseful) && !doneFlag) {
                             num += 1
                             val generationResult : ProgramGenerationResult<I, O>
-                            if(generationConfig == null) {
-                                generationResult = language.generateProgramAndExamples(7)
-                            } else {
-                                generationResult = language.generateProgramAndExamples(7, config = generationConfig)
-                            }
+                            generationResult = language.generateProgramAndExamples(7, config = generationConfig)
                             if(canSaveToReturnMemory(generationResult)) {
                                 savedResults.add(generationResult)
                             }
@@ -127,7 +123,7 @@ suspend fun generateProgramsCmd(args: Array<String>) {
         genConfig = GenerationConfig.fromJson(genConfigStr, lan.grammar())
     }
     else {
-        genConfig = null
+        genConfig = GenerationConfig(lan.grammar())
     }
     generatePrograms(lan, outputFileName = outputFileName, makeUseful = makeUseful, numToMake = numToMake, generationConfig = genConfig)
 
