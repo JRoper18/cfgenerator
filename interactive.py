@@ -6,12 +6,14 @@ import transformers
 from src.main.python.utils import RedirectStdStreams
 from src.main.python.train import train_gpt
 from src.main.python.generate import generate_gpt
+from stable_baselines3.common.callbacks import BaseCallback
 import gym
 from gym import spaces
 # from stable_baselines import DQN
 import numpy as np
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import PPO
+from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv
 
 def makedir(name):
     dirname = './output/{}'.format(name)
@@ -27,16 +29,30 @@ def make_gen_config(probs_vec, num_attempts, max_depth):
     to_serial["numRandomTries"] = num_attempts
     to_serial["maxProgramDepth"] = max_depth
     return json.dumps(to_serial)    
+class TensorboardCallback(BaseCallback):
+    """
+    Custom callback for plotting additional values in tensorboard.
+    """
+
+    def __init__(self, verbose=0):
+        super(TensorboardCallback, self).__init__(verbose)
+    def get_unwrapped_env(self) -> gym.Env:
+        return self.training_env.envs[0]
+    def _on_step(self) -> bool:
+        for run_type in self.get_unwrapped_env().run_types:
+            self.logger.record('{}_count'.format(run_type), self.get_unwrapped_env().last_rrcs[run_type])
+        return True
 
 class ProbabilisticSynthesizerEnv(gym.Env):
     """Custom Environment that follows gym interface"""
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, language, runname, evalname, num_train_gen, num_eval_gen, num_rules, num_run_types, num_steps, attr_regex):
+    def __init__(self, language, runname, evalname, num_train_gen, num_eval_gen, num_rules, run_types, num_steps, attr_regex):
         super(ProbabilisticSynthesizerEnv, self).__init__()
         # Define action and observation space
         # They must be gym.spaces objects
         self.modeldir = makedir(runname)
+        self.run_types = run_types
         self.num_train_gen = num_train_gen
         self.num_eval_gen = num_eval_gen
         self.language = language
@@ -55,7 +71,7 @@ class ProbabilisticSynthesizerEnv(gym.Env):
         self.action_space = spaces.Box(low=1, high=100, shape=(num_rules,), dtype=np.float32)
         # Using the frequencies of examples/errors as the observation space
         self.observation_space = spaces.Box(low=0, high=1000,
-        shape=(num_run_types,), dtype=np.int16)
+        shape=(len(run_types),), dtype=np.int16)
         self.step_num = 0
         self.max_num_steps = num_steps
     def step(self, action):
@@ -79,19 +95,29 @@ class ProbabilisticSynthesizerEnv(gym.Env):
             # Turn the evaluation results into a vector so we can do RL with it. 
             eval_res = json.loads(open(self.results_tmp_path, "r").read())
             rrc = eval_res["runResultCounts"]
-            obs_vec = np.array([
-                rrc["SUCCESS"], 
-                rrc["BAD"], 
-                rrc["PARSEERROR"], 
-                rrc["TYPEERROR"], 
-                rrc["DECODEERROR"], 
-                rrc["VERIFYERROR"], 
-                rrc["NAMEERROR"], 
-                rrc["RUNTIMEERROR"]
+            num_fully_correct = eval_res["numFullyCorrectPrograms"]
+            obs_vec = np.array([rrc[runtype] for runtype in self.run_types])
+            # A general rule: Success should be the best, and then bad results, and then runtime errors. 
+            # This is because the type/decode/verify/name errors shouldn't really every occur
+            # And we prefer correct programs to bad ones, but bad programs to non-running ones. 
+            # Also, the weight for a fully correct program should be >10x the success weight, because then it might
+            # Prioritize getting mostly successes instead of ALL successes. 
+            runtime_reward_weights = np.array([
+                10,
+                2,
+                0,
+                0,
+                0, 
+                0, 
+                0, 
+                1
             ])
+            runtime_rewards = np.dot(obs_vec, runtime_reward_weights)
+            self.last_rrcs = rrc
             info = dict() # Can add stuff to this but idk why except for maybe metrics/debugging?
         done = self.step_num >= self.max_num_steps
-        return obs_vec, eval_res["numFullyCorrectPrograms"], done, info
+        # What's a good reward function? Idk, tbh. 
+        return obs_vec, (num_fully_correct * 100) + runtime_rewards, done, info
     def reset(self):
         self.step_num = 0
         return np.zeros(8)  # reward, done, info can't be included
@@ -105,11 +131,11 @@ def main():
     parser.add_argument('--evalname', type=str, help='name of the evaluation set.', required=True)
     parser.add_argument('--language', type=str,
                         help='Name of the language to eval on (deepcoder or lambda2)', required=True)
-    parser.add_argument('--num_gen_per_iter', type=int, default=100, 
+    parser.add_argument('--num_gen_per_iter', type=int, default=1000, 
                         help='number of examples to make for GPT to train on each iteration')
     parser.add_argument('--num_attempts', type=int, default=1,
                         help='number of attempts GPT has to create a working program each iteration')
-    parser.add_argument('--num_iter', type=int, default=100,
+    parser.add_argument('--num_iter', type=int, default=10,
                         help='number of iterations of RL to run')
     parser.add_argument('--attr_regex', type=str, default=None,
                         help='If using a CFG-printing language, this is an attribute regex to filter the attributes that GPT sees. ')
@@ -120,7 +146,7 @@ def main():
     num_gen_per_iter = args.num_gen_per_iter
     evalname = args.evalname
     transformers.logging.set_verbosity_error()
-    lang_data_tmp_file_path = "tmp.txt"
+    lang_data_tmp_file_path = "{}/language_metadata.txt".format(makedir(runname))
     lang_data_cmd = 'echo -n | ./gradlew run --args="metadata -l {} -o {}"'.format(language, lang_data_tmp_file_path)
     subprocess.call(lang_data_cmd, shell=True)
     lang_data_tmp_file = open (lang_data_tmp_file_path, "r")
@@ -133,12 +159,12 @@ def main():
         num_train_gen=num_gen_per_iter,
         num_eval_gen=args.num_attempts,
         num_rules=num_rules,
-        num_run_types=8,
+        run_types=["SUCCESS", "BAD", "PARSEERROR", "TYPEERROR", "DECODEERROR", "VERIFYERROR", "NAMEERROR", "RUNTIMEERROR"],
         num_steps=args.num_iter,
         attr_regex=args.attr_regex
     )
-    model = PPO("MlpPolicy", rl_env, verbose=2, n_steps=2, batch_size=2, n_epochs=1)
-    model.learn(total_timesteps=args.num_iter, n_eval_episodes=0)
+    model = PPO("MlpPolicy", rl_env, tensorboard_log="./rl-logs/", verbose=1, n_steps=2, batch_size=2, n_epochs=1)
+    model.learn(total_timesteps=args.num_iter, callback=TensorboardCallback(verbose=1), n_eval_episodes=0)
     model.save("{}/saved-model".format(makedir(runname)))
     print("Finished RL loop!")
 
