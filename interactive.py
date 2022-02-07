@@ -2,6 +2,8 @@ import subprocess
 import argparse
 import os
 import json
+import transformers
+from src.main.python.utils import RedirectStdStreams
 from src.main.python.train import train_gpt
 from src.main.python.generate import generate_gpt
 import gym
@@ -30,7 +32,7 @@ class ProbabilisticSynthesizerEnv(gym.Env):
     """Custom Environment that follows gym interface"""
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, language, runname, evalname, num_train_gen, num_eval_gen, num_rules, num_run_types, attr_regex):
+    def __init__(self, language, runname, evalname, num_train_gen, num_eval_gen, num_rules, num_run_types, num_steps, attr_regex):
         super(ProbabilisticSynthesizerEnv, self).__init__()
         # Define action and observation space
         # They must be gym.spaces objects
@@ -38,10 +40,13 @@ class ProbabilisticSynthesizerEnv(gym.Env):
         self.num_train_gen = num_train_gen
         self.num_eval_gen = num_eval_gen
         self.language = language
+        self.log_path = "{}/inner_log.txt".format(self.modeldir)
+        self.log_f = open(self.log_path, "w+")
         self.synth_tmp_path = "{}/tmp_synth.txt".format(self.modeldir)
         self.gen_tmp_path = "{}/tmp_gen.txt".format(self.modeldir)
         self.results_tmp_path = "{}/tmp_results.txt".format(self.modeldir)
         self.eval_examples_path = "{}/gpt-generated-{}-eval.txt".format(makedir(evalname), evalname)
+        self.results_detailed_tmp_path = "{}/results_detailed.txt".format(self.modeldir)
         self.evalname = evalname
         self.runname = runname
         self.config_location = "{}/generation_config.txt".format(self.modeldir)
@@ -51,38 +56,44 @@ class ProbabilisticSynthesizerEnv(gym.Env):
         # Using the frequencies of examples/errors as the observation space
         self.observation_space = spaces.Box(low=0, high=1000,
         shape=(num_run_types,), dtype=np.int16)
-
+        self.step_num = 0
+        self.max_num_steps = num_steps
     def step(self, action):
-        # Make training data
-        # First, normalize the probability vector
-        normalized_prob_vec = action / np.sum(action)
-        # Make the config json and pass it to the synthesizer
-        config_str = make_gen_config(normalized_prob_vec, 5, 15)
-        open(self.config_location, "w").write(config_str)
-        synth_cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {} -g {}"'.format(self.num_train_gen, self.synth_tmp_path, self.language, self.config_location)
-        subprocess.call(synth_cmd, shell=True)
-        # Train gpt on the new batch
-        train_gpt(run_name = self.runname, generated_path = self.synth_tmp_path, output_dir = self.modeldir, attr_regex=self.attr_regex, use_pretrained=True)
-        # And then evaluate the model by using it
-        generate_gpt(model_run_name = self.runname, eval_output_generated_fname=self.gen_tmp_path, eval_generated_fname=self.eval_examples_path, model_dir_base = self.modeldir, num_attempts=self.num_eval_gen)
-        eval_cmd = 'echo -n | ./gradlew run --args="evaluate -i {} -l {} -o {} -e {}"'.format(self.gen_tmp_path, self.language, self.results_tmp_path, "/dev/null")
-        subprocess.call(eval_cmd, shell=True)
-        # Turn the evaluation results into a vector so we can do RL with it. 
-        eval_res = json.loads(open(self.results_tmp_path, "r").read())
-        rrc = eval_res["runResultCounts"]
-        obs_vec = np.array([
-            rrc["SUCCESS"], 
-            rrc["BAD"], 
-            rrc["PARSEERROR"], 
-            rrc["TYPEERROR"], 
-            rrc["DECODEERROR"], 
-            rrc["VERIFYERROR"], 
-            rrc["NAMEERROR"], 
-            rrc["RUNTIMEERROR"]
-        ])
-        info = dict() # Can add stuff to this but idk why except for maybe metrics/debugging?
-        return obs_vec, eval_res["numFullyCorrectPrograms"], False, info
+        self.step_num += 1
+        # Let this stuff go into the log file, to seperate it from the logs of StableBaselines
+        with RedirectStdStreams(stdout=self.log_f, stderr=self.log_f):
+            # Make training data
+            # First, normalize the probability vector
+            normalized_prob_vec = action / np.sum(action)
+            # Make the config json and pass it to the synthesizer
+            config_str = make_gen_config(normalized_prob_vec, 5, 5)
+            open(self.config_location, "w").write(config_str)
+            synth_cmd = 'echo -n | ./gradlew run --args="generate --useful -n {} -o {} -l {} -g {}"'.format(self.num_train_gen, self.synth_tmp_path, self.language, self.config_location)
+            subprocess.call(synth_cmd, shell=True, stdout=self.log_f, stderr=self.log_f)
+            # Train gpt on the new batch
+            train_gpt(run_name = self.runname, generated_path = self.synth_tmp_path, output_dir = self.modeldir, attr_regex=self.attr_regex, use_pretrained=True, use_saved=True)
+            # And then evaluate the model by using it
+            generate_gpt(model_run_name = self.runname, eval_output_generated_fname=self.gen_tmp_path, eval_generated_fname=self.eval_examples_path, model_dir_base = self.modeldir, num_attempts=self.num_eval_gen)
+            eval_cmd = 'echo -n | ./gradlew run --args="evaluate -i {} -l {} -o {} -e {}"'.format(self.gen_tmp_path, self.language, self.results_tmp_path, self.results_detailed_tmp_path)
+            subprocess.call(eval_cmd, shell=True, stdout=self.log_f, stderr=self.log_f)
+            # Turn the evaluation results into a vector so we can do RL with it. 
+            eval_res = json.loads(open(self.results_tmp_path, "r").read())
+            rrc = eval_res["runResultCounts"]
+            obs_vec = np.array([
+                rrc["SUCCESS"], 
+                rrc["BAD"], 
+                rrc["PARSEERROR"], 
+                rrc["TYPEERROR"], 
+                rrc["DECODEERROR"], 
+                rrc["VERIFYERROR"], 
+                rrc["NAMEERROR"], 
+                rrc["RUNTIMEERROR"]
+            ])
+            info = dict() # Can add stuff to this but idk why except for maybe metrics/debugging?
+        done = self.step_num >= self.max_num_steps
+        return obs_vec, eval_res["numFullyCorrectPrograms"], done, info
     def reset(self):
+        self.step_num = 0
         return np.zeros(8)  # reward, done, info can't be included
     def close (self):
         pass
@@ -98,7 +109,7 @@ def main():
                         help='number of examples to make for GPT to train on each iteration')
     parser.add_argument('--num_attempts', type=int, default=1,
                         help='number of attempts GPT has to create a working program each iteration')
-    parser.add_argument('--num_iter', type=int, default=50,
+    parser.add_argument('--num_iter', type=int, default=100,
                         help='number of iterations of RL to run')
     parser.add_argument('--attr_regex', type=str, default=None,
                         help='If using a CFG-printing language, this is an attribute regex to filter the attributes that GPT sees. ')
@@ -108,6 +119,7 @@ def main():
     runname = args.runname
     num_gen_per_iter = args.num_gen_per_iter
     evalname = args.evalname
+    transformers.logging.set_verbosity_error()
     lang_data_tmp_file_path = "tmp.txt"
     lang_data_cmd = 'echo -n | ./gradlew run --args="metadata -l {} -o {}"'.format(language, lang_data_tmp_file_path)
     subprocess.call(lang_data_cmd, shell=True)
@@ -122,11 +134,13 @@ def main():
         num_eval_gen=args.num_attempts,
         num_rules=num_rules,
         num_run_types=8,
+        num_steps=args.num_iter,
         attr_regex=args.attr_regex
     )
-    model = PPO("MlpPolicy", rl_env, verbose=1)
-    model.learn(total_timesteps=args.num_iter)
-    model.save(runname)
+    model = PPO("MlpPolicy", rl_env, verbose=2, n_steps=2, batch_size=2, n_epochs=1)
+    model.learn(total_timesteps=args.num_iter, n_eval_episodes=0)
+    model.save("{}/saved-model".format(makedir(runname)))
+    print("Finished RL loop!")
 
     
 

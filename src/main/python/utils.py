@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 import re
+import sys
 def find_nth(haystack, needle, n):
     start = haystack.find(needle)
     while start >= 0 and n > 1:
@@ -78,3 +79,18 @@ def cfg2prog(func_raw_str):
     symbols = re.findall('"([\w\(\),:\[\]\d-]+)"', func_raw_str)
     func_str = ' '.join(symbols)
     return func_str
+
+class RedirectStdStreams(object):
+    def __init__(self, stdout=None, stderr=None):
+        self._stdout = stdout or sys.stdout
+        self._stderr = stderr or sys.stderr
+
+    def __enter__(self):
+        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+        self.old_stdout.flush(); self.old_stderr.flush()
+        sys.stdout, sys.stderr = self._stdout, self._stderr
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._stdout.flush(); self._stderr.flush()
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr

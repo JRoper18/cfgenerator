@@ -9,10 +9,13 @@ import transformers
 import os
 
 
-def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretrained = False):
+def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretrained = False, use_saved = False):
     param_size = "125M"
-    pretrained_name = "EleutherAI/gpt-neo-%s" % param_size
     output_dir = "%s/gpt-results-%s-%s" % (output_dir, param_size, run_name)
+    if use_saved and os.path.exists(output_dir): # If there is one saved and we want to use it, then use it.
+        pretrained_name = output_dir
+    else:
+        pretrained_name = "EleutherAI/gpt-neo-%s" % param_size
 
     print(transformers.__version__)
     model = GPTNeoForCausalLM.from_pretrained(pretrained_name).cuda()
@@ -73,7 +76,7 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
         per_device_eval_batch_size=1,   # batch size for evaluation
         warmup_steps=0,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
-        logging_dir='./logs',            # directory for storing logs
+        logging_dir='./gpt-logs',            # directory for storing logs
         logging_steps=1,
         # no_cuda = True, # Damn these GPUs really are small
         fp16=True, # For better memory and training speeds. 

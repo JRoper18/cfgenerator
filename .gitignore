@@ -181,5 +181,6 @@ out/
 
 output*
 logs*
+gpt-logs*
 tmp*
 **/__pycache__/
