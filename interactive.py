@@ -68,7 +68,7 @@ class ProbabilisticSynthesizerEnv(gym.Env):
         self.config_location = "{}/generation_config.txt".format(self.modeldir)
         self.attr_regex = attr_regex
         # Actions are a probability vector outputted, 1 for each NT-symbol.  
-        self.action_space = spaces.Box(low=1, high=100, shape=(num_rules,), dtype=np.float32)
+        self.action_space = spaces.Box(low=0.00001, high=1, shape=(num_rules,), dtype=np.float32)
         # Using the frequencies of examples/errors as the observation space
         self.observation_space = spaces.Box(low=0, high=1000,
         shape=(len(run_types),), dtype=np.int16)

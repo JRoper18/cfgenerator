@@ -14,6 +14,7 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
     output_dir = "%s/gpt-results-%s-%s" % (output_dir, param_size, run_name)
     if use_saved and os.path.exists(output_dir): # If there is one saved and we want to use it, then use it.
         pretrained_name = output_dir
+        print("Using saved model")
     else:
         pretrained_name = "EleutherAI/gpt-neo-%s" % param_size
 
@@ -77,7 +78,8 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
         warmup_steps=0,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
         logging_dir='./gpt-logs',            # directory for storing logs
-        logging_steps=1,
+        # logging_steps=1,
+        # save_strategy='epoch',
         # no_cuda = True, # Damn these GPUs really are small
         fp16=True, # For better memory and training speeds. 
         # deepspeed = "./src/main/resources/ds_config_zero2.json" # SPEED
@@ -99,7 +101,7 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
     )
     # train_result = trainer.train()
     is_checkpoint = os.path.isdir(output_dir + "/checkpoint-500")
-    train_result = trainer.train(resume_from_checkpoint=is_checkpoint)
+    train_result = trainer.train(resume_from_checkpoint=(is_checkpoint and not use_saved))
     print("done training!")
     trainer.save_model(output_dir)
 
