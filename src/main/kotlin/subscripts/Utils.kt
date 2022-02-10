@@ -1,13 +1,10 @@
 package subscripts
 
-import languages.CfgLanguage
-import languages.PreprocessedCfgLanguage
-import languages.ProgramGenerationResult
-import languages.Language
 import languages.deepcoder.DeepcoderLanguage
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import languages.*
 import languages.lambda2.Lambda2FunctionalLanguage
 
 
@@ -96,5 +93,15 @@ class FrequencyCounter(val counts : Map<String, Int>,
         }
         return build.toString()
     }
+}
 
+fun <T> Collection<T>.countMap(keySet : Collection<T> = setOf()) : Map<T, Int> {
+    val mmap = mutableMapOf<T, Int>()
+    keySet.forEach {
+        mmap[it] = 0
+    }
+    this.forEach { it ->
+        mmap[it] = (mmap[it] ?: 0) + 1
+    }
+    return mmap.toMap()
 }

@@ -80,10 +80,13 @@ fun analyzeSymbolFrequency(program : String, language : Language<*, *>, frequenc
         frequencies[toFind] = (frequencies[toFind] ?: 0) + numOccurances
     }
 }
-data class ProgramEvaluationResult(val runResultCounts : Map<ProgramRunResult, Int>, val symbolCounts : Map<String, Int>, val programExampleString : String) {
+data class ProgramEvaluationResult(val runResults : List<ProgramRunResult>, val symbolCounts : Map<String, Int>, val programExampleString : String) {
     fun successRatio(): Double {
-        val ratio = (runResultCounts[ProgramRunResult.SUCCESS] ?: 0).toDouble()/ runResultCounts.values.sum().toDouble()
+        val ratio = (runResultCounts[ProgramRunResult.SUCCESS] ?: 0).toDouble()/ runResults.size
         return ratio
+    }
+    val runResultCounts : Map<ProgramRunResult, Int> by lazy {
+        runResults.countMap(ProgramRunResult.values().toList())
     }
 }
 suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramEvaluationResult {
@@ -102,9 +105,7 @@ suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramE
     var inputOutputExamples = splitExample[0].trim().removePrefix("Examples:").trim().split("Inputs:").filter {
         it.isNotBlank()
     }
-    val runResultCounts = ProgramRunResult.values().map {
-        Pair(it, 0)
-    }.toMap().toMutableMap()
+    val runResults = mutableListOf<ProgramRunResult>()
     val programExampleStr = StringBuilder()
     // Remove the first -- it may have been trimmed by the GPT model, and it also may contain a "Name: <name>"
     inputOutputExamples = inputOutputExamples.subList(1, inputOutputExamples.size)
@@ -134,9 +135,7 @@ suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramE
             val runResult = language.runProgramAgainstExample(programStr, input, expectedOutput)
             gotOneRun = gotOneRun || runResult.result.finishedRun()
             hitsAllExamples = hitsAllExamples && runResult.result.isGood()
-            runResultCounts.computeIfPresent(runResult.result) { res, value ->
-                value + 1
-            }
+            runResults.add(runResult.result)
             programExampleStr.append("Inputs :\n")
             programExampleStr.append(input)
             programExampleStr.append("\nExpected Output: \n")
@@ -150,16 +149,19 @@ suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramE
         programExampleStr.append("Program:\n${programStr}\n")
         analyzeSymbolFrequency(programStr, language, symbolCounts)
     }
-    return ProgramEvaluationResult(runResultCounts = runResultCounts, symbolCounts = symbolCounts, programExampleString = programExampleStr.toString())
+    return ProgramEvaluationResult(runResults = runResults.toList(), symbolCounts = symbolCounts, programExampleString = programExampleStr.toString())
 }
 
 data class AggregateEvaluationResult(
     val numPrograms: Int,
     val numFullyCorrectPrograms: Int,
-    val runResultCounts : Map<ProgramRunResult, Int>,
+    val runResults: List<ProgramRunResult>,
     val goodSymFreqs : Map<String, Int>,
     val badSymFreqs : Map<String, Int>
 ) {
+    val runResultCounts by lazy {
+        runResults.countMap(ProgramRunResult.values().toList())
+    }
     override fun toString() : String {
         val out = StringWriter()
         val logWriter = PrintWriter(out)
@@ -184,15 +186,12 @@ data class AggregateEvaluationResult(
 
 suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<String>, logWriter : PrintWriter, exampleWriter : PrintWriter){
     val numFullyCorrectPrograms = AtomicInteger(0)
-    val runResultCounts = ProgramRunResult.values().map {
-        Pair(it, AtomicInteger(0))
-    }.toMap()
+    val orderedRunResults = mutableListOf<ProgramRunResult>()
     val badSymFreqs = mutableMapOf<String, Int>()
     val goodSymFreqs = mutableMapOf<String, Int>()
     val goodRuleFreqs = mutableMapOf<String, Int>()
     val badRuleFreqs = mutableMapOf<String, Int>()
-    val mutex = Mutex()
-    evalExamples.pforall { example ->
+    evalExamples.forEach { example ->
         val attempts = example.split("<|attempt|>").filter {
             it.isNotBlank()
         }
@@ -206,24 +205,20 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
                 acc
             }
         }
-        bestResult.runResultCounts.forEach {
-            runResultCounts[it.key]!!.addAndGet(it.value)
-        }
-        mutex.withLock {
-            exampleWriter.println(bestResult.programExampleString)
-            if(bestResult.successRatio() == 1.0) {
-                numFullyCorrectPrograms.incrementAndGet()
-                bestResult.symbolCounts.forEach {
-                    goodSymFreqs.compute(it.key) { oldKey, oldVal ->
-                        (oldVal ?: 0) + it.value
-                    }
+        orderedRunResults.addAll(bestResult.runResults)
+        exampleWriter.println(bestResult.programExampleString)
+        if(bestResult.successRatio() == 1.0) {
+            numFullyCorrectPrograms.incrementAndGet()
+            bestResult.symbolCounts.forEach {
+                goodSymFreqs.compute(it.key) { oldKey, oldVal ->
+                    (oldVal ?: 0) + it.value
                 }
             }
-            else {
-                bestResult.symbolCounts.forEach {
-                    badSymFreqs.compute(it.key) { oldKey, oldVal ->
-                        (oldVal ?: 0) + it.value
-                    }
+        }
+        else {
+            bestResult.symbolCounts.forEach {
+                badSymFreqs.compute(it.key) { oldKey, oldVal ->
+                    (oldVal ?: 0) + it.value
                 }
             }
         }
@@ -232,9 +227,7 @@ suspend fun evaluatePrograms(language : Language<*, *>, evalExamples : List<Stri
     val aggResult = AggregateEvaluationResult(
         numPrograms = evalExamples.size,
         numFullyCorrectPrograms = numFullyCorrectPrograms.get(),
-        runResultCounts = runResultCounts.map {
-            Pair(it.key, it.value.get())
-        }.toMap(),
+        runResults = orderedRunResults,
         goodSymFreqs = goodSymFreqs,
         badSymFreqs = badSymFreqs,
     )
