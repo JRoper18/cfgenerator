@@ -70,7 +70,7 @@ class ProbabilisticSynthesizerEnv(gym.Env):
         # Actions are a probability vector outputted, 1 for each NT-symbol.  
         self.action_space = spaces.Box(low=0.00001, high=1, shape=(num_rules,), dtype=np.float32)
         # Using the frequencies of examples/errors as the observation space
-        self.observation_space = spaces.Box(low=0, high=1000,
+        self.observation_space = spaces.Box(low=0, high=200,
         shape=(len(run_types),), dtype=np.int16)
         self.step_num = 0
         self.max_num_steps = num_steps
@@ -95,8 +95,13 @@ class ProbabilisticSynthesizerEnv(gym.Env):
             # Turn the evaluation results into a vector so we can do RL with it. 
             eval_res = json.loads(open(self.results_tmp_path, "r").read())
             rrc = eval_res["runResultCounts"]
+            run_results = eval_res["runResults"]
+            run_results_indexed = [self.run_types.index(restype) for restype in run_results]
             num_fully_correct = eval_res["numFullyCorrectPrograms"]
-            obs_vec = np.array([rrc[runtype] for runtype in self.run_types])
+            run_type_counts_vec = np.array([rrc[runtype] for runtype in self.run_types])
+            # run_types_onehot_vec = np.zeros((len(run_results_indexed, len(self.run_types))))
+            # run_types_onehot_vec[np.arange(run_results_indexed.size), run_results_indexed] = 1
+            obs_vec = run_type_counts_vec
             # A general rule: Success should be the best, and then bad results, and then runtime errors. 
             # This is because the type/decode/verify/name errors shouldn't really every occur
             # And we prefer correct programs to bad ones, but bad programs to non-running ones. 
@@ -112,7 +117,7 @@ class ProbabilisticSynthesizerEnv(gym.Env):
                 0, 
                 1
             ])
-            runtime_rewards = np.dot(obs_vec, runtime_reward_weights)
+            runtime_rewards = np.dot(run_type_counts_vec, runtime_reward_weights)
             self.last_rrcs = rrc
             info = dict() # Can add stuff to this but idk why except for maybe metrics/debugging?
         done = self.step_num >= self.max_num_steps

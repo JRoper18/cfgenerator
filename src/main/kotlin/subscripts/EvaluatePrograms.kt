@@ -159,9 +159,7 @@ data class AggregateEvaluationResult(
     val goodSymFreqs : Map<String, Int>,
     val badSymFreqs : Map<String, Int>
 ) {
-    val runResultCounts by lazy {
-        runResults.countMap(ProgramRunResult.values().toList())
-    }
+    val runResultCounts = runResults.countMap(ProgramRunResult.values().toList())
     override fun toString() : String {
         val out = StringWriter()
         val logWriter = PrintWriter(out)
