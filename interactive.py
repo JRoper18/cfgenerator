@@ -29,6 +29,11 @@ def make_gen_config(probs_vec, num_attempts, max_depth):
     to_serial["numRandomTries"] = num_attempts
     to_serial["maxProgramDepth"] = max_depth
     return json.dumps(to_serial)    
+
+def count_examples(eval_file_path):
+    eval_f = open(eval_file_path, "r")
+    lines = eval_f.readlines()
+    return len(list(filter(lambda line : line.strip() == "Inputs:", lines)))
 class TensorboardCallback(BaseCallback):
     """
     Custom callback for plotting additional values in tensorboard.
@@ -70,11 +75,12 @@ class ProbabilisticSynthesizerEnv(gym.Env):
         # Actions are a probability vector outputted, 1 for each NT-symbol.  
         self.action_space = spaces.Box(low=0.00001, high=1, shape=(num_rules,), dtype=np.float32)
         # Using the frequencies of examples/errors as the observation space
-        self.observation_space = spaces.Box(low=0, high=200,
-        shape=(len(run_types),), dtype=np.int16)
+        self.observation_space = spaces.Box(low=0, high=1,
+        shape=(count_examples(self.eval_examples_path), len(run_types)), dtype=np.float32)
         self.step_num = 0
         self.max_num_steps = num_steps
     def step(self, action):
+        print("Taking step!")
         self.step_num += 1
         # Let this stuff go into the log file, to seperate it from the logs of StableBaselines
         with RedirectStdStreams(stdout=self.log_f, stderr=self.log_f):
@@ -96,12 +102,12 @@ class ProbabilisticSynthesizerEnv(gym.Env):
             eval_res = json.loads(open(self.results_tmp_path, "r").read())
             rrc = eval_res["runResultCounts"]
             run_results = eval_res["runResults"]
-            run_results_indexed = [self.run_types.index(restype) for restype in run_results]
+            run_results_indexed = np.array([self.run_types.index(restype) for restype in run_results])
             num_fully_correct = eval_res["numFullyCorrectPrograms"]
             run_type_counts_vec = np.array([rrc[runtype] for runtype in self.run_types])
-            # run_types_onehot_vec = np.zeros((len(run_results_indexed, len(self.run_types))))
-            # run_types_onehot_vec[np.arange(run_results_indexed.size), run_results_indexed] = 1
-            obs_vec = run_type_counts_vec
+            run_types_onehot_vec = np.zeros((run_results_indexed.size, len(self.run_types)), dtype=np.float32)
+            run_types_onehot_vec[np.arange(run_results_indexed.size), run_results_indexed] = 1
+            obs_vec = run_types_onehot_vec
             # A general rule: Success should be the best, and then bad results, and then runtime errors. 
             # This is because the type/decode/verify/name errors shouldn't really every occur
             # And we prefer correct programs to bad ones, but bad programs to non-running ones. 

@@ -1,14 +1,30 @@
 import torch
 from transformers import GPTNeoForCausalLM, GPT2Tokenizer
 
-def generate_gpt(eval_generated_fname,
-    eval_output_generated_fname,
-    model_run_name,
-    model_dir_base,
-    param_size = "125M",
-    num_attempts=25,
-     
-):
+
+def generate_from_prompt(prompt, num_attempts, tokenizer, model):
+    tokens = tokenizer(prompt, return_tensors="pt").input_ids.cuda()
+    curr_len = (tokens.shape[1])
+    new_len = min(1200, curr_len)
+    cutpoint = 0
+    if new_len < curr_len :
+        cutpoint = curr_len - new_len
+    input_tensor = tokens[:, cutpoint:]
+    tensor_outs = model.generate(
+        input_tensor, 
+        max_length=2048,  
+        num_return_sequences=num_attempts,
+        # no_repeat_ngram_size=2,
+        # repetition_penalty=1.5,
+        top_p=0.95,
+        temperature=.75,
+        do_sample=True,
+        top_k=50,
+        # early_stopping=True
+    )
+    return [tokenizer.decode(output) for output in tensor_outs]
+
+def get_model(model_dir_base, param_size, model_run_name):
     model_dir = "%s/gpt-results-%s-%s" % (model_dir_base, param_size, model_run_name)
 
     # Now, make the outputs for us to evaluate:
@@ -18,7 +34,17 @@ def generate_gpt(eval_generated_fname,
         eos_token="<|endoftext|>",
         pad_token="<|pad|>"
     )
+    return fine_model, fine_tokenizer
 
+def generate_gpt(eval_generated_fname,
+    eval_output_generated_fname,
+    model_run_name,
+    model_dir_base,
+    param_size = "125M",
+    num_attempts=25,
+     
+):
+    fine_model, fine_tokenizer = get_model(model_dir_base, param_size, model_run_name)
     dataset_strs = []
     with open(eval_generated_fname, 'r') as data:
         split_ds = data.read().split("<|splitter|>")
@@ -35,32 +61,14 @@ def generate_gpt(eval_generated_fname,
     print("Average/Max length to pad: %d/%d" % (avg_length, max_length))
     with open(eval_output_generated_fname, 'w') as file:
         for idx, eval_ex in enumerate(dataset_strs):
-            tokens = fine_tokenizer(eval_ex, return_tensors="pt").input_ids.cuda()
-            curr_len = (tokens.shape[1])
-            new_len = min(1200, curr_len)
-            cutpoint = 0
-            if new_len < curr_len :
-                cutpoint = curr_len - new_len
-            input_tensor = tokens[:, cutpoint:]
             attempt_count = 0
             total_output = "<|splitter|>\n"
             while attempt_count < num_attempts:
                 current_num_attempts = min(num_attempts - attempt_count, max_num_attempts)
                 attempt_count += current_num_attempts
-                outputs = fine_model.generate(
-                    input_tensor, 
-                    max_length=2048,  
-                    num_return_sequences=current_num_attempts,
-                    # no_repeat_ngram_size=2,
-                    # repetition_penalty=1.5,
-                    top_p=0.95,
-                    temperature=.75,
-                    do_sample=True,
-                    top_k=50,
-                    # early_stopping=True
-                )
+                outputs = generate_from_prompt(eval_ex, current_num_attempts, fine_tokenizer, fine_model)
                 for output in outputs:
-                    total_output += "<|attempt|>\n" + fine_tokenizer.decode(output)
+                    total_output += "<|attempt|>\n" + output
             total_output = total_output.replace("<|startoftext|>", "")
             total_output = total_output.replace("<|endoftext|>", "")
             file.write(total_output)
