@@ -77,7 +77,9 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
         per_device_eval_batch_size=1,   # batch size for evaluation
         warmup_steps=0,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
-        logging_dir='./gpt-logs',            # directory for storing logs
+        save_steps = int(0.1 * str_ds_size),
+        save_strategy="steps",
+        # logging_dir='./gpt-logs',            # directory for storing logs
         # logging_steps=1,
         # save_strategy='epoch',
         # no_cuda = True, # Damn these GPUs really are small
@@ -100,7 +102,12 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
                 "labels": torch.stack([f[0] for f in data])}
     )
     # train_result = trainer.train()
-    is_checkpoint = os.path.isdir(output_dir + "/checkpoint-500")
+    subdirs = os.listdir(output_dir) 
+    is_checkpoint = False
+    for subdir in subdirs:
+        if "checkpoint" in subdir:
+            is_checkpoint = True
+            break
     train_result = trainer.train(resume_from_checkpoint=(is_checkpoint and not use_saved))
     print("done training!")
     trainer.save_model(output_dir)
