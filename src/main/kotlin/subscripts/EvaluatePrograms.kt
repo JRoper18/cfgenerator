@@ -108,7 +108,7 @@ suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramE
     val runResults = mutableListOf<ProgramRunResult>()
     val programExampleStr = StringBuilder()
     // Remove the first -- it may have been trimmed by the GPT model, and it also may contain a "Name: <name>"
-    inputOutputExamples = inputOutputExamples.subList(1, inputOutputExamples.size)
+    // inputOutputExamples = inputOutputExamples.subList(1, inputOutputExamples.size)
     var gotOneRun = false
     var hitsAllExamples = true
     val symbolCounts = mutableMapOf<String, Int>()
@@ -147,7 +147,11 @@ suspend fun gradeAttempt(language : Language<*, *>, attempt : String) : ProgramE
             }
         }
         programExampleStr.append("Program:\n${programStr}\n")
-        analyzeSymbolFrequency(programStr, language, symbolCounts)
+        try {
+            analyzeSymbolFrequency(programStr, language, symbolCounts)
+        } catch (ex : NotImplementedError) {
+            // Whatever. Maybe it doesn't have a grammar.
+        }
     }
     return ProgramEvaluationResult(runResults = runResults.toList(), symbolCounts = symbolCounts, programExampleString = programExampleStr.toString())
 }

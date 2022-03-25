@@ -14,9 +14,6 @@ import kotlin.random.Random
 class PythonInterpreter(
                         val typeAttr : String = "type",
                         val random : Random = Random(100L),
-                        val maxFailedExamples : Int = 20,
-                        val generatedIntRange : IntRange = IntRange(-20, 20),
-                        val generatedListSizeRange : IntRange = IntRange(0, 4)
 ){
     companion object {
         val libStr = File("./src/main/kotlin/interpreters/simplepython/lib.py").readText() + "\n"
