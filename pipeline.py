@@ -35,6 +35,9 @@ def main():
                         help = 'Generate evaluation examples from our CFG generator to evaluate GPT on. ')
     parser.add_argument('--do_gpt_gen', action='store_true',
                         help = 'Generate programs using a trained GPT model')
+    parser.add_argument('--do_free_gen', action='store_true',
+                        help = 'Generate programs using a trained GPT model in an unformatted way. Must provide a prompt using option "--free_prompt"')
+    parser.add_argument('--free_prompt', type=str)
     parser.add_argument('--do_eval', action='store_true',
                         help = 'Evaluate examples created by GPT. ')
     parser.add_argument('--num_train', type=int, default=10000, 
@@ -90,6 +93,9 @@ def main():
         from src.main.python.generate import generate_gpt
         generate_gpt(model_run_name = modelname, eval_output_generated_fname=gpt_generated_eval_path, eval_generated_fname=cfg_generated_eval_path, model_dir_base = modeldir, num_attempts=args.num_attempts)
 
+    if(args.do_free_gen):
+        from src.main.python.generate import generate_gpt_free
+        generate_gpt_free(model_run_name = modelname, eval_output_generated_fname=gpt_generated_eval_path, prompt=args.free_prompt, model_dir_base = modeldir, num_gen=args.num_eval)
     if(args.do_eval or do_all):
         cmd = 'echo -n | ./gradlew run --args="evaluate -i {} -l {} -o {} -e {}"'.format(gpt_generated_eval_path, language, eval_log_path, examples_eval_path)
         ret = subprocess.call(cmd, shell=True)

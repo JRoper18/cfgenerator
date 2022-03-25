@@ -74,3 +74,26 @@ def generate_gpt(eval_generated_fname,
             file.write(total_output)
             if idx % 10 == 0:
                 print("GPT Generated %d/%d" % (idx, len(dataset_strs)))
+
+
+def generate_gpt_free(
+    eval_output_generated_fname,
+    model_run_name,
+    model_dir_base,
+    prompt,
+    fake_in = "1",
+    fake_out = "1",
+    num_gen = 100,
+    param_size = "125M",   
+):
+    fine_model, fine_tokenizer = get_model(model_dir_base, param_size, model_run_name)
+    max_num_attempts = 10
+    with open(eval_output_generated_fname, 'w') as file:
+        for i in range(0, num_gen, max_num_attempts):
+            outputs = generate_from_prompt(prompt, max_num_attempts, fine_tokenizer, fine_model)
+            for output in outputs:
+                total_output = "<|splitter|>\n<|attempt|>\nInput: {}\nOutput: {}\nProgram: {}\n".format(fake_in, fake_out, output)
+                total_output = total_output.replace("<|startoftext|>", "")
+                total_output = total_output.replace("<|endoftext|>", "")
+                file.write(total_output)
+            print("GPT Generated %d/%d" % (i, num_gen))
