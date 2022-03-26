@@ -185,3 +185,4 @@ gpt-logs*
 rl-logs*
 tmp*
 **/__pycache__/
+prompt.txt

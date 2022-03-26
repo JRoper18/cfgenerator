@@ -16,6 +16,7 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
         pretrained_name = output_dir
         print("Using saved model")
     else:
+        print("Using fresh pretrained model")
         pretrained_name = "EleutherAI/gpt-neo-%s" % param_size
 
     print(transformers.__version__)
@@ -27,6 +28,7 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
     if not use_pretrained:
         print("Not using pretrained weights! Using random instead")
         model = GPTNeoForCausalLM(model.config).cuda()     
+    print("Model loaded.")
     # Resize the token embeddings because we've just added 3 new tokens 
     model.resize_token_embeddings(len(tokenizer))
 
@@ -42,7 +44,7 @@ def train_gpt(run_name, generated_path, output_dir, attr_regex = None, use_pretr
         split_ds = data.read().split("<|splitter|>")
         dataset_strs = [text for text in split_ds]
     str_ds_size = len(dataset_strs)
-    if(str_ds_size < 100000):            
+    if(str_ds_size < 20000):            
         print("Getting largest token lengths from %d examples" % str_ds_size)
         token_lengths = [len(tokenizer.encode(ds_str)) for ds_str in dataset_strs]
         max_length = max(token_lengths)

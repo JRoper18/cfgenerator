@@ -92,7 +92,7 @@ def generate_gpt_free(
         for i in range(0, num_gen, max_num_attempts):
             outputs = generate_from_prompt(prompt, max_num_attempts, fine_tokenizer, fine_model)
             for output in outputs:
-                total_output = "<|splitter|>\n<|attempt|>\nInput: {}\nOutput: {}\nProgram: {}\n".format(fake_in, fake_out, output)
+                total_output = "<|splitter|>\n<|attempt|>\nInput: {}\nOutput: {}\nProgram: \n{}\n".format(fake_in, fake_out, output)
                 total_output = total_output.replace("<|startoftext|>", "")
                 total_output = total_output.replace("<|endoftext|>", "")
                 file.write(total_output)
