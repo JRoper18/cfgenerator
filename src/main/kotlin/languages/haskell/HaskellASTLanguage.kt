@@ -50,10 +50,16 @@ class HaskellASTLanguage : Language<String, String> {
             } catch (ex : HaskellInterpreter.InterpretError) {
                 val detailedMsg = ex.serr + "\nIn Pretty-Program:\n${prettyProg}"
                 val rrs : ProgramRunResult
-                if(ex.serr.contains("Not in scope:")) {
-                    rrs = ProgramRunResult.NAMEERROR
-                } else if(ex.serr.contains("Couldn't match expected type")){
+                if(ex.serr.contains("type")){
                     rrs = ProgramRunResult.TYPEERROR
+                } else if(ex.serr.contains("Not in scope:")) {
+                    rrs = ProgramRunResult.NAMEERROR
+                } else if(ex.serr.contains("Variable not in scope:")) {
+                    rrs = ProgramRunResult.NAMEERROR
+                } else if(ex.serr.contains("In the pattern")) {
+                    rrs = ProgramRunResult.PARSEERROR
+                } else if(ex.serr.contains("In the expression")) {
+                    rrs = ProgramRunResult.PARSEERROR
                 } else if(ex.serr.contains("Conflicting definitions")) {
                     rrs = ProgramRunResult.NAMEERROR
                 } else {
