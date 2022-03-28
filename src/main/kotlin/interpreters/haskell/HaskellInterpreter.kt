@@ -6,13 +6,15 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.name
 
 class HaskellInterpreter(
     val ghcLibDir : String = Path("/home/jroper18/.stack/programs/x86_64-linux/ghc-tinfo6-8.10.7/bin/").toString(),
-    val helperLib : String = "HaskellHelper"
+    val helperLib : String = "HaskellHelper",
+    val timeoutMs : Long = 1000,
 ) {
     internal class InterpretError(val serr : String) : IllegalArgumentException(serr)
 
@@ -32,6 +34,10 @@ class HaskellInterpreter(
 
         stdInput.write(inStr)
         stdInput.close()
+        if(!proc.waitFor(timeoutMs, TimeUnit.MILLISECONDS)) {
+            proc.destroy()
+            throw InterpretError("Timeout after ${timeoutMs} ms")
+        }
 
         // Read the output from the command
         var s: String? = null

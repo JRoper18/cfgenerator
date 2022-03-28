@@ -37,7 +37,8 @@ class HaskellASTLanguage : Language<String, String> {
         return totalProg
     }
     override fun runProgramWithExample(program: String, input: String): String {
-        val actualOut = interp.runHsScript(buildProgramFromAST(program) + "\nmain = print \$ f ${input}")
+        val totalProg = buildProgramFromAST(program) + "\nmain = print $ f ${input.trim()}"
+        val actualOut = interp.runHsScript(totalProg)
         return actualOut
     }
 
@@ -47,7 +48,18 @@ class HaskellASTLanguage : Language<String, String> {
             try {
                 return ProgramRunDetailedResult.fromInputOutput(input, runProgramWithExample(program, input), output)
             } catch (ex : HaskellInterpreter.InterpretError) {
-                return ProgramRunDetailedResult(ProgramRunResult.PARSEERROR, ex.serr + "\nIn Pretty-Program:\n${prettyProg}")
+                val detailedMsg = ex.serr + "\nIn Pretty-Program:\n${prettyProg}"
+                val rrs : ProgramRunResult
+                if(ex.serr.contains("Not in scope:")) {
+                    rrs = ProgramRunResult.NAMEERROR
+                } else if(ex.serr.contains("Couldn't match expected type")){
+                    rrs = ProgramRunResult.TYPEERROR
+                } else if(ex.serr.contains("Conflicting definitions")) {
+                    rrs = ProgramRunResult.NAMEERROR
+                } else {
+                    rrs = ProgramRunResult.RUNTIMEERROR
+                }
+                return ProgramRunDetailedResult(rrs, detailedMsg)
             }
         } catch (ex : HaskellInterpreter.InterpretError) {
             return ProgramRunDetailedResult(ProgramRunResult.DECODEERROR, ex.serr + "\nIn AST-Program:\n${program}")
