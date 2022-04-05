@@ -6,6 +6,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import languages.*
 import languages.haskell.HaskellASTLanguage
+import languages.haskell.HaskellLanguage
 import languages.lambda2.Lambda2FunctionalLanguage
 
 
@@ -28,6 +29,7 @@ enum class LanguageRef {
     LAMBDA2CFGSKETCH,
     LAMBDA2NOARITHCFG,
     HASKELLAST,
+    HASKELL,
 }
 
 fun argsToLanguage(lan : LanguageRef) : Language<*, *> {
@@ -38,6 +40,7 @@ fun argsToLanguage(lan : LanguageRef) : Language<*, *> {
         LanguageRef.LAMBDA2CFGSKETCH -> return PreprocessedCfgLanguage(CfgLanguage(Lambda2FunctionalLanguage(doSketch = true)))
         LanguageRef.LAMBDA2NOARITHCFG -> return CfgLanguage(Lambda2FunctionalLanguage(excludedFunctions = setOf("plus", "times", "minus")))
         LanguageRef.HASKELLAST -> return HaskellASTLanguage()
+        LanguageRef.HASKELL -> return HaskellLanguage()
     }
 }
 

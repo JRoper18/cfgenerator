@@ -10,13 +10,14 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.name
+import languages.ProgramRunResult
 
 class HaskellInterpreter(
     val ghcLibDir : String = Path("/home/jroper18/.stack/programs/x86_64-linux/ghc-tinfo6-8.10.7/bin/").toString(),
     val helperLib : String = "HaskellHelper",
     val timeoutMs : Long = 1000,
 ) {
-    internal class InterpretError(val serr : String) : IllegalArgumentException(serr)
+    class InterpretError(val serr : String) : IllegalArgumentException(serr)
 
     fun astToScript(ast : String, ignoreErr : Boolean = false) : String {
         return runCommands(arrayOf(helperLib, "--mode", "pretty", "--stdin"), ast, ignoreErr = ignoreErr)
@@ -54,6 +55,28 @@ class HaskellInterpreter(
             throw InterpretError(errStr.toString())
         }
         return output.toString()
+    }
+
+    fun errToRunResult(ex : HaskellInterpreter.InterpretError) : ProgramRunResult {
+        val rrs : ProgramRunResult
+        if(ex.serr.contains("type")){
+            rrs = ProgramRunResult.TYPEERROR
+        } else if(ex.serr.contains("parse error")) {
+            rrs = ProgramRunResult.PARSEERROR
+        } else if(ex.serr.contains("Not in scope:")) {
+            rrs = ProgramRunResult.NAMEERROR
+        } else if(ex.serr.contains("Variable not in scope:")) {
+            rrs = ProgramRunResult.NAMEERROR
+        } else if(ex.serr.contains("In the pattern")) {
+            rrs = ProgramRunResult.PARSEERROR
+        } else if(ex.serr.contains("In the expression")) {
+            rrs = ProgramRunResult.PARSEERROR
+        } else if(ex.serr.contains("Conflicting definitions")) {
+            rrs = ProgramRunResult.NAMEERROR
+        } else {
+            rrs = ProgramRunResult.RUNTIMEERROR
+        }
+        return rrs;
     }
 
     fun runHsScript(script : String, ignoreErr : Boolean = false) : String {

@@ -9,7 +9,7 @@ import languages.ProgramGenerationResult
 import languages.ProgramRunDetailedResult
 import languages.ProgramRunResult
 
-class HaskellASTLanguage : Language<String, String> {
+class HaskellLanguage : Language<String, String> {
     override fun generateProgramAndExamples(
         numExamples: Int,
         config: GenerationConfig
@@ -32,7 +32,7 @@ class HaskellASTLanguage : Language<String, String> {
     }
 
     private fun buildTotalProgram(program : String) : String {
-        val totalProg = "module Main where\n${parsedProg}"
+        val totalProg = "module Main where\n${program}"
         return totalProg
     }
     override fun runProgramWithExample(program: String, input: String): String {
@@ -48,22 +48,7 @@ class HaskellASTLanguage : Language<String, String> {
                 return ProgramRunDetailedResult.fromInputOutput(input, runProgramWithExample(program, input), output)
             } catch (ex : HaskellInterpreter.InterpretError) {
                 val detailedMsg = ex.serr + "\nIn Pretty-Program:\n${prettyProg}"
-                val rrs : ProgramRunResult
-                if(ex.serr.contains("type")){
-                    rrs = ProgramRunResult.TYPEERROR
-                } else if(ex.serr.contains("Not in scope:")) {
-                    rrs = ProgramRunResult.NAMEERROR
-                } else if(ex.serr.contains("Variable not in scope:")) {
-                    rrs = ProgramRunResult.NAMEERROR
-                } else if(ex.serr.contains("In the pattern")) {
-                    rrs = ProgramRunResult.PARSEERROR
-                } else if(ex.serr.contains("In the expression")) {
-                    rrs = ProgramRunResult.PARSEERROR
-                } else if(ex.serr.contains("Conflicting definitions")) {
-                    rrs = ProgramRunResult.NAMEERROR
-                } else {
-                    rrs = ProgramRunResult.RUNTIMEERROR
-                }
+                val rrs : ProgramRunResult = interp.errToRunResult(ex);
                 return ProgramRunDetailedResult(rrs, detailedMsg)
             }
         } catch (ex : HaskellInterpreter.InterpretError) {
