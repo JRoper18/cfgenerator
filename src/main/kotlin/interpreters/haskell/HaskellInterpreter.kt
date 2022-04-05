@@ -59,19 +59,18 @@ class HaskellInterpreter(
 
     fun errToRunResult(ex : HaskellInterpreter.InterpretError) : ProgramRunResult {
         val rrs : ProgramRunResult
-        if(ex.serr.contains("type")){
+        val errStr = ex.serr.lowercase();
+        if(errStr.contains("type")){
             rrs = ProgramRunResult.TYPEERROR
-        } else if(ex.serr.contains("parse error")) {
+        } else if(errStr.contains("parse error")) {
             rrs = ProgramRunResult.PARSEERROR
-        } else if(ex.serr.contains("Not in scope:")) {
+        } else if(errStr.contains("not in scope")) {
             rrs = ProgramRunResult.NAMEERROR
-        } else if(ex.serr.contains("Variable not in scope:")) {
-            rrs = ProgramRunResult.NAMEERROR
-        } else if(ex.serr.contains("In the pattern")) {
+        } else if(errStr.contains("in the pattern")) {
             rrs = ProgramRunResult.PARSEERROR
-        } else if(ex.serr.contains("In the expression")) {
+        } else if(errStr.contains("in the expression")) {
             rrs = ProgramRunResult.PARSEERROR
-        } else if(ex.serr.contains("Conflicting definitions")) {
+        } else if(ex.serr.contains("conflicting definitions")) {
             rrs = ProgramRunResult.NAMEERROR
         } else {
             rrs = ProgramRunResult.RUNTIMEERROR
