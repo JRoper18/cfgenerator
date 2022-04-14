@@ -9,7 +9,8 @@ import languages.ProgramGenerationResult
 import languages.ProgramRunDetailedResult
 import languages.ProgramRunResult
 
-class HaskellASTLanguage : Language<String, String> {
+
+class HaskellASTLanguage(val astType : HaskellASTType = HaskellASTType.PARSE) : Language<String, String> {
     override fun generateProgramAndExamples(
         numExamples: Int,
         config: GenerationConfig
@@ -32,19 +33,22 @@ class HaskellASTLanguage : Language<String, String> {
     }
 
     private fun buildProgramFromAST(program : String) : String {
-        val parsedProg = interp.astToScript(program)
+        val parsedProg = interp.astToScript(program, astType = this.astType)
         val totalProg = "module Main where\n${parsedProg}"
         return totalProg
     }
+    private fun buildTotalProgramWithInput(program : String, input : String) : String {
+        return buildProgramFromAST(program) + "\nmain = print $ f ${input.trim()}"
+    }
     override fun runProgramWithExample(program: String, input: String): String {
-        val totalProg = buildProgramFromAST(program) + "\nmain = print $ f ${input.trim()}"
+        val totalProg = buildTotalProgramWithInput(program, input)
         val actualOut = interp.runHsScript(totalProg)
         return actualOut
     }
 
     override fun runProgramAgainstExample(program: String, input: String, output: String): ProgramRunDetailedResult {
         try {
-            val prettyProg = buildProgramFromAST(program)
+            val prettyProg = buildTotalProgramWithInput(program, input)
             try {
                 return ProgramRunDetailedResult.fromInputOutput(input, runProgramWithExample(program, input), output)
             } catch (ex : HaskellInterpreter.InterpretError) {

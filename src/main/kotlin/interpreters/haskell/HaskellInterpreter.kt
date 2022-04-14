@@ -11,6 +11,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.absolute
 import kotlin.io.path.name
 import languages.ProgramRunResult
+import languages.haskell.HaskellASTType
 
 class HaskellInterpreter(
     val ghcLibDir : String = Path("/home/jroper18/.stack/programs/x86_64-linux/ghc-tinfo6-8.10.7/bin/").toString(),
@@ -19,8 +20,8 @@ class HaskellInterpreter(
 ) {
     class InterpretError(val serr : String) : IllegalArgumentException(serr)
 
-    fun astToScript(ast : String, ignoreErr : Boolean = false) : String {
-        return runCommands(arrayOf(helperLib, "--mode", "pretty", "--stdin"), ast, ignoreErr = ignoreErr)
+    fun astToScript(ast : String, astType : HaskellASTType, ignoreErr : Boolean = false) : String {
+        return runCommands(arrayOf(helperLib, "--mode", "pretty", "--stage", astType.toString().lowercase(), "--stdin"), ast, ignoreErr = ignoreErr)
     }
 
     private fun runCommands(commands : Array<String>, inStr : String, ignoreErr : Boolean = false) : String {
