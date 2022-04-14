@@ -3,7 +3,10 @@ from transformers import GPTNeoForCausalLM, GPT2Tokenizer
 
 
 def generate_from_prompt(prompt, num_attempts, tokenizer, model):
-    tokens = tokenizer(prompt, return_tensors="pt").input_ids.cuda()
+    final_prompt = prompt
+    if prompt == "":
+        final_prompt = "<|startoftext|>"
+    tokens = tokenizer(final_prompt, return_tensors="pt").input_ids.cuda()
     curr_len = (tokens.shape[1])
     new_len = min(1200, curr_len)
     cutpoint = 0
