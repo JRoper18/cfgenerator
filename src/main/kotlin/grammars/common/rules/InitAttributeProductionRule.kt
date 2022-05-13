@@ -3,6 +3,9 @@ package grammars.common.rules
 import grammar.*
 import grammar.constraints.RuleConstraint
 
+/**
+A production rule that just initializes a new attribute with an initial value. 
+*/
 class InitAttributeProductionRule(rule: ProductionRule, val initialKey : String, val initialVal : String) : KeyedAttributesProductionRule(listOf(initialKey), rule) {
     override fun makeSynthesizedAttributes(childAttributes: List<NodeAttributes>): NodeAttributes {
         val ret = NodeAttributes()

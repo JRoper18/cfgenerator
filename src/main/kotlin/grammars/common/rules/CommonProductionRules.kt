@@ -18,6 +18,8 @@ fun TerminalProductionRule(lhs: Symbol) : ProductionRule{
 fun TerminalAPR(lsh: Symbol) : APR {
     return APR(TerminalProductionRule(lsh))
 }
+// Used during the generation process. 
+// If you're seeing UNEXPANDED symbols in a generated program, there's something wrong with the grammar or the generator. 
 fun UnexpandedAPR(lsh: Symbol) : APR {
     return APR(PR(lsh, listOf(UNEXPANDED)))
 }

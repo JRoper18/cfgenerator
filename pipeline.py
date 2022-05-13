@@ -24,7 +24,7 @@ def main():
                         help='name of everything. cant be used with other name args. ')
 
     parser.add_argument('--language', type=str,
-                        help='Name of the language to eval on (deepcoder or lambda2)')
+                        help='Name of the language to eval on (deepcoder or lambda2 or lambda2cfg or haskell or haskellast)')
     parser.add_argument('--do_all', action='store_true',
                         help = 'Do the entire pipeline. ')
     parser.add_argument('--do_cfgs', action='store_true',
@@ -37,7 +37,8 @@ def main():
                         help = 'Generate programs using a trained GPT model')
     parser.add_argument('--do_free_gen', action='store_true',
                         help = 'Generate programs using a trained GPT model in an unformatted way. Must provide a prompt using option "--free_prompt"')
-    parser.add_argument('--free_prompt', type=str, default="./prompt.txt")
+    parser.add_argument('--free_prompt', type=str, default="./prompt.txt", 
+                        help = "Location of file that contains the prompt as rawtext. ")
     parser.add_argument('--do_eval', action='store_true',
                         help = 'Evaluate examples created by GPT. ')
     parser.add_argument('--num_train', type=int, default=10000, 
